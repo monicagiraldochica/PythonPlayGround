@@ -6,7 +6,7 @@ root_path = Path("/hpc/modulefiles")
 def scanModules() -> pd.DataFrame:
     rows = []
 
-    for lua in root_path.rglob("*.lua"):
+    for lua in root_path.rglob("*/*.lua"):
         print(lua)
         break
 
