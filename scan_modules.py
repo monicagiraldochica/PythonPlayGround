@@ -7,7 +7,7 @@ def scanModules() -> pd.DataFrame:
     rows = []
 
     for lua in root_path.rglob("*/*.lua"):
-        parts = lua.parts
+        parts = lua.parts[1:]
         print(parts)
         break
 
