@@ -57,7 +57,7 @@ def scanModules() -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
     if not df.empty:
-        df = df.sort_values(["module", "version"], kind="stable").reset_index(drop=True)
+        df = df.sort_values(["module_name", "version"], kind="stable").reset_index(drop=True)
     
     return df
 
