@@ -2,24 +2,63 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 import stat
+import re
 
-root_path = Path("/hpc/modulefiles")
+def getDependencies(module_file: Path) -> list[str]:
+    deps = set()
+    DEP_RE = re.compile(r'\bdepends_on\s*\(\s*"([^"]+)"\s*\)')
+
+    try:
+        content = module_file.read_text()
+        for dep in DEP_RE.findall(content):
+            deps.add(dep)
+        return sorted(deps)
+
+    except (FileNotFoundError, PermissionError, IsADirectoryError) as e:
+        raise RuntimeError(f"Unreadable file: {e}") from e
+    
+    except UnicodeDecodeError as e:
+        raise RuntimeError(f"Encoding issue: {e}") from e
+    
+    except OSError as e:
+        raise RuntimeError(f"Error reading: {e}") from e
 
 def scanModules() -> pd.DataFrame:
     rows = []
+    root_path = Path("/hpc/modulefiles")
 
     for lua in root_path.rglob("*/*.lua"):
-        parts = lua.parts[1:]
-        module = parts[2]
-        version = Path(parts[3]).stem.lstrip('.')
-        hidden = parts[3].startswith(".")
-        print(hidden)
-        st = lua.stat()
-        readable_by_others = bool(st.st_mode & stat.S_IROTH)
-        print(readable_by_others)
-        print(datetime.fromtimestamp(st.st_mtime))
-        print(datetime.fromtimestamp(st.st_atime))
-        break
+        try:
+            module = lua.parent.name
+            last = lua.name
+            version = Path(last).stem.lstrip('.')
+            hidden = last.startswith(".")
+            st = lua.stat()
+            readable_by_others = bool(st.st_mode & stat.S_IROTH)
+            public = (not hidden) and readable_by_others
+            mod = datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d")
+            dependencies = getDependencies(lua)
+
+            rows.append({
+                "module_name": module,
+                "version": version,
+                "public": public,
+                "last_mod": mod,
+                "dependencies": "; ".join(dependencies)
+            })
+            df = pd.DataFrame(rows)
+            if not df.empty:
+                df = df.sort_values(["module", "version"], kind="stable").reset_index(drop=True)
+
+            return df
+
+        except RuntimeError as e:
+            print(f"Could not read {lua}: {e}")
+            continue
+
+        except OSError as e:
+            print(f"Skipping {lua} due to filesystem error: {e}")
+            continue
 
 def main():
     scanModules()
