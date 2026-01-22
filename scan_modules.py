@@ -46,11 +46,6 @@ def scanModules() -> pd.DataFrame:
                 "last_mod": mod,
                 "dependencies": "; ".join(dependencies)
             })
-            df = pd.DataFrame(rows)
-            if not df.empty:
-                df = df.sort_values(["module", "version"], kind="stable").reset_index(drop=True)
-
-            return df
 
         except RuntimeError as e:
             print(f"Could not read {lua}: {e}")
@@ -59,6 +54,12 @@ def scanModules() -> pd.DataFrame:
         except OSError as e:
             print(f"Skipping {lua} due to filesystem error: {e}")
             continue
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values(["module", "version"], kind="stable").reset_index(drop=True)
+    
+    return df
 
 def main():
     scanModules()
