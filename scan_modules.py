@@ -4,14 +4,16 @@ from datetime import datetime
 import stat
 import re
 
+DEP_RE = re.compile(r'\bdepends_on\s*\(\s*"([^"]+)"\s*\)')
+
 def getDependencies(module_file: Path) -> list[str]:
     deps = set()
-    DEP_RE = re.compile(r'\bdepends_on\s*\(\s*"([^"]+)"\s*\)')
 
     try:
         content = module_file.read_text()
         for dep in DEP_RE.findall(content):
             deps.add(dep)
+
         return sorted(deps)
 
     except (FileNotFoundError, PermissionError, IsADirectoryError) as e:
@@ -62,7 +64,17 @@ def scanModules() -> pd.DataFrame:
     return df
 
 def main():
-    scanModules()
+    df = scanModules()
+    output = f"module_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name="modules", index=False)
+
+        ws = writer.sheets["modules"]
+        ws.freeze_panes = "A2" 
+        ws.auto_filter.ref = ws.dimensions
+
+    print(f"Wrote {len(df)} rows to {output}")
 
 if __name__ == "__main__":
     main()
