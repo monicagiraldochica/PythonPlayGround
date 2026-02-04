@@ -246,6 +246,45 @@ def migrateVersions(v_new, v_old):
 
 			installPackage(v_new, line)
 
+# Get list of mandatory dependencies
+# repo_mode can be "cran" or "bioc"
+def r_mandatory_deps_recursive(r_version: str, package: str, repo_mode: str = "bioc", cran_repo: str = "https://cran.r-project.org") -> list[str]:
+	if repo_mode not in ("cran", "bioc"):
+		raise ValueError("repo_mode must be 'cran' or 'bioc'")
+	
+	if repo_mode == "cran":
+		repo_setup = f'repos <- c(CRAN = "{cran_repo}")'
+	else:
+		repo_setup = 'repos <- BiocManager::repositories()'
+		
+	r_expr = f"""
+		pkg <- "{package}"
+		{repo_setup}
+		ap <- available.packages(repos = repos)
+		deps <- tools::package_dependencies(
+		packages = pkg,
+		db = ap,
+		which = c("Depends", "Imports", "LinkingTo"), recursive = TRUE)[[pkg]]
+
+		if (is.null(deps)) quit(status = 2)  # package not found in repo index
+
+		deps <- unique(deps)
+		deps <- deps[deps != "R"]            # drop "R (>= ...)" if present
+		deps <- sort(deps)
+		cat(deps, sep="\\n")
+	""".strip()
+
+	[returncode, stderr, stdout] = runRcmd(r_version, r_expr)
+	if returncode==2:
+		where = "CRAN" if repo_mode == "cran" else "Bioconductor/CRAN repos"
+		raise ValueError(f"Package '{package}' not found in {where} metadata")
+	if returncode!=0:
+		raise RuntimeError(f"Rscript failed:\n{stderr}")
+	if not stdout:
+		return []
+
+	return [ln for ln in stdout.splitlines() if ln.strip()]
+
 def main():
 	os.chdir("/group/rccadmin/work/mkeith/R")
 	[v_new, v_old, migrate, pkg_install, git_repo] = parse_arguments()
