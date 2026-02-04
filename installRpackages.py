@@ -9,6 +9,7 @@ import subprocess
 from shlex import quote
 from datetime import date
 from pathlib import Path
+import sys
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -248,6 +249,9 @@ def migrateVersions(v_new, v_old):
 def main():
 	os.chdir("/group/rccadmin/work/mkeith/R")
 	[v_new, v_old, migrate, pkg_install, git_repo] = parse_arguments()
+
+	if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
+		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
 	if migrate:
 		migrateVersions(v_new, v_old)
