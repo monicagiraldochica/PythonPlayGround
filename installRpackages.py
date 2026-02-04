@@ -40,7 +40,7 @@ def comparePackages(v_new: str, v_old: str):
 def runRcmd(r_version:str, r_expr: str):
 	module_cmd = f"module load R/{quote(r_version)}"
 	cmd = f"{module_cmd} && Rscript -e {quote(r_expr)}"
-	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
+	result = subprocess.run(["bash", "-lc", cmd])
 
 	return [result.returncode, result.stderr, result.stdout]
 
@@ -161,7 +161,7 @@ def hadFailed(package):
 		return False
 	
 	cmd = f"grep -F {quote(package)} fail.txt | head -n 1 | cut -d: -f1"
-	return subprocess.run(cmd, shell=True, capture_output=True, check=False).stdout.strip()==package
+	return subprocess.run(cmd, shell=True, check=False).stdout.strip()==package
 
 def installPackage(r_version: str, package: str, check_pastFail=True, gitRepo=None):
 	if isInstalled(r_version, package):
