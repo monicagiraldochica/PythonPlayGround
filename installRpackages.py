@@ -250,3 +250,6 @@ def main():
 
 	if pkg_install:
 		installPackage(v_new, pkg_install)
+
+if __name__ == "__main__":
+    main()
