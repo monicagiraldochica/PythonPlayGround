@@ -161,7 +161,10 @@ def hadFailed(package):
 		return False
 	
 	cmd = f"grep -F {quote(package)} fail.txt | head -n 1 | cut -d: -f1"
-	return subprocess.run(cmd, shell=True, check=False).stdout.strip()==package
+	out = subprocess.run(cmd, shell=True, check=False).stdout
+	if out==None:
+		return False
+	return out.strip()==package
 
 def installPackage(r_version: str, package: str, check_pastFail=True, gitRepo=None):
 	if isInstalled(r_version, package):
@@ -249,7 +252,7 @@ def main():
 		migrateVersions(v_new, v_old)
 
 	if pkg_install:
-		installPackage(v_new, pkg_install)
+		installPackage(v_new, pkg_install, check_pastFail=False)
 
 if __name__ == "__main__":
     main()
