@@ -35,12 +35,12 @@ def savePackageList(r_version: str):
 # Save the list of packages that are in v_old but not in v_new
 def comparePackages(v_new: str, v_old: str):
 	with open("missing.txt", "w") as f:
-		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f, text=True)
+		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f)
 
 def runRcmd(r_version:str, r_expr: str):
 	module_cmd = f"module load R/{quote(r_version)}"
 	cmd = f"{module_cmd} && Rscript -e {quote(r_expr)}"
-	result = subprocess.run(["bash", "-lc", cmd], text=True, capture_output=True)
+	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
 
 	return [result.returncode, result.stderr, result.stdout]
 
@@ -89,7 +89,7 @@ def installWithTarball(r_version: str, package: str):
 
 	# Install tarball
 	cmd = f"module load {quote(r_version)} && R CMD INSTALL {quote(str(tarball))}"
-	result = subprocess.run(["bash", "-lc", cmd], text=True, capture_output=True)
+	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
 
 	if result.returncode!=0 or not isInstalled(r_version, package):
 		err = (result.stderr or result.stdout).strip()
@@ -161,7 +161,7 @@ def hadFailed(package):
 		return False
 	
 	cmd = f"grep -F {quote(package)} fail.txt | head -n 1 | cut -d: -f1"
-	return subprocess.run(cmd, shell=True, text=True, capture_output=True, check=False).stdout.strip()==package
+	return subprocess.run(cmd, shell=True, capture_output=True, check=False).stdout.strip()==package
 
 def installPackage(r_version: str, package: str, check_pastFail=True, gitRepo=None):
 	if isInstalled(r_version, package):
