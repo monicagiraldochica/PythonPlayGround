@@ -16,12 +16,13 @@ def parse_arguments():
 	parser.add_argument("--vold", help="Old R version")
 	parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
 	parser.add_argument("--install", help="package to install in vnew")
+	parser.add_argument("--git-repo", help="GitHub repository")
 	args = parser.parse_args()
 
 	v_new = args.vnew or "4.5.0"
 	v_old = args.vold or "4.4.2"
 
-	return [v_new, v_old, args.migrate, args.install]
+	return [v_new, v_old, args.migrate, args.install, args.git_repo]
 
 def savePackageList(r_version: str):
 	fin = open(f"{r_version}.txt", 'w')
@@ -246,13 +247,17 @@ def migrateVersions(v_new, v_old):
 
 def main():
 	os.chdir("/group/rccadmin/work/mkeith/R")
-	[v_new, v_old, migrate, pkg_install] = parse_arguments()
+	[v_new, v_old, migrate, pkg_install, git_repo] = parse_arguments()
 
 	if migrate:
 		migrateVersions(v_new, v_old)
 
 	if pkg_install:
-		installPackage(v_new, pkg_install, check_pastFail=False)
+		if not git_repo:
+			installPackage(v_new, pkg_install, check_pastFail=False)
+		
+		else:
+			installPackage(v_new, pkg_install, check_pastFail=False, gitRepo=git_repo)
 
 if __name__ == "__main__":
     main()
