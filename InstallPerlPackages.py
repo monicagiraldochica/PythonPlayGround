@@ -22,6 +22,7 @@ def check_module(mdl: str) -> int:
 
     except subprocess.CalledProcessError as e:
         msg = (e.stderr or e.stdout or str(e)).strip()
+        print(msg)
         if "Can't locate" in msg:
             return 2 # missing module
         else:
