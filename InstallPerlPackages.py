@@ -132,16 +132,15 @@ def main():
     if input("This script requires Python 3.7 or higher. Are you using the correct version? [y/N]: ").lower().strip() not in ["y", "yes"]:
         sys.exit(1)
 
-    os.chdir("/group/rccadmin/work/mkeith/perl")
     [v_new, v_old, migrate, install] = parse_arguments()
 
     if migrate:
         try:
             # Put the list of modules from the new version in dictionary
-            dic_new = txt2dic(f"{v_new}.txt")
+            dic_new = txt2dic(v_new)
 
             # Put the list of modules from the old version in dictionary
-            dic_old = txt2dic(f"{v_old}.txt")
+            dic_old = txt2dic(v_old)
 
             # Get the list of missing packages
             missing_keys = set(dic_old.keys()) - set(dic_new.keys())
