@@ -39,6 +39,9 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
 
     for mdl in missing_modules:
         status = check_module(mdl)
+        print(mdl)
+        print(status)
+        print(install)
         if status==1 and install:
             print(f"Installing {mdl}")
 
@@ -78,11 +81,12 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
         for mdl,msg in dic3.items():
             print(f"{mdl}: {msg}\n")
 
-        if dic2.items():
+        if dic2.items() and dic3.items():
             print("\nOther:")
         for status,msg in dic2.items():
-            list_txt = "\n\t".join(dic1[status])
-            print(f"{msg}:{list_txt}")
+            if dic1[status]:
+                list_txt = "\n\t".join(dic1[status])
+                print(f"{msg}:\n\t{list_txt}")
 
 def txt2dic(txt, working_dir):
     """
@@ -120,8 +124,11 @@ def parse_arguments():
     parser.add_argument("--working-dir", help="Directory where outputs will be saved", required=True)
     parser.add_argument("--vnew", help="New Perl version")
     parser.add_argument("--vold", help="Old Perl version")
-    parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
-    parser.add_argument("--install", help="package(s) to install in vnew, divided by comma")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
+    group.add_argument("--install", help="package(s) to install in vnew, divided by comma")
+
     args = parser.parse_args()
     
     v_new = args.vnew or "5.42.0"

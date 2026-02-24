@@ -16,9 +16,12 @@ def parse_arguments():
 	parser.add_argument("--working-dir", help="Directory where outputs will be saved", required=True)
 	parser.add_argument("--vnew", help="New R version")
 	parser.add_argument("--vold", help="Old R version")
-	parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
-	parser.add_argument("--install", help="package to install in vnew")
 	parser.add_argument("--git-repo", help="GitHub repository")
+
+	group = parser.add_mutually_exclusive_group(required=True)
+	group.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
+	group.add_argument("--install", help="package to install in vnew")
+
 	args = parser.parse_args()
 	
 	v_new = args.vnew or "4.5.0"
