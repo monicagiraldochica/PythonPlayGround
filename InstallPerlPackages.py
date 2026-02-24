@@ -15,13 +15,14 @@ def check_module(mdl: str) -> int:
     0 -> Module installed
     1 -> Module not installed
     2 -> Module can't be located
+    3 -> Other compilation/runtime errors
     """
     try:
         result = subprocess.run(['perl', f"-M{mdl}", '-e', 'print "Installed\n"'], capture_output=True, text=True, check=True)
         if result.stdout.strip()=="Installed":
             return 0
         
-        result = subprocess.run(["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"])
+        result = subprocess.run(["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"], capture_output=True, text=True, check=True)
         if result.stdout.strip()=="Installed":
             return 0
 
