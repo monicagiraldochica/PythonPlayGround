@@ -39,9 +39,6 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
 
     for mdl in missing_modules:
         status = check_module(mdl)
-        print(mdl)
-        print(status)
-        print(install)
         if status==1 and install:
             print(f"Installing {mdl}")
 
