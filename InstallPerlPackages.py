@@ -18,7 +18,14 @@ def check_module(mdl: str) -> int:
     """
     try:
         result = subprocess.run(['perl', f"-M{mdl}", '-e', 'print "Installed\n"'], capture_output=True, text=True, check=True)
-        return 0 if result.stdout.strip()=="Installed" else 1
+        if result.stdout.strip()=="Installed":
+            return 0
+        
+        result = subprocess.run(["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"])
+        if result.stdout.strip()=="Installed":
+            return 0
+
+        return 1
 
     except subprocess.CalledProcessError as e:
         msg = (e.stderr or e.stdout or str(e)).strip()
