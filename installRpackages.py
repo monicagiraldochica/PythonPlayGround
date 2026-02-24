@@ -13,30 +13,46 @@ import sys
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
-	parser.add_argument("--vnew", help="New R version", required=True)
+	parser.add_argument("--working-dir", help="Directory where outputs will be saved", required=True)
+	parser.add_argument("--vnew", help="New R version")
 	parser.add_argument("--vold", help="Old R version")
 	parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
 	parser.add_argument("--install", help="package to install in vnew")
 	parser.add_argument("--git-repo", help="GitHub repository")
 	args = parser.parse_args()
-
+	
 	v_new = args.vnew or "4.5.0"
 	v_old = args.vold or "4.4.2"
 
-	return [v_new, v_old, args.migrate, args.install, args.git_repo]
+	working_dir = args.working_dir
+	if not os.path.isdir(working_dir):
+		sys.exit(f"{working_dir} doesn't exist")
+	working_dir = working_dir[:-1] if working_dir.endswith("/") else working_dir
+	
+	return [v_new, v_old, args.migrate, args.install, args.git_repo, working_dir]
 
-def savePackageList(r_version: str):
-	fin = open(f"{r_version}.txt", 'w')
+def savePackageList(r_version: str, working_dir: str):
+	try:
+		with open(f"{working_dir}/{r_version}.txt", 'w') as fin:
+			for item in sorted(os.listdir(f"/hpc/apps/R/{r_version}/lib64/R/library/"), key=str.casefold):
+				if not item.startswith("00LOCK"):
+					_ = fin.write(item+"\n")
 
-	for item in sorted(os.listdir(f"/hpc/apps/R/{r_version}/lib64/R/library/"), key=str.casefold):
-		if not item.startswith("00LOCK"):
-			_ = fin.write(item+"\n")
-
-	fin.close()
+	except FileNotFoundError as e:
+		raise RuntimeError(f"File not found: {e}") from e
+	
+	except NotADirectoryError as e:
+		raise RuntimeError(f"Not a directory: {e}") from e
+	
+	except PermissionError as e:
+		raise RuntimeError(f"Permission error: {e}") from e
+	
+	except OSError as e:
+		raise RuntimeError(f"OS error: {e}") from e
 
 # Save the list of packages that are in v_old but not in v_new
-def comparePackages(v_new: str, v_old: str):
-	with open("missing.txt", "w") as f:
+def comparePackages(v_new: str, v_old: str, working_dir: str):
+	with open(f"{working_dir}/missing.txt", "w") as f:
 		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f)
 
 def runRcmd(r_version:str, r_expr: str):
@@ -158,22 +174,22 @@ def installBiocManager(r_version: str, package: str):
 	return [True, f"Successfully installed in R/{r_version} with Bioconductor"]
 
 # Check if a package install had already failed
-def hadFailed(package):
+def hadFailed(package:str, working_dir:str):
 	if not os.path.isfile("fail.txt"):
 		return False
 	
-	cmd = f"grep -F {quote(package)} fail.txt | head -n 1 | cut -d: -f1"
+	cmd = f"grep -F {quote(package)} {working_dir}/fail.txt | head -n 1 | cut -d: -f1"
 	out = subprocess.run(cmd, shell=True, check=False).stdout
 	if out==None:
 		return False
 	return out.strip()==package
 
-def installPackage(r_version: str, package: str, check_pastFail=True, gitRepo=None):
+def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None):
 	if isInstalled(r_version, package):
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
 	
-	if check_pastFail and hadFailed(package):
+	if check_pastFail and hadFailed(package, working_dir):
 		print(f"{package} installation already failed")
 		return [False, ""]
 	
@@ -201,19 +217,19 @@ def saveInstallAttempt(success: bool, message: str):
 	log_path = Path(filename)
 	log_path.open("a", encoding="utf-8").write(line)
 
-def migrateVersions(v_new, v_old):
+def migrateVersions(v_new, v_old, working_dir):
 	# Get the list of packages in the new version
-	savePackageList(v_new)
+	savePackageList(v_new, working_dir)
 
 	# Get the list of packages in the old version
-	savePackageList(v_old)
+	savePackageList(v_old, working_dir)
 
 	# Get the list of packages missing in the new version
-	comparePackages(v_new, v_old)
+	comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of known some missing packages
 	for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
-		[success, msg] = installPackage(v_new, dep)
+		[success, msg] = installPackage(v_new, dep, working_dir)
 		if msg!="":
 			saveInstallAttempt(success, f"{dep}: {msg}")
 
@@ -233,18 +249,18 @@ def migrateVersions(v_new, v_old):
 		"SCPA":"jackbibby1/SCPA"
 	}
 	for pkg,repo in git_pkgs.items():
-		[success, msg] = installPackage(v_new, pkg, gitRepo=repo)
+		[success, msg] = installPackage(v_new, pkg, working_dir, gitRepo=repo)
 		if msg!="":
 			saveInstallAttempt(success, f"{pkg}: {msg}")
 
 	# Install normal packages
-	with open("missing.txt", "r") as fin:
+	with open(f"{working_dir}/missing.txt", "r") as fin:
 		for line in fin:
 			line = line.replace("\n","").replace("> ","")
 			if line.startswith("<") or line[0].isdigit():
 				continue
 
-			installPackage(v_new, line)
+			installPackage(v_new, line, working_dir)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
@@ -286,21 +302,20 @@ def r_mandatory_deps_recursive(r_version: str, package: str, repo_mode: str = "b
 	return [ln for ln in stdout.splitlines() if ln.strip()]
 
 def main():
-	os.chdir("/group/rccadmin/work/mkeith/R")
-	[v_new, v_old, migrate, pkg_install, git_repo] = parse_arguments()
+	[v_new, v_old, migrate, pkg_install, git_repo, working_dir] = parse_arguments()
 
 	if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
 	if migrate:
-		migrateVersions(v_new, v_old)
+		migrateVersions(v_new, v_old, working_dir)
 
 	if pkg_install:
 		if not git_repo:
-			installPackage(v_new, pkg_install, check_pastFail=False)
+			installPackage(v_new, pkg_install, working_dir, check_pastFail=False)
 		
 		else:
-			installPackage(v_new, pkg_install, check_pastFail=False, gitRepo=git_repo)
+			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, gitRepo=git_repo)
 
 if __name__ == "__main__":
     main()

@@ -118,7 +118,7 @@ def txt2dic(txt, working_dir):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install Perl packages on the cluster")
     parser.add_argument("--working-dir", help="Directory where outputs will be saved", required=True)
-    parser.add_argument("--vnew", help="New Perl version", required=True)
+    parser.add_argument("--vnew", help="New Perl version")
     parser.add_argument("--vold", help="Old Perl version")
     parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
     parser.add_argument("--install", help="package(s) to install in vnew, divided by comma")
@@ -126,10 +126,10 @@ def parse_arguments():
     
     v_new = args.vnew or "5.42.0"
     v_old = args.vold or "5.26.1"
-    
+
     working_dir = args.working_dir
     if not os.path.isdir(working_dir):
-        print(f"{working_dir} doesn't exist")
+        sys.exit(f"{working_dir} doesn't exist")
     working_dir = working_dir[:-1] if working_dir.endswith("/") else working_dir
     
     return [v_new, v_old, args.migrate, args.install, working_dir]
