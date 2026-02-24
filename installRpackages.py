@@ -13,7 +13,7 @@ import sys
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
-	parser.add_argument("--vnew", help="New R version")
+	parser.add_argument("--vnew", help="New R version", required=True)
 	parser.add_argument("--vold", help="Old R version")
 	parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
 	parser.add_argument("--install", help="package to install in vnew")

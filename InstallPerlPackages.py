@@ -84,14 +84,15 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
             list_txt = "\n\t".join(dic1[status])
             print(f"{msg}:{list_txt}")
 
-def txt2dic(txt):
+def txt2dic(txt, working_dir):
     """
     Read a tab-delimited file into a dict {key: value}.
     Skips blank lines and lines without at least 2 columns.
     """
     try:
         dic = {}
-        with open(txt, "r") as f:
+        output = f"{working_dir}/{txt}"
+        with open(output, "r") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
@@ -101,46 +102,53 @@ def txt2dic(txt):
                     dic[line[0]] = line[1]
 
     except FileNotFoundError:
-        raise RuntimeError(f"File not found: {txt}")
+        raise RuntimeError(f"File not found: {output}")
 
     except PermissionError:
-        raise RuntimeError(f"No permission to read: {txt}")
+        raise RuntimeError(f"No permission to read: {output}")
 
     except UnicodeDecodeError:
-        raise RuntimeError(f"File is not valid UTF-8: {txt}")
+        raise RuntimeError(f"File is not valid UTF-8: {output}")
 
     except OSError as e:
-        raise RuntimeError(f"Unexpected OS error when opening {txt}: {e}")
+        raise RuntimeError(f"Unexpected OS error when opening {output}: {e}")
 
     return dic
 
 def parse_arguments():
-	parser = argparse.ArgumentParser(description="Install Perl packages on the cluster")
-	parser.add_argument("--vnew", help="New Perl version")
-	parser.add_argument("--vold", help="Old Perl version")
-	parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
-	parser.add_argument("--install", help="package(s) to install in vnew, divided by comma")
-	args = parser.parse_args()
-
-	v_new = args.vnew or "5.42.0"
-	v_old = args.vold or "5.26.1"
-
-	return [v_new, v_old, args.migrate, args.install]
+    parser = argparse.ArgumentParser(description="Install Perl packages on the cluster")
+    parser.add_argument("--working-dir", help="Directory where outputs will be saved", required=True)
+    parser.add_argument("--vnew", help="New Perl version", required=True)
+    parser.add_argument("--vold", help="Old Perl version")
+    parser.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
+    parser.add_argument("--install", help="package(s) to install in vnew, divided by comma")
+    args = parser.parse_args()
+    
+    v_new = args.vnew or "5.42.0"
+    v_old = args.vold or "5.26.1"
+    
+    working_dir = args.working_dir
+    if not os.path.isdir(working_dir):
+        print(f"{working_dir} doesn't exist")
+    working_dir = working_dir[:-1] if working_dir.endswith("/") else working_dir
+    
+    return [v_new, v_old, args.migrate, args.install, working_dir]
 
 def main():
-    print(f"Python version: {sys.version_info}")
-    if input("This script requires Python 3.7 or higher. Are you using the correct version? [y/N]: ").lower().strip() not in ["y", "yes"]:
+    python_info = sys.version_info
+    if (not python_info.major) or (not python_info.minor) or (python_info.major<3) or (python_info.minor<7):
+        print(f"Python version: {sys.version_info}\nThis script requires Python 3.7 or higher.")
         sys.exit(1)
 
-    [v_new, v_old, migrate, install] = parse_arguments()
+    [v_new, v_old, migrate, install, working_dir] = parse_arguments()
 
     if migrate:
         try:
             # Put the list of modules from the new version in dictionary
-            dic_new = txt2dic(v_new)
+            dic_new = txt2dic(v_new, working_dir)
 
             # Put the list of modules from the old version in dictionary
-            dic_old = txt2dic(v_old)
+            dic_old = txt2dic(v_old, working_dir)
 
             # Get the list of missing packages
             missing_keys = set(dic_old.keys()) - set(dic_new.keys())
