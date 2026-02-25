@@ -21,7 +21,7 @@ def check_module(mdl: str) -> int:
         is_dispatcher = mdl.startswith("Log::Report::Dispatcher")
 
         cmd = f"perl -M{mdl} -e print \"Installed\""
-        print(f"Running: {cmd}...\n")
+        print(f"Running: {cmd}\n")
         # capture_output=True: do NOT print the command's output to the terminal
         # text=True: makes stdout and stderr strings instead of bytes
         # check=True: if there's an error, an exception is produced
@@ -31,8 +31,8 @@ def check_module(mdl: str) -> int:
             return 0
         
         elif is_dispatcher:
-            cmd = ["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"]
-            print(f"Running: {cmd}...\n")
+            cmd = f"perl -e use Log::Report (); require {mdl}; print \"Installed\""
+            print(f"Running: {cmd}\n")
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if result.returncode==0 and result.stdout.strip()=="Installed":
                 return 0
@@ -68,7 +68,7 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
                 cmds = [f"cpan -T{mdl}", f"cpanm -T{mdl}"]
                 for i in range(1):
                     cmd = cmds[i]
-                    print(f"\nRunning: {cmd}...")
+                    print(f"\nRunning: {cmd}")
 
                     if i==1:
                         # capture_output=True: do NOT print the command's output to the terminal
