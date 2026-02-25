@@ -189,8 +189,13 @@ def hadFailed(package:str, working_dir:str):
 	
 	return out.strip()==package
 
-def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None, update=False):
-	if (not update) and isInstalled(r_version, package):
+def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, check_pastFail=True, gitRepo=None):
+	package = pkg_install if pkg_install else pkg_update
+	if package is None:
+		print("No package provided")
+		return [False, ""]
+
+	if pkg_install and isInstalled(r_version, package):
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
 	
@@ -234,7 +239,7 @@ def migrateVersions(v_new, v_old, working_dir):
 
 	# Install known dependencies of known some missing packages
 	for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
-		[success, msg] = installPackage(v_new, dep, working_dir)
+		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		if msg!="":
 			saveInstallAttempt(success, f"{dep}: {msg}")
 
@@ -254,7 +259,7 @@ def migrateVersions(v_new, v_old, working_dir):
 		"SCPA":"jackbibby1/SCPA"
 	}
 	for pkg,repo in git_pkgs.items():
-		[success, msg] = installPackage(v_new, pkg, working_dir, gitRepo=repo)
+		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 		if msg!="":
 			saveInstallAttempt(success, f"{pkg}: {msg}")
 
@@ -265,7 +270,7 @@ def migrateVersions(v_new, v_old, working_dir):
 			if line.startswith("<") or line[0].isdigit():
 				continue
 
-			installPackage(v_new, line, working_dir)
+			installPackage(v_new, working_dir, pkg_install=line)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
@@ -331,7 +336,7 @@ def main():
 		print(f"Python version: {major}.{minor}.{micro}\nThis script requires Python 3.7 or higher.")
 		sys.exit(1)
 
-	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, update] = parse_arguments()
+	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update] = parse_arguments()
 
 	# Check R version
 	rVers = getRversion()
@@ -348,12 +353,13 @@ def main():
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir)
 
-	if pkg_install or update:
-		if (not git_repo):
-			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, update=update)
-		
-		else:
-			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, gitRepo=git_repo, update=update)
+	if pkg_install and (not git_repo):
+		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False)	
+	elif pkg_install:
+		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
+
+	if pkg_update:
+		installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
 
 if __name__ == "__main__":
     main()
