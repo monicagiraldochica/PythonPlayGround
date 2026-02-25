@@ -18,23 +18,27 @@ def check_module(mdl: str) -> int:
     3 -> Other compilation/runtime errors
     """
     try:
-        result = subprocess.run(['perl', f"-M{mdl}", '-e', 'print "Installed\n"'], capture_output=True, text=True, check=True)
-        if result.stdout.strip()=="Installed":
+        result = subprocess.run(['perl', f"-M{mdl}", '-e', 'print "Installed\n"'], capture_output=True, text=True)
+        if result.returncode==0 and result.stdout.strip()=="Installed":
             return 0
         
-        result = subprocess.run(["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"], capture_output=True, text=True, check=True)
-        if result.stdout.strip()=="Installed":
-            return 0
+        err = (result.stderr or result.stdout or "").strip()
+        if err:
+            print(err)
+        if "Can't locate" in err:
+            return 2
+        
+        if mdl.startswith("Log::Report::Dispatcher"):
+            result = subprocess.run(["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"], capture_output=True, text=True, check=True)
+            if result.returncode==0 and result.stdout.strip()=="Installed":
+                return 0
 
         return 1
 
     except subprocess.CalledProcessError as e:
         msg = (e.stderr or e.stdout or str(e)).strip()
         print(msg)
-        if "Can't locate" in msg:
-            return 2 # missing module
-        else:
-            return 3 # any other Perl compilation/runtime error
+        return 3 # any other Perl compilation/runtime error
 
 def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt"):
     dic1 = {0:[], 1:[], 2:[], 3:[]}
