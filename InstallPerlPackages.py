@@ -20,7 +20,7 @@ def check_module(mdl: str) -> int:
     try:
         is_dispatcher = mdl.startswith("Log::Report::Dispatcher")
 
-        cmd = f"perl -M{mdl} -e print \"Installed\n\""
+        cmd = f"perl -M{mdl} -e print \"Installed\""
         print(f"Running: {cmd}...\n")
         # capture_output=True: do NOT print the command's output to the terminal
         # text=True: makes stdout and stderr strings instead of bytes
