@@ -190,6 +190,7 @@ def hadFailed(package:str, working_dir:str):
 	return out.strip()==package
 
 def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None, update=False):
+	print("entro")
 	if (not update) and isInstalled(r_version, package):
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
