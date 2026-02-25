@@ -10,6 +10,7 @@ from shlex import quote
 from datetime import date
 from pathlib import Path
 import sys
+import re
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -309,8 +310,9 @@ def r_mandatory_deps_recursive(package, repo_mode="bioc", cran_repo="https://cra
 
 def getRversion():
 	try:
-		result = subprocess.run(["R","--version"], check=True, capture_output=True, text=True)
-		return result.stdout.splitlines()[0]
+		result = subprocess.run(["R","--version"], check=True, capture_output=True, text=True).stdout
+		match = re.search(r"(\d+\.\d+\.\d+)", result)
+		return match.group(1) if match else None
 	
 	except FileNotFoundError:
 		return None
