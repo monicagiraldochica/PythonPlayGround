@@ -20,7 +20,7 @@ def check_module(mdl: str) -> int:
     try:
         is_dispatcher = mdl.startswith("Log::Report::Dispatcher")
 
-        cmd = f"perl -M{mdl} -e print 'Installed'\n"
+        cmd = f"perl -M{mdl} -e print \"Installed\n\""
         print(f"Running: {cmd}...\n")
         # capture_output=True: do NOT print the command's output to the terminal
         # text=True: makes stdout and stderr strings instead of bytes
@@ -31,7 +31,7 @@ def check_module(mdl: str) -> int:
             return 0
         
         elif is_dispatcher:
-            cmd = f"perl -e use Log::Report (); require {mdl}; print 'Installed'\n"
+            cmd = ["perl", "-e", f"use Log::Report (); require {mdl}; print 'Installed\n'"]
             print(f"Running: {cmd}...\n")
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if result.returncode==0 and result.stdout.strip()=="Installed":
