@@ -22,6 +22,7 @@ def parse_arguments():
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
 	group.add_argument("--install", help="package to install in vnew")
+	group.add_argument("--update", help="package to update in vnew")
 
 	args = parser.parse_args()
 	
@@ -33,7 +34,7 @@ def parse_arguments():
 		sys.exit(f"{working_dir} doesn't exist")
 	working_dir = working_dir[:-1] if working_dir.endswith("/") else working_dir
 	
-	return [v_new, v_old, args.migrate, args.install, args.git_repo, working_dir]
+	return [v_new, v_old, args.migrate, args.install, args.git_repo, working_dir, args.update]
 
 def savePackageList(r_version: str, working_dir: str):
 	try:
@@ -188,8 +189,8 @@ def hadFailed(package:str, working_dir:str):
 	
 	return out.strip()==package
 
-def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None):
-	if isInstalled(r_version, package):
+def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None, update=False):
+	if (not update) and isInstalled(r_version, package):
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
 	
@@ -330,7 +331,7 @@ def main():
 		print(f"Python version: {major}.{minor}.{micro}\nThis script requires Python 3.7 or higher.")
 		sys.exit(1)
 
-	[v_new, v_old, migrate, pkg_install, git_repo, working_dir] = parse_arguments()
+	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, update] = parse_arguments()
 
 	# Check R version
 	rVers = getRversion()
@@ -349,10 +350,10 @@ def main():
 
 	if pkg_install:
 		if not git_repo:
-			installPackage(v_new, pkg_install, working_dir, check_pastFail=False)
+			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, update=update)
 		
 		else:
-			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, gitRepo=git_repo)
+			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, gitRepo=git_repo, update=update)
 
 if __name__ == "__main__":
     main()
