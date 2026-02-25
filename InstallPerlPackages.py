@@ -31,7 +31,7 @@ def check_module(mdl: str) -> int:
             return 0
         
         elif is_dispatcher:
-            cmd = f"perl -e use Log::Report (); require {mdl}; print \"Installed\""
+            cmd = f"perl -e 'use Log::Report (); require {mdl}; print \"Installed\"'"
             print(f"Running: {cmd}\n")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
             if result.returncode==0 and result.stdout.strip()=="Installed":
