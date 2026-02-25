@@ -58,9 +58,8 @@ def comparePackages(v_new: str, v_old: str, working_dir: str):
 	with open(f"{working_dir}/missing.txt", "w") as f:
 		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f)
 
-def runRcmd(r_version:str, r_expr: str):
-	module_cmd = f"module load R/{quote(r_version)}"
-	cmd = f"{module_cmd} && Rscript -e {quote(r_expr)}"
+def runRcmd(r_expr: str):
+	cmd = f"Rscript -e {quote(r_expr)}"
 	result = subprocess.run(["bash", "-lc", cmd])
 
 	return [result.returncode, result.stderr, result.stdout]
@@ -69,14 +68,14 @@ def runRcmd(r_version:str, r_expr: str):
 def isInstalled(r_version: str, package: str) -> bool:
 	dir_exists = os.path.isdir(f"/hpc/apps/R/{r_version}/lib64/R/library/{package}/")	
 	r_expr = f'quit(status = if (requireNamespace("{package}", quietly=TRUE)) 0 else 1)'
-	can_be_loaded = (runRcmd(r_version, r_expr)[0] == 0)
+	can_be_loaded = (runRcmd(r_expr)[0] == 0)
 
 	return dir_exists and can_be_loaded
 
 def installWithRscript(r_version: str, package: str):
 	print(f"Installing {package} in R/{r_version} using Rscript...")
 	r_exp = f'install.packages("{package}")'
-	[returncode, stderr, stdout] = runRcmd(r_version, r_exp)
+	[returncode, stderr, stdout] = runRcmd(r_exp)
 
 	if returncode!=0 or not isInstalled(r_version, package):
 		err = (stderr or stdout).strip()
@@ -98,7 +97,7 @@ def installWithTarball(r_version: str, package: str):
 	# Download the latest tarball
 	print(f"Downloading latest source tarball for {package}")
 	r_expr = f'download.packages("{package}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
-	if runRcmd(r_version, r_expr)[0]!=0:
+	if runRcmd(r_expr)[0]!=0:
 		return [False, f"Could not download latest tarball for {package} from cran.r-project.org"]
 
 	matches = sorted(dest.glob(f"{package}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -109,7 +108,7 @@ def installWithTarball(r_version: str, package: str):
 	print(f"Downloaded {tarball} in {dest}")
 
 	# Install tarball
-	cmd = f"module load {quote(r_version)} && R CMD INSTALL {quote(str(tarball))}"
+	cmd = f"R CMD INSTALL {quote(str(tarball))}"
 	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
 
 	if result.returncode!=0 or not isInstalled(r_version, package):
@@ -130,7 +129,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 	msg = ""
 	for opt in ["remotes", "devtools"]:
 		r_expr = f'{opt}::install_github("{repo}")'
-		[returncode, stderr, stdout] = runRcmd(r_version, r_expr)
+		[returncode, stderr, stdout] = runRcmd(r_expr)
 
 		if returncode==0 and isInstalled(r_version, pkg):
 			print(f"{pkg} was successfully installed in R/{r_version} with GitHub ({opt})")
@@ -147,7 +146,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 def installGiotto(r_version: str, giotto:str):
 	print(f"Installing {giotto} in R/{r_version} using Giotto...")
 	r_expr = f'pak::pkg_install("{giotto}")'
-	[returncode, stderr, stdout] = runRcmd(r_version, r_expr)
+	[returncode, stderr, stdout] = runRcmd(r_expr)
 
 	if returncode!=0 or not isInstalled(r_version, giotto):
 		err = (stderr or stdout).strip()
@@ -163,7 +162,7 @@ def installGiotto(r_version: str, giotto:str):
 def installBiocManager(r_version: str, package: str):
 	print(f"Installing {package} in R/{r_version} using Bioconductor...")
 	r_expr = f'BiocManager::install(c("{package}"))'
-	[returncode, stderr, stdout] = runRcmd(r_version, r_expr)
+	[returncode, stderr, stdout] = runRcmd(r_expr)
 
 	if returncode!=0 or not isInstalled(r_version, package):
 		err = (stderr or stdout).strip()
@@ -185,6 +184,7 @@ def hadFailed(package:str, working_dir:str):
 	out = subprocess.run(cmd, shell=True, check=False).stdout
 	if out==None:
 		return False
+	
 	return out.strip()==package
 
 def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None):
@@ -267,12 +267,13 @@ def migrateVersions(v_new, v_old, working_dir):
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
-def r_mandatory_deps_recursive(r_version: str, package: str, repo_mode: str = "bioc", cran_repo: str = "https://cran.r-project.org") -> list[str]:
+def r_mandatory_deps_recursive(package: str, repo_mode: str = "bioc", cran_repo: str = "https://cran.r-project.org") -> list[str]:
 	if repo_mode not in ("cran", "bioc"):
 		raise ValueError("repo_mode must be 'cran' or 'bioc'")
 	
 	if repo_mode == "cran":
 		repo_setup = f'repos <- c(CRAN = "{cran_repo}")'
+
 	else:
 		repo_setup = 'repos <- BiocManager::repositories()'
 		
@@ -293,19 +294,41 @@ def r_mandatory_deps_recursive(r_version: str, package: str, repo_mode: str = "b
 		cat(deps, sep="\\n")
 	""".strip()
 
-	[returncode, stderr, stdout] = runRcmd(r_version, r_expr)
+	[returncode, stderr, stdout] = runRcmd(r_expr)
 	if returncode==2:
 		where = "CRAN" if repo_mode == "cran" else "Bioconductor/CRAN repos"
 		raise ValueError(f"Package '{package}' not found in {where} metadata")
+	
 	if returncode!=0:
 		raise RuntimeError(f"Rscript failed:\n{stderr}")
+	
 	if not stdout:
 		return []
 
 	return [ln for ln in stdout.splitlines() if ln.strip()]
 
+def getRversion():
+	try:
+		result = subprocess.run(["R","--version"], check=True, capture_output=True, text=True)
+		return result.stdout.splitlines()[0]
+	
+	except FileNotFoundError:
+		return None
+	
+	except subprocess.CalledProcessError:
+		return None
+
 def main():
 	[v_new, v_old, migrate, pkg_install, git_repo, working_dir] = parse_arguments()
+
+	# Check R version
+	rVers = getRversion()
+	if rVers is None:
+		print(f"No R loaded. Run: module load R/{v_new}")
+		sys.exit(1)
+	if rVers!=v_new:
+		print(f"Wrong version of R loaded ({rVers}). Need {v_new}.")
+		sys.exit(1)
 
 	if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
