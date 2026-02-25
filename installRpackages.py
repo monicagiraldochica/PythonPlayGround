@@ -267,7 +267,7 @@ def migrateVersions(v_new, v_old, working_dir):
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
-def r_mandatory_deps_recursive(package: str, repo_mode: str = "bioc", cran_repo: str = "https://cran.r-project.org") -> list[str]:
+def r_mandatory_deps_recursive(package, repo_mode="bioc", cran_repo="https://cran.r-project.org"):
 	if repo_mode not in ("cran", "bioc"):
 		raise ValueError("repo_mode must be 'cran' or 'bioc'")
 	
