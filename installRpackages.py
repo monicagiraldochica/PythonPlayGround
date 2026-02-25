@@ -190,7 +190,6 @@ def hadFailed(package:str, working_dir:str):
 	return out.strip()==package
 
 def installPackage(r_version: str, package: str, working_dir:str, check_pastFail=True, gitRepo=None, update=False):
-	print("entro")
 	if (not update) and isInstalled(r_version, package):
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
@@ -349,8 +348,8 @@ def main():
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir)
 
-	if pkg_install:
-		if not git_repo:
+	if pkg_install or update:
+		if (not git_repo):
 			installPackage(v_new, pkg_install, working_dir, check_pastFail=False, update=update)
 		
 		else:
