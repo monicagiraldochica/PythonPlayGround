@@ -25,7 +25,7 @@ def check_module(mdl: str) -> int:
         # capture_output=True: do NOT print the command's output to the terminal
         # text=True: makes stdout and stderr strings instead of bytes
         # check=True: if there's an error, an exception is produced
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True) if is_dispatcher else subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True) if is_logreport else subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
         
         if result.returncode==0 and result.stdout.strip()=="Installed":
             return 0
