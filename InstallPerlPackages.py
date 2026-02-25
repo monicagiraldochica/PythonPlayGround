@@ -18,7 +18,7 @@ def check_module(mdl: str) -> int:
     2 -> Compilation/runtime errors
     """
     try:
-        is_dispatcher = mdl.startswith("Log::Report::Dispatcher")
+        is_logreport = ("Log::Report" in mdl) or ("LogReport" in mdl)
 
         cmd = f"perl -M{mdl} -e print \"Installed\""
         print(f"Running: {cmd}\n")
@@ -30,7 +30,7 @@ def check_module(mdl: str) -> int:
         if result.returncode==0 and result.stdout.strip()=="Installed":
             return 0
         
-        elif is_dispatcher:
+        elif is_logreport:
             cmd = f"perl -e 'use Log::Report (); require {mdl}; print \"Installed\"'"
             print(f"Running: {cmd}\n")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
