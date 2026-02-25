@@ -177,7 +177,19 @@ def parse_arguments():
     
     return [v_new, v_old, args.migrate, args.install, working_dir]
 
+def get_perl_version():
+    try:
+        v = subprocess.check_output(["perl", "-e", "print $^V"], text=True).strip()
+        return v.lstrip("v")
+    
+    except FileNotFoundError:
+        return None
+    
+    except subprocess.CalledProcessError:
+        return None
+
 def main():
+    # Check python version
     python_info = sys.version_info
     major = python_info.major or 0
     minor = python_info.minor or 0
@@ -188,13 +200,22 @@ def main():
 
     [v_new, v_old, migrate, install, working_dir] = parse_arguments()
 
+    # Check perl version
+    perl_version = get_perl_version()
+    if perl_version is None:
+        print("Perl module is not loaded")
+        sys.exit(1)
+    elif perl_version!=v_new:
+        print(f"Wrong perl version loaded ({perl_version}). Need {v_new}")
+        sys.exit(1)
+
     if migrate:
         try:
             # Put the list of modules from the new version in dictionary
-            dic_new = txt2dic(v_new, working_dir)
+            dic_new = txt2dic(f"{v_new}.txt", working_dir)
 
             # Put the list of modules from the old version in dictionary
-            dic_old = txt2dic(v_old, working_dir)
+            dic_old = txt2dic(f"{v_old}.txt", working_dir)
 
             # Get the list of missing packages
             missing_keys = set(dic_old.keys()) - set(dic_new.keys())
