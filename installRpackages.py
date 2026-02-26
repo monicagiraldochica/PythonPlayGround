@@ -426,10 +426,10 @@ def main():
 				print(f"{pkg},{msg}\n")
 			if not success:
 				with open(file1, "a") as f1:
-					f1.write(f"{pkg},{msg.replace('\n',' ')}"+"\n")
+					f1.write(f"{pkg},{msg.replace('\n',' ')}")
 			else:
 				with open(file2,'a') as f2:
-					f2.write(f"{pkg},{msg.replace('\n',' ')}"+"\n")
+					f2.write(f"{pkg},{msg.replace('\n',' ')}")
 
 if __name__ == "__main__":
     main()
