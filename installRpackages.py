@@ -11,6 +11,7 @@ from datetime import date
 from pathlib import Path
 import sys
 import re
+import pandas as pd
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -189,7 +190,7 @@ def hadFailed(package:str, working_dir:str):
 	
 	return out.strip()==package
 
-def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, check_pastFail=True, gitRepo=None):
+def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, check_pastFail=True, gitRepo=None, bioc=False):
 	package = pkg_install if pkg_install else pkg_update
 	if package is None:
 		print("No package provided")
@@ -209,13 +210,15 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 	if package.endswith("/Giotto"):
 		return installGiotto(r_version, package)
 	
-	[success, msg] = installWithRscript(r_version, package)
-	if success:
-		return [success, msg]
+	if (not bioc):
+		[success, msg] = installWithRscript(r_version, package)
+		if success:
+			return [success, msg]
 	
-	[success, msg2] = installWithTarball(r_version, package)
-	if success:
-		return [success, ", ".join(msg, msg2)]
+	if (not bioc):
+		[success, msg2] = installWithTarball(r_version, package)
+		if success:
+			return [success, ", ".join(msg, msg2)]
 
 	[success, msg3] = installBiocManager(r_version, package)
 	return [success, ", ".join(msg, msg2, msg3)]
@@ -226,6 +229,27 @@ def saveInstallAttempt(success: bool, message: str):
 	filename = f"{'success' if success else 'failed'}_{today}.txt"
 	log_path = Path(filename)
 	log_path.open("a", encoding="utf-8").write(line)
+
+def isBiocPackage(pkg_name):
+	r_code = f'''
+		if (!requireNamespace("BiocManager", quietly=TRUE)) {{
+			cat("UNKNOWN"); quit(status=0)
+		}}
+
+		avail <- tryCatch(BiocManager::available(), error=function(e) character())
+		cat(if ("{pkg_name}" %in% avail) "YES" else "NO")
+	'''
+
+	try:
+		result = subprocess.run(["R", "--slave", "-e", r_code], capture_output=True, text=True, check=True)
+		out = (result.stdout or "").strip()
+		return out=="YES"
+	
+	except FileNotFoundError:
+		return False
+	
+	except subprocess.CalledProcessError:
+		return False
 
 def migrateVersions(v_new, v_old, working_dir):
 	# Get the list of packages in the new version
@@ -263,14 +287,18 @@ def migrateVersions(v_new, v_old, working_dir):
 		if msg!="":
 			saveInstallAttempt(success, f"{pkg}: {msg}")
 
-	# Install normal packages
+	# Install other packages
 	with open(f"{working_dir}/missing.txt", "r") as fin:
 		for line in fin:
 			line = line.replace("\n","").replace("> ","")
 			if line.startswith("<") or line[0].isdigit():
 				continue
 
-			installPackage(v_new, working_dir, pkg_install=line)
+			if isBiocPackage(line):
+				installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+
+			else:
+				installPackage(v_new, working_dir, pkg_install=line)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
@@ -359,7 +387,11 @@ def main():
 		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
 
 	if pkg_update:
-		installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
+		if pkg_update.endswith(".csv"):
+			df = pd.read_csv(pkg_update, index_col=0)
+			print(df)
+
+		#installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
 
 if __name__ == "__main__":
     main()
