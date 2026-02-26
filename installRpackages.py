@@ -62,10 +62,17 @@ def comparePackages(v_new: str, v_old: str, working_dir: str):
 		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f)
 
 def runRcmd(r_expr: str):
-	cmd = f"Rscript -e {quote(r_expr)}"
-	result = subprocess.run(["bash", "-lc", cmd])
-
-	return [result.returncode, result.stderr, result.stdout]
+	try:
+		cmd = f"Rscript -e {quote(r_expr)}"
+		# capture_output=True: do NOT print the command's output to the terminal
+		# text=True: makes stdout and stderr strings instead of bytes
+		# check=True: if there's an error, an exception is produced
+		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, text=True, check=True)
+		return [result.returncode, result.stderr, result.stdout]
+	
+	except subprocess.CalledProcessError as e:
+		err = (e.stderr or e.stdout or str(e)).strip()
+		return [2, err, ""]
 
 # Check if a package exists and is correctly installed
 def isInstalled(r_version: str, package: str) -> bool:
@@ -75,37 +82,34 @@ def isInstalled(r_version: str, package: str) -> bool:
 
 	return dir_exists and can_be_loaded
 
-def installWithRscript(r_version: str, package: str):
-	print(f"Installing {package} in R/{r_version} using Rscript...")
-	r_exp = f'install.packages("{package}")'
+def installWithRscript(r_version: str, pkg: str):
+	print(f"Installing {pkg} in R/{r_version} using Rscript...")
+	r_exp = f'install.packages("{pkg}")'
 	[returncode, stderr, stdout] = runRcmd(r_exp)
 
-	if returncode!=0 or not isInstalled(r_version, package):
+	if returncode!=0 or not isInstalled(r_version, pkg):
 		err = (stderr or stdout).strip()
 		if err:
-			print(err)
-			return [False, f"Installation using Rscript failed with error: {err}"]
+			return [False, f"Installation of {pkg} using Rscript failed with error: {err}"]
 		else:
-			print(f"Installation using Rscript failed with return code {returncode} (no output captured)")
-			return [False, f"Installation using Rscript failed with return code {returncode} (no output captured)"]
+			return [False, f"Installation of {pkg} using Rscript failed with return code {returncode} (no output captured)"]
 	
-	print(f"{package} was successfully installed in R/{r_version} with Rscript")
-	return [True, f"Successfully installed in R/{r_version} with Rscript"]
+	return [True, f"Successfully installed {pkg} in R/{r_version} with Rscript"]
 
-def installWithTarball(r_version: str, package: str):
-	print(f"Installing {package} in R/{r_version} using Tarball...")
+def installWithTarball(r_version: str, pkg: str):
+	print(f"Installing {pkg} in R/{r_version} using Tarball...")
 	dest = Path(f"/adminfs/builds/R-{r_version}/packages")
 	dest.mkdir(parents=True, exist_ok=True)
 
 	# Download the latest tarball
-	print(f"Downloading latest source tarball for {package}")
-	r_expr = f'download.packages("{package}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
+	print(f"Downloading latest source tarball for {pkg}")
+	r_expr = f'download.packages("{pkg}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
 	if runRcmd(r_expr)[0]!=0:
-		return [False, f"Could not download latest tarball for {package} from cran.r-project.org"]
+		return [False, f"Could not download latest tarball for {pkg} from cran.r-project.org"]
 
-	matches = sorted(dest.glob(f"{package}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+	matches = sorted(dest.glob(f"{pkg}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
 	if not matches:
-		return [False, f"No tarball found for {package}"]
+		return [False, f"No tarball found for {pkg}"]
 	
 	tarball = matches[0]
 	print(f"Downloaded {tarball} in {dest}")
@@ -114,17 +118,14 @@ def installWithTarball(r_version: str, package: str):
 	cmd = f"R CMD INSTALL {quote(str(tarball))}"
 	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
 
-	if result.returncode!=0 or not isInstalled(r_version, package):
+	if result.returncode!=0 or not isInstalled(r_version, pkg):
 		err = (result.stderr or result.stdout).strip()
 		if err:
-			print(err)
-			return [False, f"Installation using tarball failed with error: {err}"]
+			return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
 		else:
-			print(f"Installation using tarball failed with return code {result.returncode} (no output captured)")
-			return [False, f"Installation tarball Rscript failed with return code {result.returncode} (no output captured)"]
+			return [False, f"Installation of {pkg} uwing tarball Rscript failed with return code {result.returncode} (no output captured)"]
 	
-	print(f"{package} was successfully installed in R/{r_version} with tarball")
-	return [True, f"Successfully installed in R/{r_version} with tarball"]
+	return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 
 def installFromGitHub(r_version: str, repo: str, pkg: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
@@ -135,48 +136,44 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 		[returncode, stderr, stdout] = runRcmd(r_expr)
 
 		if returncode==0 and isInstalled(r_version, pkg):
-			print(f"{pkg} was successfully installed in R/{r_version} with GitHub ({opt})")
-			return [True, f"Successfully installed in R/{r_version} with GitHub {opt}"]
+			return [True, f"Successfully installed {pkg} in R/{r_version} with GitHub {opt}"]
 		
 		err = (stderr or stdout).strip()
 		if err:
 			",".join(msg, err)
 
 	if msg!="":
-		return [False, f"Installation using GitHub failed with error: {err}"]
-	return [False, f"Installation using GitHub failed (no output captured)"]
+		return [False, f"Installation of {pkg} using GitHub failed with error: {err}"]
+	
+	return [False, f"Installation of {pkg} using GitHub failed (no output captured)"]
 
-def installGiotto(r_version: str, giotto:str):
-	print(f"Installing {giotto} in R/{r_version} using Giotto...")
-	r_expr = f'pak::pkg_install("{giotto}")'
+def installGiotto(r_version: str, giotto_pkg:str):
+	print(f"Installing {giotto_pkg} in R/{r_version} using Giotto...")
+	r_expr = f'pak::pkg_install("{giotto_pkg}")'
 	[returncode, stderr, stdout] = runRcmd(r_expr)
 
-	if returncode!=0 or not isInstalled(r_version, giotto):
+	if returncode!=0 or not isInstalled(r_version, giotto_pkg):
 		err = (stderr or stdout).strip()
 		if err:
-			return [False, f"Installation using Giotto failed with error: {err}"]
+			return [False, f"Installation of {giotto_pkg} using Giotto failed with error: {err}"]
 		else:
-			print(f"Installation using Giotto failed with return code {returncode} (no output captured)")
-			return [False, f"Installation using Giotto failed with return code {returncode} (no output captured)"]
+			return [False, f"Installation of {giotto_pkg} using Giotto failed with return code {returncode} (no output captured)"]
 	
-	print(f"{giotto} was successfully installed in R/{r_version} with Giotto")
-	return [True, f"Successfully installed in R/{r_version} with Giotto"]
+	return [True, f"Successfully installed {giotto_pkg} in R/{r_version} with Giotto"]
 
-def installBiocManager(r_version: str, package: str):
-	print(f"Installing {package} in R/{r_version} using Bioconductor...")
-	r_expr = f'BiocManager::install(c("{package}"))'
+def installBiocManager(r_version: str, pkg: str):
+	print(f"Installing {pkg} in R/{r_version} using Bioconductor...")
+	r_expr = f'BiocManager::install(c("{pkg}"))'
 	[returncode, stderr, stdout] = runRcmd(r_expr)
 
-	if returncode!=0 or not isInstalled(r_version, package):
+	if returncode!=0 or not isInstalled(r_version, pkg):
 		err = (stderr or stdout).strip()
 		if err:
-			return [False, f"Installation using Bioconductor failed with error: {err}"]
+			return [False, f"Installation of {pkg} using Bioconductor failed with error: {err}"]
 		else:
-			print(f"Installation using Bioconductor failed with return code {returncode} (no output captured)")
-			return [False, f"Installation using Bioconductor failed with return code {returncode} (no output captured)"]
-	
-	print(f"{package} was successfully installed in R/{r_version} with Bioconductor")
-	return [True, f"Successfully installed in R/{r_version} with Bioconductor"]
+			return [False, f"Installation of {pkg} using Bioconductor failed with return code {returncode} (no output captured)"]
+		
+	return [True, f"Successfully installed {pkg} in R/{r_version} with Bioconductor"]
 
 # Check if a package install had already failed
 def hadFailed(package:str, working_dir:str):
@@ -266,6 +263,7 @@ def migrateVersions(v_new, v_old, working_dir):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		if msg!="":
 			saveInstallAttempt(success, f"{dep}: {msg}")
+			print(msg)
 
 	# Install Git packages
 	git_pkgs = {
@@ -286,6 +284,7 @@ def migrateVersions(v_new, v_old, working_dir):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 		if msg!="":
 			saveInstallAttempt(success, f"{pkg}: {msg}")
+			print(msg)
 
 	# Install other packages
 	with open(f"{working_dir}/missing.txt", "r") as fin:
@@ -295,10 +294,13 @@ def migrateVersions(v_new, v_old, working_dir):
 				continue
 
 			if isBiocPackage(line):
-				installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
 
 			else:
-				installPackage(v_new, working_dir, pkg_install=line)
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
+
+			if msg!="":
+				print(msg)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
@@ -413,10 +415,18 @@ def main():
 					other_packages+=[pkg]
 
 		for pkg in bioc_packages:
-			installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=True)
+			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=True)
+			if msg!="":
+				print(msg)
+			if not success:
+				break
 
 		for pkg in other_packages:
-			installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False)
+			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False)
+			if msg!="":
+				print(msg)
+			if not success:
+				break
 
 if __name__ == "__main__":
     main()
