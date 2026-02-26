@@ -23,7 +23,7 @@ def parse_arguments():
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
 	group.add_argument("--install", help="package to install in vnew")
-	group.add_argument("--update", help="package to update in vnew")
+	group.add_argument("--update", help="package(s) to update in vnew divided by comma, or path of csv file with the following columns: Index, Package, LibPath (not used), Install_Path (not used), Built (not used), ReposVer (not used), Repository.")
 
 	args = parser.parse_args()
 	
