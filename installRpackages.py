@@ -418,12 +418,18 @@ def main():
 				else:
 					other_packages+=[pkg]
 
+		file1 = f"{working_dir}/fail_Feb26.csv"
+		file2 = f"{working_dir}/installed_Feb26.csv"
 		for pkg in bioc_packages+other_packages:
 			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=(pkg in bioc_packages))
 			if msg!="":
-				print(msg)
+				print(f"{pkg},{msg}\n")
 			if not success:
-				break
+				with open(file1, "a") as f1:
+					f1.write(f"{pkg},{msg.replace("\n"," ")}\n")
+			else:
+				with open(file2,'a') as f2:
+					f2.write(f"{pkg},{msg.replace("\n"," ")}\n")
 
 if __name__ == "__main__":
     main()
