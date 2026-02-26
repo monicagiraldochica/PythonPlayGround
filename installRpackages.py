@@ -398,7 +398,7 @@ def main():
 
 			df = pd.read_csv(pkg_update, index_col=0)
 			for _,line in df.iterrows():
-				print(f"{line}")
+				print(f"{line.Package},{line.Repository}")
 				break
 
 		#else:
