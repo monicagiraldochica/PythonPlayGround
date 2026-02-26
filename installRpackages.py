@@ -387,6 +387,8 @@ def main():
 		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
 
 	if pkg_update:
+		bioc_packages = []
+		other_packages = []
 		if pkg_update.endswith(".csv"):
 			if (not os.path.isfile(pkg_update)) and os.path.isfile(f"{working_dir}/{pkg_update}"):
 				pkg_update = f"{working_dir}/{pkg_update}"
@@ -396,8 +398,10 @@ def main():
 
 			df = pd.read_csv(pkg_update, index_col=0)
 			for index,line in df.items():
-				print(f"{line["Package"]},{line["Repository"]}")
+				print(f"{line['Package']},{line['Repository']}")
 
+		#else:
+		#isBiocPackage(pkg_name)
 		#installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
 
 if __name__ == "__main__":
