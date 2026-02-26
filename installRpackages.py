@@ -403,7 +403,7 @@ def main():
 				if "bioconductor" in repo:
 					bioc_packages+=[pkg]
 				else:
-					other_packages+=[pgk]
+					other_packages+=[pkg]
 
 		else:
 			for pkg in pkg_update.split(","):
@@ -413,10 +413,10 @@ def main():
 					other_packages+=[pkg]
 
 		for pkg in bioc_packages:
-			installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False, bioc=True)
+			installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=True)
 
 		for pkg in other_packages:
-			installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
+			installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False)
 
 if __name__ == "__main__":
     main()
