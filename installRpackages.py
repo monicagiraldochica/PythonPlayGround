@@ -211,11 +211,15 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 		[success, msg] = installWithRscript(r_version, package)
 		if success:
 			return [success, msg]
+	else:
+		msg = ""
 	
 	if (not bioc):
 		[success, msg2] = installWithTarball(r_version, package)
 		if success:
 			return [success, ", ".join(msg, msg2)]
+	else:
+		msg2=""
 
 	[success, msg3] = installBiocManager(r_version, package)
 	return [success, ", ".join(msg, msg2, msg3)]
