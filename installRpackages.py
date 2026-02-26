@@ -388,8 +388,15 @@ def main():
 
 	if pkg_update:
 		if pkg_update.endswith(".csv"):
+			if (not os.path.isfile(pkg_update)) and os.path.isfile(f"{working_dir}/{pkg_update}"):
+				pkg_update = f"{working_dir}/{pkg_update}"
+			if (not os.path.isfile(pkg_update)):
+				print(f"Can't find {pkg_update} nor {working_dir}/{pkg_update}")
+				sys.exit(1)
+
 			df = pd.read_csv(pkg_update, index_col=0)
-			print(df)
+			for index,line in df.items():
+				print(f"{line["Package"]},{line["Repository"]}")
 
 		#installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
 
