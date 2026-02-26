@@ -414,15 +414,8 @@ def main():
 				else:
 					other_packages+=[pkg]
 
-		for pkg in bioc_packages:
-			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=True)
-			if msg!="":
-				print(msg)
-			if not success:
-				break
-
-		for pkg in other_packages:
-			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False)
+		for pkg in bioc_packages+other_packages:
+			[success, msg] = installPackage(v_new, working_dir, pkg_update=pkg, check_pastFail=False, bioc=(pkg in bioc_packages))
 			if msg!="":
 				print(msg)
 			if not success:
