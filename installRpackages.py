@@ -399,6 +399,7 @@ def main():
 			df = pd.read_csv(pkg_update, index_col=0)
 			for index,line in df.items():
 				print(f"{line}")
+				break
 
 		#else:
 		#isBiocPackage(pkg_name)
