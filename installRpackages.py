@@ -397,7 +397,7 @@ def main():
 				sys.exit(1)
 
 			df = pd.read_csv(pkg_update, index_col=0)
-			for index,line in df.items():
+			for _,line in df.iterrows():
 				print(f"{line}")
 				break
 
