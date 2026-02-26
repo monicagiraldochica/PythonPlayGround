@@ -398,7 +398,7 @@ def main():
 
 			df = pd.read_csv(pkg_update, index_col=0)
 			for index,line in df.items():
-				print(f"{line['Package']},{line['Repository']}")
+				print(f"{line}")
 
 		#else:
 		#isBiocPackage(pkg_name)
