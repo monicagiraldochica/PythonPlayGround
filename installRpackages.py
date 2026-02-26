@@ -398,12 +398,25 @@ def main():
 
 			df = pd.read_csv(pkg_update, index_col=0)
 			for _,line in df.iterrows():
-				print(f"{line.Package},{line.Repository}")
-				break
+				pkg = line.Package
+				repo = line.Repository
+				if "bioconductor" in repo:
+					bioc_packages+=[pkg]
+				else:
+					other_packages+=[pgk]
 
-		#else:
-		#isBiocPackage(pkg_name)
-		#installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
+		else:
+			for pkg in pkg_update.split(","):
+				if isBiocPackage(pkg):
+					bioc_packages+=[pkg]
+				else:
+					other_packages+=[pkg]
+
+		for pkg in bioc_packages:
+			installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False, bioc=True)
+
+		for pkg in other_packages:
+			installPackage(v_new, working_dir, pkg_update=pkg_update, check_pastFail=False)
 
 if __name__ == "__main__":
     main()
