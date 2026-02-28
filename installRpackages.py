@@ -366,8 +366,9 @@ def main():
 	major = python_info.major or 0
 	minor = python_info.minor or 0
 	micro = python_info.micro or 0
+	print(f"Python version: {major}.{minor}.{micro}\n")
 	if major==0 or minor==0 or major<3 or minor<7:
-		print(f"Python version: {major}.{minor}.{micro}\nThis script requires Python 3.7 or higher.")
+		print("This script requires Python 3.7 or higher.")
 		sys.exit(1)
 
 	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update] = parse_arguments()
@@ -389,8 +390,10 @@ def main():
 
 	if pkg_install and (not git_repo):
 		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False)	
+
 	elif pkg_install:
-		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
+		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
+		print(f"{success}: {msg}")
 
 	if pkg_update:
 		bioc_packages = []

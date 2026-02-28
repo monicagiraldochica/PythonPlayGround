@@ -194,8 +194,9 @@ def main():
     major = python_info.major or 0
     minor = python_info.minor or 0
     micro = python_info.micro or 0
+    print(f"Python version: {major}.{minor}.{micro}\n")
     if major==0 or minor==0 or major<3 or minor<7:
-        print(f"Python version: {major}.{minor}.{micro}\nThis script requires Python 3.7 or higher.")
+        print("This script requires Python 3.7 or higher.")
         sys.exit(1)
 
     [v_new, v_old, migrate, install, working_dir] = parse_arguments()
@@ -205,6 +206,7 @@ def main():
     if perl_version is None:
         print("Perl module is not loaded")
         sys.exit(1)
+        
     elif perl_version!=v_new:
         print(f"Wrong perl version loaded ({perl_version}). Need {v_new}")
         sys.exit(1)
