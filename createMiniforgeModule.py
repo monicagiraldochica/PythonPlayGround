@@ -44,9 +44,13 @@ def main():
     [main_package, version] = parse_arguments()
 
     # Check if the module is already installed
-    print(availableModules("python"))
-    print(availableModules("hicexplorer"))
-    print(availableModules("baqlava"))
+    ml_avail = availableModules(main_package)
+    if f"{main_package}/{version}" in ml_avail:
+        print(f"Good news! {main_package}/{version} is already installed!")
+        sys.exit(1)
+    elif len(ml_avail)>0 and input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}.\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
+        sys.exit(1)
+    print("proceed")
 
 if __name__ == "__main__":
     main()
