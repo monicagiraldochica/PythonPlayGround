@@ -30,13 +30,9 @@ def availableModules(pkg):
     cmd = f"module avail {pkg}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
-    print(f"out: {out}")
     matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', out)
-    print(f"match: {matches}")
-    #pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
-    #matches = pat.findall(out)
 
-    #return matches if matches else []
+    return matches
 
 def main():
     # Check conda version
@@ -48,9 +44,9 @@ def main():
     [main_package, version] = parse_arguments()
 
     # Check if the module is already installed
-    #print(availableModules("hicexplorer"))
-    availableModules("python")
-    #print(availableModules("baqlava"))
+    print(availableModules("python"))
+    print(availableModules("hicexplorer"))
+    print(availableModules("baqlava"))
 
 if __name__ == "__main__":
     main()
