@@ -27,7 +27,7 @@ def getCondaVersion():
         return None
 
 def availableModules(pkg):
-    result = subprocess.run(["ml", "avail", pkg], check=True, capture_output=True, text=True).stdout
+    result = subprocess.run(["module", "avail", pkg], check=True, capture_output=True, text=True).stdout
     pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
     matches = pat.findall(result)
 
