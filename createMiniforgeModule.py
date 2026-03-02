@@ -49,7 +49,7 @@ def main():
 
     # Check if the module is already installed
     #print(availableModules("hicexplorer"))
-    availableModules("hicexplorer")
+    availableModules("python")
     #print(availableModules("baqlava"))
 
 if __name__ == "__main__":
