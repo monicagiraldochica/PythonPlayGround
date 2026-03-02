@@ -46,5 +46,5 @@ def main():
     print(availableModules("hicexplorer"))
     print(availableModules("baqlava"))
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
