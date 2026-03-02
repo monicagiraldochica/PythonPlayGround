@@ -5,6 +5,7 @@ import subprocess
 import sys
 import argparse
 import re
+import os
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -34,13 +35,22 @@ def availableModules(pkg):
 
     return matches
 
-def downloadedVersions(pkg):
-    cmd = "ls -1 /hpc/apps/miniforge/envs"
+def contentFolder(path):
+    path = path[:-1] if path.endswith("/") else path
+    cmd = f"ls -1 {path}"
+    result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
+    out = (result.stdout or "") + (result.stderr or "")
+
+    return out
+
+def downloadedMiniforgeVersions(pkg, path):
+    path = path[:-1] if path.endswith("/") else path
+    cmd = f"ls -1 {path}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
     names = re.findall(rf'^{re.escape(pkg)}-[^/\s]+$', out, flags=re.MULTILINE)
 
-    return [f"/hpc/apps/miniforge/envs/{name}" for name in names]
+    return [f"{path}/{name}" for name in names]
 
 def main():
     # Check conda version
@@ -56,12 +66,29 @@ def main():
     if f"{main_package}/{version}" in ml_avail:
         print(f"Good news! {main_package}/{version} is already installed!")
         sys.exit(1)
-    elif len(ml_avail)>0 and input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
-        sys.exit(1)
-    
-    print(downloadedVersions("hicexplorer"))
-    print(downloadedVersions("python"))
-    print(downloadedVersions("baqlava"))
+    elif len(ml_avail)>0:
+        if input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
+            sys.exit(1)
+    else:
+        downloads = downloadedMiniforgeVersions(main_package, "/hpc/apps/miniforge/envs")
+        if len(downloads)>0:
+            ml_folder = f"/hpc/modulefiles/{main_package}"
+            msg = f"A previous miniforge environment was created for {main_package} ({', '.join(downloads)}), "
+            if os.path.isdir(ml_folder):
+                msg+="but not the module.\nDo you want to proceed? [y/N]: "
+            else:
+                msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "
+
+            if input(msg).strip().lower() not in ("yes", "y"):
+                sys.exit()
+
+        elif os.path.isdir(f"/hpc/apps/{main_package}"):
+            msg = f"{main_package} was previously downloaded in /hpc/apps, outside miniforge, but no module was created.\nDo you want to proceed? [y/N]: "
+
+            if input(msg).strip().lower() not in ("yes", "y"):
+                sys.exit()
+
+    print(contentFolder("/hpc/apps/miniforge/envs/hicexplorer-3.7.6"))
 
 if __name__ == "__main__":
     main()
