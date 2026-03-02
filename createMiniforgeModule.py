@@ -30,9 +30,9 @@ def availableModules(pkg):
     cmd = f"module avail {pkg}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
-    print(out)
+    print(f"out: {out}")
     match = re.search(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', out)
-    print(match)
+    print(f"match: {match}")
     #pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
     #matches = pat.findall(out)
 
