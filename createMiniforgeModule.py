@@ -59,9 +59,9 @@ def main():
     elif len(ml_avail)>0 and input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
         sys.exit(1)
     
-    downloadedVersions("hicexplorer")
-    downloadedVersions("python")
-    downloadedVersions("baqlava")
+    print(downloadedVersions("hicexplorer"))
+    print(downloadedVersions("python"))
+    print(downloadedVersions("baqlava"))
 
 if __name__ == "__main__":
     main()
