@@ -31,8 +31,8 @@ def availableModules(pkg):
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
     print(f"out: {out}")
-    versions = re.findall(rf'\b{re.escape(pkg)}/([^\s]+)', out)
-    print(f"match: {versions}")
+    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', out)
+    print(f"match: {matches}")
     #pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
     #matches = pat.findall(out)
 
