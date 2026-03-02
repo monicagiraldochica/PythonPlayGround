@@ -31,7 +31,7 @@ def availableModules(pkg):
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
     print(f"out: {out}")
-    match = re.search(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', out)
+    match = re.search(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', out, flags=re.MULTILINE)
     print(f"match: {match}")
     #pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
     #matches = pat.findall(out)
@@ -48,7 +48,8 @@ def main():
     [main_package, version] = parse_arguments()
 
     # Check if the module is already installed
-    print(availableModules("hicexplorer"))
+    #print(availableModules("hicexplorer"))
+    availableModules("hicexplorer")
     #print(availableModules("baqlava"))
 
 if __name__ == "__main__":
