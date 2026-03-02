@@ -34,6 +34,14 @@ def availableModules(pkg):
 
     return matches
 
+def downloadedVersions(pkg):
+    cmd = "ls -1 /hpc/apps/miniforge/envs"
+    result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
+    out = (result.stdout or "") + (result.stderr or "")
+    names = re.findall(rf'^{re.escape(pkg)}-[^/\s]+$', out, flags=re.MULTILINE)
+
+    return [f"/hpc/apps/miniforge/envs/{name}" for name in names]
+
 def main():
     # Check conda version
     rVers = getCondaVersion()
@@ -48,9 +56,12 @@ def main():
     if f"{main_package}/{version}" in ml_avail:
         print(f"Good news! {main_package}/{version} is already installed!")
         sys.exit(1)
-    elif len(ml_avail)>0 and input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}.\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
+    elif len(ml_avail)>0 and input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
         sys.exit(1)
-    print("proceed")
+    
+    downloadedVersions("hicexplorer")
+    downloadedVersions("python")
+    downloadedVersions("baqlava")
 
 if __name__ == "__main__":
     main()
