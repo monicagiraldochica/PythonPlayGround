@@ -5,7 +5,6 @@ import subprocess
 import sys
 import argparse
 import re
-import shlex
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -28,13 +27,14 @@ def getCondaVersion():
         return None
 
 def availableModules(pkg):
-    cmd = f"module avail {shlex.quote(pkg)}"
+    cmd = f"module avail {pkg}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
-    out = (result.stdout or "") + (result.stderr or "")
-    pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
-    matches = pat.findall(out)
+    print(result)
+    #out = (result.stdout or "") + (result.stderr or "")
+    #pat = re.compile(rf'^{re.escape(pkg)}/\d+(?:\.\d+)*\s*$', re.MULTILINE)
+    #matches = pat.findall(out)
 
-    return matches if matches else []
+    #return matches if matches else []
 
 def main():
     # Check conda version
