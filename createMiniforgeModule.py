@@ -70,6 +70,8 @@ def main():
 
     # The module is already installed
     ml_avail = availableModules(main_package)
+    create_env = True
+
     if f"{main_package}/{version}" in ml_avail:
         print(f"Good news! {main_package}/{version} is already installed!")
         sys.exit(1)
@@ -89,6 +91,7 @@ def main():
 
             # The miniforge environment was previously created, but the module not
             if os.path.isdir(ml_folder):
+                create_env = False
                 msg+="but not the module.\nDo you want to proceed? [y/N]: "
 
             # The module was created at some point, but it was disabled
@@ -103,6 +106,11 @@ def main():
 
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit()
+
+    if create_env:
+        env_name = f"{main_package}-{version}"
+        print(f"conda create -n {env_name}")
+        subprocess.run(["conda", "create", "-y", "-n", env_name, f"{main_package}={version}"], check=True)
                 
 if __name__ == "__main__":
     main()
