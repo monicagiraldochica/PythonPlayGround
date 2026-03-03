@@ -6,7 +6,6 @@ import sys
 import argparse
 import re
 import os
-from pathlib import Path
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -130,13 +129,18 @@ def main():
         repos = input("https git repos divided by comma: ").split(",")
         if len(repos)>0:
             build_path = f"/adminfs/builds/{main_package}"
-            dest = Path(build_path)
-            dest.parent.mkdir(parents=True, exist_ok=True)
+            if not os.path.isdir(build_path):
+                os.mkdir(build_path)
+            build_path = f"{build_path}/downloads"
+            if not os.path.isdir(build_path):
+                os.mkdir(build_path)
 
             for repo in repos:
-                repo_name = Path(repo).stem
-                if not os.path.isdir(f"{build_path}/{repo_name}"):
-                    cmd = ["git", "clone", repo, str(dest)]
+                repo_name = repo.split("/").remove(".git")
+                dest = f"{build_path}/{repo_name}"
+                if not os.path.isdir(dest):
+                    input(f"Downloading {repo} to {dest}")
+                    cmd = ["git", "clone", repo, dest]
                     print(" ".join(cmd))
                     result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
@@ -145,7 +149,7 @@ def main():
                         print(f"Could not download {repo}: {err}")
                         sys.exit(1)
 
-                    input(f"Successfully downloaded {repo} in {str(dest)}/{repo_name} [Enter]")
+                    input(f"Successfully downloaded {repo} [Enter]")
 
     if use_pip:
         which_pip = input(f"\nrun 'which pip' and paste here the output: ")
