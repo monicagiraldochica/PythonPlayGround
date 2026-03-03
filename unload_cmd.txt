@@ -1,0 +1,5 @@
+execute{cmd="for i in $(seq ${CONDA_SHLVL:=0}); do conda deactivate; done; pre=" .. conda_dir .. "; \
+        export LD_LIBRARY_PATH=$(echo ${LD_LIBRARY_PATH} | tr ':' '\\n' | /bin/grep . | /bin/grep -v $pre | tr '\\n' ':' | sed 's/:$//'); \
+        export PATH=$(echo ${PATH} | tr ':' '\\n' | /bin/grep . | /bin/grep -v $pre | tr '\\n' ':' | sed 's/:$//'); \
+        unset -f " .. funcs .. "; \
+        unset $(env | /bin/grep -o \"[^=]*CONDA[^=]*\" | /bin/grep -v 'CONDA_ENVS_PATH\\|CONDA_PKGS_DIRS');", modeA={"unload"}}
