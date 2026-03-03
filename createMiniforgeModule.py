@@ -71,10 +71,11 @@ def main():
     input("sudo su - [Enter]")
     input("ml load miniforge [Enter]")
 
-    # The module is already installed
     ml_avail = availableModules(main_package)
     create_env = True
+    ml_folder = f"/hpc/modulefiles/{main_package}"
 
+    # The module is already installed
     if f"{main_package}/{version}" in ml_avail:
         print(f"Good news! {main_package}/{version} is already installed!")
         sys.exit(1)
@@ -89,7 +90,6 @@ def main():
         apps_path = f"/hpc/apps/{main_package}"
 
         if len(downloads)>0:
-            ml_folder = f"/hpc/modulefiles/{main_package}"
             msg = f"\nA previous miniforge environment was created for {main_package} ({', '.join(downloads)}), "
 
             # The miniforge environment was previously created, but not the module
@@ -125,15 +125,13 @@ def main():
 
     input(f"\nconda activate {env_name} [Enter]")
 
+    req_files = []
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
         repos = input("https git repos divided by comma: ").split(",")
         if len(repos)>0:
-            build_path = f"/adminfs/builds/{main_package}"
+            build_path = f"/adminfs/builds/{main_package}/git_repos"
             if not os.path.isdir(build_path):
-                os.mkdir(build_path)
-            build_path = f"{build_path}/downloads"
-            if not os.path.isdir(build_path):
-                os.mkdir(build_path)
+                os.makedirs(build_path)
 
             for repo in repos:
                 repo_name = repo.split("/")[-1].replace(".git", "")
@@ -155,10 +153,14 @@ def main():
                 else:
                     print(f"\n{dest} already exists")
 
+                req_file = f"{dest}/requirements.txt"
+                if os.path.isfile(req_file):
+                    req_files+=[req_file]
+
     if use_pip:
-        which_pip = input(f"\nrun 'which pip' and paste here the output: ")
+        which_pip = input("\nrun 'which pip' and paste here the output: ")
         if which_pip!=f"/hpc/apps/miniforge/envs/{env_name}/bin/pip":
-            input("*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
+            input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
 
         print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed, and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
         pips = input("List of programs to install using pip divided by comma: ").split(",")
@@ -166,6 +168,22 @@ def main():
             input(f"pip install {pip_install} [Enter]")
             input(f"conda list | grep {pip_install} [Enter]")
             input("Run a test command [Enter]")
+
+    input("Run any conda commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
+
+    if len(req_files)>0:
+        msg = f"Found {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
+        if input(msg).strip().lower() in ("y", "yes"):
+            for req_file in req_files:
+                with open(req_file, "r") as fin:
+                    line = fin.readline()
+                    input(f"conda list | grep {line} [Enter]")
+
+    if input("Do you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
+        db_folder = f"/hpc/refdata/{main_package}"
+        if not os.path.isdir(db_folder):
+            os.mkdir(db_folder)
+        input(f"Download any databases to {db_folder} [Enter]")
                 
 if __name__ == "__main__":
     main()
