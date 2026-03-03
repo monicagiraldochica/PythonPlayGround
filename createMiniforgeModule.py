@@ -6,6 +6,7 @@ import sys
 import argparse
 import re
 import os
+from pathlib import Path
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -107,10 +108,46 @@ def main():
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit()
 
+    use_pip = input("Are you installing using pip inside this conda environment? [Y/n]").strip().lower() not in ("n", "not")
+    env_name = f"{main_package}-{version}"
     if create_env:
-        env_name = f"{main_package}-{version}"
-        print(f"conda create -n {env_name}")
-        subprocess.run(["conda", "create", "-y", "-n", env_name, f"{main_package}={version}"], check=True)
+        venv_python = input(f"What python version is required by {main_package}/{version} (i.e. python>=3.10, Enter if no specific version required): ")
+        if (not venv_python) and use_pip:
+            print("*** YOU NEED TO INSTALL PYTHON INSIDE THE CONDA ENV OR IT WILL INSTALL THE PROGRAM IN BASE ***")
+            venv_python = f"python={major}.{minor}.{micro}"
+        
+        if (not venv_python):
+            input(f"conda create -n {env_name} [Enter]")
+        else:
+            input(f"conda create -n {env_name} {venv_python} [Enter]")
+
+    input(f"conda activate {env_name} [Enter]")
+
+    if input("Do you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
+        repos = input("https git repos divided by comma:").split(",")
+        if len(repos)>0:
+            build_path = f"/adminfs/builds/{main_package}"
+            dest = Path(build_path)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+
+            for repo in repos:
+                cmd = ["git", "clone", repo, str(dest)]
+                result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+                if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{Path(repo).stem}")):
+                    print("Could not download {repo}")
+                    sys.exit(1)
+
+    if use_pip:
+        which_pip = input(f"run 'which pip' and paste here the output: ")
+        if which_pip!=f"/hpc/apps/miniforge/envs/{env_name}/bin/pip":
+            input("*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
+
+        print("After each pip install run 'conda list | grep <program>' to check that it was indeed installed and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
+        pips = input("List of pip installs divided by comma: ").split(",")
+        for pip_install in pips:
+            input(f"pip install {pip_install} [Enter]")
+            input(f"conda list | grep {pip_install} [Enter]")
+            input("Run a test command [Enter]")
                 
 if __name__ == "__main__":
     main()
