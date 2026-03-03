@@ -138,19 +138,18 @@ def main():
             for repo in repos:
                 repo_name = repo.split("/")[-1].replace(".git", "")
                 dest = f"{build_path}/{repo_name}"
-                print(dest)
                 if not os.path.isdir(dest):
                     input(f"Downloading {repo} to {dest}")
-                #    cmd = ["git", "clone", repo, dest]
-                #    print(" ".join(cmd))
-                #    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+                    cmd = ["git", "clone", repo, dest]
+                    print(" ".join(cmd))
+                    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
-                #    if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{repo_name}")):
-                #        err = result.stderr or result.stdout
-                #        print(f"Could not download {repo}: {err}")
-                #        sys.exit(1)
+                    if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{repo_name}")):
+                        err = result.stderr or result.stdout
+                        print(f"Could not download {repo}: {err}")
+                        sys.exit(1)
 
-                #    input(f"Successfully downloaded {repo} [Enter]")
+                    input(f"Successfully downloaded {repo} [Enter]")
 
     #if use_pip:
     #    which_pip = input(f"\nrun 'which pip' and paste here the output: ")
