@@ -56,7 +56,6 @@ def main():
     if rVers is None:
         print("Miniforge loaded. Run: module load miniforge")
         sys.exit(1)
-    input("ml load miniforge [Enter]")
 
     # Check python version
     python_info = sys.version_info
@@ -69,6 +68,9 @@ def main():
         sys.exit(1)
 
     [main_package, version] = parse_arguments()
+
+    input("sudo su - [Enter]")
+    input("ml load miniforge [Enter]")
 
     # The module is already installed
     ml_avail = availableModules(main_package)
@@ -91,8 +93,8 @@ def main():
             ml_folder = f"/hpc/modulefiles/{main_package}"
             msg = f"A previous miniforge environment was created for {main_package} ({', '.join(downloads)}), "
 
-            # The miniforge environment was previously created, but the module not
-            if os.path.isdir(ml_folder):
+            # The miniforge environment was previously created, but not the module
+            if (not os.path.isdir(ml_folder)):
                 create_env = False
                 msg+="but not the module.\nDo you want to proceed? [y/N]: "
 
