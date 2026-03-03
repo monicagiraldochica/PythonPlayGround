@@ -136,10 +136,10 @@ def main():
                 os.mkdir(build_path)
 
             for repo in repos:
-                print(repo)
-                print(repo.split("/"))
-                print(repo.split("/")[-1])
-                #repo_name = repo.split("/")[-1].remove(".git")
+                #print(repo)
+                #print(repo.split("/"))
+                #print(repo.split("/")[-1])
+                repo_name = repo.split("/")[-1].replace(".git", "")
                 #dest = f"{build_path}/{repo_name}"
                 #print(dest)
                 #if not os.path.isdir(dest):
