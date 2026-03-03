@@ -77,12 +77,12 @@ def main():
 
     # The module is already installed
     if f"{main_package}/{version}" in ml_avail:
-        print(f"Good news! {main_package}/{version} is already installed!")
+        print(f"\nGood news! {main_package}/{version} is already installed!")
         sys.exit(1)
     
     # A different version of the module was installed
     elif len(ml_avail)>0:
-        if input(f"A different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
+        if input(f"\nA different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
             sys.exit(1)
     
     else:
@@ -167,23 +167,29 @@ def main():
         for pip_install in pips:
             input(f"pip install {pip_install} [Enter]")
             input(f"conda list | grep {pip_install} [Enter]")
-            input("Run a test command [Enter]")
+            msg = f"Run a test command for {pip_install}."
+            forge_path = f"/hpc/apps/miniforge/envs/{main_package}-{version}/bin/"
+            if os.path.isdir(forge_path):
+                msg+=f"\nThe list of commands for {main_package} can be found in {forge_path}"
+            input(f"{msg} [Enter]")
 
-    input("Run any conda commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
+    input("\nRun any conda commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
 
     if len(req_files)>0:
-        msg = f"Found {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
+        msg = f"\nFound {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
         if input(msg).strip().lower() in ("y", "yes"):
             for req_file in req_files:
                 with open(req_file, "r") as fin:
                     line = fin.readline()
                     input(f"conda list | grep {line} [Enter]")
 
-    if input("Do you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
+    if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
         db_folder = f"/hpc/refdata/{main_package}"
         if not os.path.isdir(db_folder):
             os.mkdir(db_folder)
         input(f"Download any databases to {db_folder} [Enter]")
-                
+
+    print(ml_avail)
+
 if __name__ == "__main__":
     main()
