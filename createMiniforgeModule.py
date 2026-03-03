@@ -100,7 +100,7 @@ def main():
 
             # The module was created at some point, but it was disabled
             else:
-                msg+=f"and there's a module folder for this app ({ml_folder}) in /hpc/modulefiles/{main_package}. However, the module is not available.\nDo you want to proceed? [y/N]: "            
+                msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "            
 
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit()
