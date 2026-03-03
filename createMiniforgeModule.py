@@ -134,17 +134,18 @@ def main():
             dest.parent.mkdir(parents=True, exist_ok=True)
 
             for repo in repos:
-                cmd = ["git", "clone", repo, str(dest)]
-                print(" ".join(cmd))
-                result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-                repo_name = Path(repo).stem
+                if not os.path.isdir(f"{build_path}/{repo_name}"):
+                    cmd = ["git", "clone", repo, str(dest)]
+                    print(" ".join(cmd))
+                    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+                    repo_name = Path(repo).stem
 
-                if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{repo_name}")):
-                    err = result.stderr or result.stdout
-                    print(f"Could not download {repo}: {err}")
-                    sys.exit(1)
+                    if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{repo_name}")):
+                        err = result.stderr or result.stdout
+                        print(f"Could not download {repo}: {err}")
+                        sys.exit(1)
 
-                input(f"Successfully downloaded {repo} in {str(dest)}/{repo_name} [Enter]")
+                    input(f"Successfully downloaded {repo} in {str(dest)}/{repo_name} [Enter]")
 
     if use_pip:
         which_pip = input(f"\nrun 'which pip' and paste here the output: ")
