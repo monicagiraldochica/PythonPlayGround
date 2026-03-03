@@ -138,30 +138,34 @@ def main():
             for repo in repos:
                 repo_name = repo.split("/")[-1].replace(".git", "")
                 dest = f"{build_path}/{repo_name}"
+
                 if not os.path.isdir(dest):
-                    input(f"Downloading {repo} to {dest}")
+                    input(f"\nDownloading {repo} to {dest} [Enter]")
                     cmd = ["git", "clone", repo, dest]
                     print(" ".join(cmd))
                     result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
-                    if result.returncode!=0 or (not os.path.isdir(f"{build_path}/{repo_name}")):
+                    if result.returncode!=0 or (not os.path.isdir(dest)):
                         err = result.stderr or result.stdout
-                        print(f"Could not download {repo}: {err}")
+                        print(f"Could not download {repo_name}: {err}")
                         sys.exit(1)
 
-                    input(f"Successfully downloaded {repo} [Enter]")
+                    input(f"Successfully downloaded {repo_name} [Enter]")
 
-    #if use_pip:
-    #    which_pip = input(f"\nrun 'which pip' and paste here the output: ")
-    #    if which_pip!=f"/hpc/apps/miniforge/envs/{env_name}/bin/pip":
-    #        input("*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
+                else:
+                    print(f"\n{dest} already exists")
 
-    #    print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
-    #    pips = input("List of pip installs divided by comma: ").split(",")
-    #    for pip_install in pips:
-    #        input(f"pip install {pip_install} [Enter]")
-    #        input(f"conda list | grep {pip_install} [Enter]")
-    #        input("Run a test command [Enter]")
+    if use_pip:
+        which_pip = input(f"\nrun 'which pip' and paste here the output: ")
+        if which_pip!=f"/hpc/apps/miniforge/envs/{env_name}/bin/pip":
+            input("*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
+
+        print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
+        pips = input("List of pip installs divided by comma: ").split(",")
+        for pip_install in pips:
+            input(f"pip install {pip_install} [Enter]")
+            input(f"conda list | grep {pip_install} [Enter]")
+            input("Run a test command [Enter]")
                 
 if __name__ == "__main__":
     main()
