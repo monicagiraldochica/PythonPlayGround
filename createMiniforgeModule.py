@@ -136,8 +136,8 @@ def main():
                 os.mkdir(build_path)
 
             for repo in repos:
-                print(repo)
-                #repo_name = repo.split("/").remove(".git")
+                print(repo.split("/")[-1])
+                #repo_name = repo.split("/")[-1].remove(".git")
                 #dest = f"{build_path}/{repo_name}"
                 #if not os.path.isdir(dest):
                 #    input(f"Downloading {repo} to {dest}")
