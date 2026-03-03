@@ -56,6 +56,7 @@ def main():
     if rVers is None:
         print("Miniforge loaded. Run: module load miniforge")
         sys.exit(1)
+    input("ml load miniforge [Enter]")
 
     # Check python version
     python_info = sys.version_info
