@@ -136,11 +136,14 @@ def main():
                 os.mkdir(build_path)
 
             for repo in repos:
-                repo_name = repo.split("/")[-1].remove(".git")
-                dest = f"{build_path}/{repo_name}"
-                print(dest)
-                if not os.path.isdir(dest):
-                    input(f"Downloading {repo} to {dest}")
+                print(repo)
+                print(repo.split("/"))
+                print(repo.split("/")[-1])
+                #repo_name = repo.split("/")[-1].remove(".git")
+                #dest = f"{build_path}/{repo_name}"
+                #print(dest)
+                #if not os.path.isdir(dest):
+                #    input(f"Downloading {repo} to {dest}")
                 #    cmd = ["git", "clone", repo, dest]
                 #    print(" ".join(cmd))
                 #    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
