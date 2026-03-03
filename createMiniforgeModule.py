@@ -160,8 +160,8 @@ def main():
         if which_pip!=f"/hpc/apps/miniforge/envs/{env_name}/bin/pip":
             input("*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS /hpc/apps/miniforge/envs/{env_name}/bin/pip *** [Enter]")
 
-        print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
-        pips = input("List of pip installs divided by comma: ").split(",")
+        print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed, and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
+        pips = input("List of programs to install using pip divided by comma: ").split(",")
         for pip_install in pips:
             input(f"pip install {pip_install} [Enter]")
             input(f"conda list | grep {pip_install} [Enter]")
