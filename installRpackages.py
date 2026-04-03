@@ -12,6 +12,8 @@ from pathlib import Path
 import sys
 import re
 import pandas as pd
+import csv
+from datetime import datetime
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -94,6 +96,7 @@ def installWithRscript(r_version: str, pkg: str):
 		else:
 			return [False, f"Installation of {pkg} using Rscript failed with return code {returncode} (no output captured)"]
 	
+	saveLog(r_version, pkg, "Rscript")
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Rscript"]
 
 def installWithTarball(r_version: str, pkg: str):
@@ -123,8 +126,9 @@ def installWithTarball(r_version: str, pkg: str):
 		if err:
 			return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
 		else:
-			return [False, f"Installation of {pkg} uwing tarball Rscript failed with return code {result.returncode} (no output captured)"]
+			return [False, f"Installation of {pkg} using tarball Rscript failed with return code {result.returncode} (no output captured)"]
 	
+	saveLog(r_version, pkg, "Tarball")
 	return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 
 def installFromGitHub(r_version: str, repo: str, pkg: str):
@@ -136,6 +140,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 		[returncode, stderr, stdout] = runRcmd(r_expr)
 
 		if returncode==0 and isInstalled(r_version, pkg):
+			saveLog(r_version, pkg, "GitHub")
 			return [True, f"Successfully installed {pkg} in R/{r_version} with GitHub {opt}"]
 		
 		err = (stderr or stdout).strip()
@@ -159,6 +164,7 @@ def installGiotto(r_version: str, giotto_pkg:str):
 		else:
 			return [False, f"Installation of {giotto_pkg} using Giotto failed with return code {returncode} (no output captured)"]
 	
+	saveLog(r_version, giotto_pkg, "Giotto")
 	return [True, f"Successfully installed {giotto_pkg} in R/{r_version} with Giotto"]
 
 def installBiocManager(r_version: str, pkg: str):
@@ -173,7 +179,17 @@ def installBiocManager(r_version: str, pkg: str):
 		else:
 			return [False, f"Installation of {pkg} using Bioconductor failed with return code {returncode} (no output captured)"]
 		
+	saveLog(r_version, pkg, "BiocManager")
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Bioconductor"]
+
+def saveLog(rversion, pkgname, install_method):
+	filename = "added_with_script.csv"
+	new_file = not os.path.exists(filename)
+	with open(filename, "a", newline="") as f:
+		writer = csv.writer(f)
+		if new_file:
+			writer.writerow(["rversion", "pkgname", "install_method", "date"])
+		writer.writerow([rversion, pkgname, install_method, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
 
 # Check if a package install had already failed
 def hadFailed(package:str, working_dir:str):
