@@ -29,7 +29,7 @@ def getCondaVersion():
     except subprocess.CalledProcessError:
         return None
 
-def availableModules(pkg):
+def availableModules(pkg: str):
     cmd = f"module avail {pkg}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
     out = (result.stdout or "") + (result.stderr or "")
@@ -37,7 +37,7 @@ def availableModules(pkg):
 
     return matches
 
-def contentFolder(path):
+def contentFolder(path: str):
     path = path[:-1] if path.endswith("/") else path
     cmd = f"ls -1 {path}"
     result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
@@ -45,7 +45,7 @@ def contentFolder(path):
 
     return out
 
-def downloadedMiniforgeVersions(pkg, path):
+def downloadedMiniforgeVersions(pkg: str, path:str):
     out = contentFolder(path)
     names = re.findall(rf'^{re.escape(pkg)}-[^/\s]+$', out, flags=re.MULTILINE)
 
@@ -55,7 +55,7 @@ def main():
     # Check conda version
     rVers = getCondaVersion()
     if rVers is None:
-        print("Miniforge loaded. Run: module load miniforge")
+        print("Miniforge NOT loaded. Run: module load miniforge")
         sys.exit(1)
 
     # Check python version
