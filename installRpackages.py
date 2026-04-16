@@ -61,7 +61,7 @@ def savePackageList(r_version: str, working_dir: str):
 # Save the list of packages that are in v_old but not in v_new
 def comparePackages(v_new: str, v_old: str, working_dir: str):
 	with open(f"{working_dir}/missing.txt", "w") as f:
-		subprocess.run(["grep", "-Fvx", "-f", v_old, v_new], stdout=f)
+		subprocess.run(["grep", "-Fvx", "-f", f"{working_dir}/{v_old}.txt", f"{working_dir}/{v_new}.txt"], stdout=f)
 
 def runRcmd(r_expr: str):
 	try:
@@ -273,54 +273,54 @@ def migrateVersions(v_new, v_old, working_dir):
 	savePackageList(v_new, working_dir)
 
 	# Get the list of packages in the old version
-	savePackageList(v_old, working_dir)
+	#savePackageList(v_old, working_dir)
 
 	# Get the list of packages missing in the new version
-	comparePackages(v_new, v_old, working_dir)
+	#comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of known some missing packages
-	for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
-		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-		if msg!="":
-			saveInstallAttempt(success, f"{dep}: {msg}")
-			print(msg)
+	#for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
+	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
+	#	if msg!="":
+	#		saveInstallAttempt(success, f"{dep}: {msg}")
+	#		print(msg)
 
 	# Install Git packages
-	git_pkgs = {
-		"SeuratData":"satijalab/seurat-data",
-		"SeuratDisk":"mojaveazure/seurat-disk",
-		"SeuratWrappers":"satijalab/seurat-wrappers",
-		"CellChat":"jinworks/CellChat",
-		"monocle3":"cole-trapnell-lab/monocle3",
-		"presto":"immunogenomics/presto",
-		"proteoDA":"ByrumLab/proteoDA",
-		"rbokeh":"hafen/rbokeh",
-		"SCENIC":"aertslab/SCENIC",
-		"SCopeLoomR":"aertslab/SCopeLoomR",
-		"velocyto.R":"velocyto-team/velocyto.R",
-		"SCPA":"jackbibby1/SCPA"
-	}
-	for pkg,repo in git_pkgs.items():
-		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
-		if msg!="":
-			saveInstallAttempt(success, f"{pkg}: {msg}")
-			print(msg)
+	#git_pkgs = {
+	#	"SeuratData":"satijalab/seurat-data",
+	#	"SeuratDisk":"mojaveazure/seurat-disk",
+	#	"SeuratWrappers":"satijalab/seurat-wrappers",
+	#	"CellChat":"jinworks/CellChat",
+	#	"monocle3":"cole-trapnell-lab/monocle3",
+	#	"presto":"immunogenomics/presto",
+	#	"proteoDA":"ByrumLab/proteoDA",
+	#	"rbokeh":"hafen/rbokeh",
+	#	"SCENIC":"aertslab/SCENIC",
+	#	"SCopeLoomR":"aertslab/SCopeLoomR",
+	#	"velocyto.R":"velocyto-team/velocyto.R",
+	#	"SCPA":"jackbibby1/SCPA"
+	#}
+	#for pkg,repo in git_pkgs.items():
+	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
+	#	if msg!="":
+	#		saveInstallAttempt(success, f"{pkg}: {msg}")
+	#		print(msg)
 
 	# Install other packages
-	with open(f"{working_dir}/missing.txt", "r") as fin:
-		for line in fin:
-			line = line.replace("\n","").replace("> ","")
-			if line.startswith("<") or line[0].isdigit():
-				continue
+	#with open(f"{working_dir}/missing.txt", "r") as fin:
+	#	for line in fin:
+	#		line = line.replace("\n","").replace("> ","")
+	#		if line.startswith("<") or line[0].isdigit():
+	#			continue
 
-			if isBiocPackage(line):
-				[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+	#		if isBiocPackage(line):
+	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
 
-			else:
-				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
+	#		else:
+	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
 
-			if msg!="":
-				print(msg)
+	#		if msg!="":
+	#			print(msg)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
