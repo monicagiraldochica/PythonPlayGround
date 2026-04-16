@@ -276,14 +276,14 @@ def migrateVersions(v_new, v_old, working_dir):
 	#savePackageList(v_old, working_dir)
 
 	# Get the list of packages missing in the new version
-	comparePackages(v_new, v_old, working_dir)
+	#comparePackages(v_new, v_old, working_dir)
 
-	# Install known dependencies of known some missing packages
-	#for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
-	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-	#	if msg!="":
-	#		saveInstallAttempt(success, f"{dep}: {msg}")
-	#		print(msg)
+	## Install known dependencies of known some missing packages
+	##for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
+	##	[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
+	##	if msg!="":
+	##		saveInstallAttempt(success, f"{dep}: {msg}")
+	##		print(msg)
 
 	# Install Git packages
 	#git_pkgs = {
@@ -307,20 +307,20 @@ def migrateVersions(v_new, v_old, working_dir):
 	#		print(msg)
 
 	# Install other packages
-	#with open(f"{working_dir}/missing.txt", "r") as fin:
-	#	for line in fin:
-	#		line = line.replace("\n","").replace("> ","")
-	#		if line.startswith("<") or line[0].isdigit():
-	#			continue
+	with open(f"{working_dir}/missing.txt", "r") as fin:
+		for line in fin:
+			line = line.replace("\n","").replace("> ","")
+			if line.startswith("<") or line[0].isdigit():
+				continue
 
-	#		if isBiocPackage(line):
-	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+			if isBiocPackage(line):
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
 
-	#		else:
-	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
+			else:
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
 
-	#		if msg!="":
-	#			print(msg)
+			if msg!="":
+				print(msg)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
