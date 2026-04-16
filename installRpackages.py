@@ -61,7 +61,7 @@ def savePackageList(r_version: str, working_dir: str):
 # Save the list of packages that are in v_old but not in v_new
 def comparePackages(v_new: str, v_old: str, working_dir: str):
 	with open(f"{working_dir}/missing.txt", "w") as f:
-		subprocess.run(["grep", "-Fvx", "-f", f"{working_dir}/{v_old}.txt", f"{working_dir}/{v_new}.txt"], stdout=f)
+		subprocess.run(["grep", "-Fvx", "-f", f"{working_dir}/{v_new}.txt", f"{working_dir}/{v_old}.txt"], stdout=f)
 
 def runRcmd(r_expr: str):
 	try:
@@ -276,7 +276,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	#savePackageList(v_old, working_dir)
 
 	# Get the list of packages missing in the new version
-	#comparePackages(v_new, v_old, working_dir)
+	comparePackages(v_new, v_old, working_dir)
 
 	## Install known dependencies of known some missing packages
 	##for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
@@ -307,20 +307,20 @@ def migrateVersions(v_new, v_old, working_dir):
 	#		print(msg)
 
 	# Install other packages
-	with open(f"{working_dir}/missing.txt", "r") as fin:
-		for line in fin:
-			line = line.replace("\n","").replace("> ","")
-			if line.startswith("<") or line[0].isdigit():
-				continue
+	#with open(f"{working_dir}/missing.txt", "r") as fin:
+	#	for line in fin:
+	#		line = line.replace("\n","").replace("> ","")
+	#		if line.startswith("<") or line[0].isdigit():
+	#			continue
 
-			if isBiocPackage(line):
-				[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+	#		if isBiocPackage(line):
+	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
 
-			else:
-				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
+	#		else:
+	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
 
-			if msg!="":
-				print(msg)
+	#		if msg!="":
+	#			print(msg)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
