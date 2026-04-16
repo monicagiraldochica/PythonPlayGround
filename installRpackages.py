@@ -273,10 +273,10 @@ def migrateVersions(v_new, v_old, working_dir):
 	#savePackageList(v_new, working_dir)
 
 	# Get the list of packages in the old version
-	savePackageList(v_old, working_dir)
+	#savePackageList(v_old, working_dir)
 
 	# Get the list of packages missing in the new version
-	#comparePackages(v_new, v_old, working_dir)
+	comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of known some missing packages
 	#for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
