@@ -29,8 +29,8 @@ def parse_arguments():
 
 	args = parser.parse_args()
 	
-	v_new = args.vnew or "4.5.0"
-	v_old = args.vold or "4.4.2"
+	v_new = args.vnew or ".4.5.3"
+	v_old = args.vold or "4.5.0"
 
 	working_dir = args.working_dir
 	if not os.path.isdir(working_dir):
@@ -41,7 +41,8 @@ def parse_arguments():
 
 def savePackageList(r_version: str, working_dir: str):
 	try:
-		with open(f"{working_dir}/{r_version}.txt", 'w') as fin:
+		r_file = f"{r_version[1:] if r_version.startswith('.') else r_version}.txt"
+		with open(f"{working_dir}/{r_file}.txt", 'w') as fin:
 			for item in sorted(os.listdir(f"/hpc/apps/R/{r_version}/lib64/R/library/"), key=str.casefold):
 				if not item.startswith("00LOCK"):
 					_ = fin.write(item+"\n")
