@@ -29,7 +29,7 @@ def parse_arguments():
 
 	args = parser.parse_args()
 	
-	v_new = args.vnew or ".4.5.3"
+	v_new = args.vnew or "4.5.3"
 	v_old = args.vold or "4.5.0"
 
 	working_dir = args.working_dir
