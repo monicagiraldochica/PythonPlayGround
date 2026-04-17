@@ -210,7 +210,7 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
 	
-	fail_txt = f"{working_dir}/failures/" + re.sub(r"[^\w]", "_", package)
+	fail_txt = f"{working_dir}/failures/" + re.sub(r"[^\w]", "_", package) + ".txt"
 	print(f"fail_txt: {fail_txt}")
 	print(os.path.isfile(fail_txt))
 	if check_pastFail and os.path.isfile(fail_txt):
