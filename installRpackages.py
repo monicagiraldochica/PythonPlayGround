@@ -290,14 +290,12 @@ def migrateVersions(v_new, v_old, working_dir):
 	# Install known dependencies of some known missing packages
 	i=0
 	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
-		if i>3:
-			break
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, f"{dep}: {msg}")
 		if success:
-			print(f"Install of {dep} was successfull{': ' + msg if msg else ''}\n")
+			print(f"Install of {dep} was successfull\n")
 		else:
-			print(f"Install of {dep} failed{': ' + msg if msg else ''}\n")
+			print(f"Install of {dep} failed\n")
 		i+=1
 
 	# Install Git packages
