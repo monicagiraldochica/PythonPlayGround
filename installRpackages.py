@@ -154,7 +154,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str, working_dir: str):
 		
 		err = (stderr or stdout).strip()
 		if err:
-			",".join(msg, err)
+			",".join([msg, err])
 
 	if msg!="":
 		return [False, f"Installation of {pkg} using GitHub failed with error: {err}"]
