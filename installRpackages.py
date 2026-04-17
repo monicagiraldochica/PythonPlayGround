@@ -262,7 +262,7 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 		log_dir = base_dir / "failures"
 		log_dir.mkdir(parents=True, exist_ok=True)
 
-		with (log_dir / f"{pkg}.txt").open("a", encoding="utf-8") as f:
+		with (log_dir / f"{pkg.replace('\\','_')}.txt").open("a", encoding="utf-8") as f:
 			f.write(line)
 
 def isBiocPackage(pkg_name):
