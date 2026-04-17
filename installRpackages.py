@@ -323,20 +323,20 @@ def migrateVersions(v_new, v_old, working_dir):
 			print(f"Install of {pkg} failed\n")
 
 	# Install other packages
-	#with open(f"{working_dir}/missing.txt", "r") as fin:
-	#	for line in fin:
-	#		line = line.replace("\n","").replace("> ","")
-	#		if line.startswith("<") or line[0].isdigit() or line.startswith("_"):
-	#			continue
+	with open(f"{working_dir}/missing.txt", "r") as fin:
+		for line in fin:
+			line = line.replace("\n","").replace("> ","")
+			if line.startswith("<") or line[0].isdigit() or line.startswith("_"):
+				continue
 
-	#		if isBiocPackage(line):
-	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
+			if isBiocPackage(line):
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line, bioc=True)
 
-	#		else:
-	#			[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
+			else:
+				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
 
-	#		if msg!="":
-	#			print(msg)
+			if msg!="":
+				print(msg)
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
