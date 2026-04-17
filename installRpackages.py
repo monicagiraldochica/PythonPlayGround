@@ -290,7 +290,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	# Install known dependencies of some known missing packages
 	i=0
 	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
-		if i>2:
+		if i>3:
 			break
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, f"{dep}: {msg}")
