@@ -205,7 +205,7 @@ def hadFailed(package:str, working_dir:str):
 	if not os.path.isfile(f"{working_dir}/fail.txt"):
 		return False
 	
-	cmd = f"grep -F {quote(package)} {working_dir}/fail.txt | head -n 1 | cut -d: -f1"
+	cmd = f"grep -F {quote(package)} {working_dir}/fail.txt"
 	out = subprocess.run(cmd, shell=True, check=False).stdout
 	if out==None:
 		return False
@@ -249,12 +249,21 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 	[success, msg3] = installBiocManager(r_version, package, working_dir)
 	return [success, ", ".join([msg, msg2, msg3])]
 
-def saveInstallAttempt(success: bool, message: str, working_dir: str):
-	today = date.today().strftime("%Y_%m_%d")
-	line = message.rstrip("\r\n")+"\n"
-	filename = f"{working_dir}/{'success' if success else 'fail'}.txt"
-	log_path = Path(filename)
-	log_path.open("a", encoding="utf-8").write(line)
+def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
+	base_dir = Path(working_dir)
+	base_dir.mkdir(parents=True, exist_ok=True)
+
+	filename = base_dir / ("success.txt" if success else "fail.txt")
+	with filename.open("a", encoding="utf-8") as f:
+		f.write(pkg+"\n")
+
+	if (not success) and message:
+		line = message.rstrip("\r\n")+"\n"
+		log_dir = base_dir / "failures"
+		log_dir.mkdir(parents=True, exist_ok=True)
+
+		with (log_dir / f"{pkg}.txt").open("a", encoding="utf-8") as f:
+			f.write(line)
 
 def isBiocPackage(pkg_name):
 	r_code = f'''
