@@ -208,10 +208,12 @@ def hadFailed(package:str, working_dir:str):
 	cmd = f"grep {quote(package)} {working_dir}/fail.txt | head -n1"
 	print(cmd)
 	out = subprocess.run(cmd, shell=True, check=False).stdout
+	print(f"**{out}**")
 	if out==None:
 		return False
-	print(f"**{out}**")
-	
+	print(out.strip())
+	print(out.strip()==package)
+
 	return out.strip()==package
 
 def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, check_pastFail=True, gitRepo=None, bioc=False):
