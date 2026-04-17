@@ -253,9 +253,10 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 		log_dir = base_dir / "failures"
 		log_dir.mkdir(parents=True, exist_ok=True)
 
-		pkg = re.sub(r"[^\w]", "_", pkg)
-		with (log_dir / f"{pkg}.txt").open("w", encoding="utf-8") as f:
-			f.write(line)
+		log_file = (log_dir) + re.sub(r"[^\w]", "_", pkg) + ".txt"
+		if not os.path.isfile:
+			with (log_file).open("w", encoding="utf-8") as f:
+				f.write(line)
 
 def isBiocPackage(pkg_name):
 	r_code = f'''
