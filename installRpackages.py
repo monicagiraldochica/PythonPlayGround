@@ -283,10 +283,9 @@ def migrateVersions(v_new, v_old, working_dir):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, f"{dep}: {msg}")
 		if success:
-			print(f"Install of {dep} was successfull: {msg}")
+			print(f"Install of {dep} was successfull{': ' + msg if msg else ''}")
 		else:
-			print(f"Install of {dep} failed: {msg}")
-		break
+			print(f"Install of {dep} failed{': ' + msg if msg else ''}")
 
 	# Install Git packages
 	#git_pkgs = {
