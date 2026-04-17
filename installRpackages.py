@@ -335,8 +335,11 @@ def migrateVersions(v_new, v_old, working_dir):
 			else:
 				[success, msg] = installPackage(v_new, working_dir, pkg_install=line)
 
-			if msg!="":
-				print(msg)
+			saveInstallAttempt(success, line, msg, working_dir)
+			if success:
+				print(f"Install of {line} was successfull\n")
+			else:
+				print(f"Install of {line} failed\n")
 
 # Get list of mandatory dependencies
 # repo_mode can be "cran" or "bioc"
