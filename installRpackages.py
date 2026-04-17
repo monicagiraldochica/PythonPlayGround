@@ -299,7 +299,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	# Install known dependencies of some known missing packages
 	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-		saveInstallAttempt(success, f"{dep}: {msg}\n", working_dir)
+		saveInstallAttempt(success, dep, msg, working_dir)
 		if success:
 			print(f"Install of {dep} was successfull\n")
 		else:
@@ -323,7 +323,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	#for pkg,repo in git_pkgs.items():
 	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 	#	if msg!="":
-	#		saveInstallAttempt(success, f"{pkg}: {msg}", working_dir)
+	#		saveInstallAttempt(success, pkg, msg, working_dir)
 	#		print(msg)
 
 	# Install other packages
