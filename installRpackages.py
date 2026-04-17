@@ -249,10 +249,10 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 	[success, msg3] = installBiocManager(r_version, package)
 	return [success, ", ".join([msg, msg2, msg3])]
 
-def saveInstallAttempt(success: bool, message: str):
+def saveInstallAttempt(success: bool, message: str, working_dir: str):
 	today = date.today().strftime("%Y_%m_%d")
 	line = message.rstrip("\r\n")+"\n"
-	filename = f"{'success' if success else 'failed'}_{today}.txt"
+	filename = f"{working_dir}/{'success' if success else 'failed'}_{today}.txt"
 	log_path = Path(filename)
 	log_path.open("a", encoding="utf-8").write(line)
 
@@ -288,10 +288,9 @@ def migrateVersions(v_new, v_old, working_dir):
 	#comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of some known missing packages
-	i=0
 	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-		saveInstallAttempt(success, f"{dep}: {msg}")
+		saveInstallAttempt(success, f"{dep}: {msg}", working_dir)
 		if success:
 			print(f"Install of {dep} was successfull\n")
 		else:
@@ -316,7 +315,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	#for pkg,repo in git_pkgs.items():
 	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 	#	if msg!="":
-	#		saveInstallAttempt(success, f"{pkg}: {msg}")
+	#		saveInstallAttempt(success, f"{pkg}: {msg}", working_dir)
 	#		print(msg)
 
 	# Install other packages
