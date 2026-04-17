@@ -100,36 +100,42 @@ def installWithRscript(r_version: str, pkg: str):
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Rscript"]
 
 def installWithTarball(r_version: str, pkg: str):
-	print(f"Installing {pkg} in R/{r_version} using Tarball...")
-	dest = Path(f"/adminfs/builds/R-{r_version}/packages")
-	dest.mkdir(parents=True, exist_ok=True)
+	try:
+		print(f"Installing {pkg} in R/{r_version} using Tarball...")
+		dest = Path(f"/adminfs/builds/R-{r_version}/packages")
+		dest.mkdir(parents=True, exist_ok=True)
 
-	# Download the latest tarball
-	print(f"Downloading latest source tarball for {pkg}")
-	r_expr = f'download.packages("{pkg}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
-	if runRcmd(r_expr)[0]!=0:
-		return [False, f"Could not download latest tarball for {pkg} from cran.r-project.org"]
+		# Download the latest tarball
+		print(f"Downloading latest source tarball for {pkg}")
+		r_expr = f'download.packages("{pkg}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
+		if runRcmd(r_expr)[0]!=0:
+			return [False, f"Could not download latest tarball for {pkg} from cran.r-project.org"]
 
-	matches = sorted(dest.glob(f"{pkg}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
-	if not matches:
-		return [False, f"No tarball found for {pkg}"]
+		matches = sorted(dest.glob(f"{pkg}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+		if not matches:
+			return [False, f"No tarball found for {pkg}"]
+		
+		tarball = matches[0]
+		print(f"Downloaded {tarball} in {dest}")
+
+		# Install tarball
+		cmd = f"R CMD INSTALL {quote(str(tarball))}"
+		# capture_output=True: do NOT print the command's output to the terminal
+		# check=True: if there's an error, an exception is produced
+		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, check=True)
+
+		if result.returncode!=0 or not isInstalled(r_version, pkg):
+			err = (result.stderr or result.stdout).strip()
+			if err:
+				return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
+			else:
+				return [False, f"Installation of {pkg} using tarball Rscript failed with return code {result.returncode} (no output captured)"]
+		
+		saveLog(r_version, pkg, "Tarball")
+		return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 	
-	tarball = matches[0]
-	print(f"Downloaded {tarball} in {dest}")
-
-	# Install tarball
-	cmd = f"R CMD INSTALL {quote(str(tarball))}"
-	result = subprocess.run(["bash", "-lc", cmd], capture_output=True)
-
-	if result.returncode!=0 or not isInstalled(r_version, pkg):
-		err = (result.stderr or result.stdout).strip()
-		if err:
-			return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
-		else:
-			return [False, f"Installation of {pkg} using tarball Rscript failed with return code {result.returncode} (no output captured)"]
-	
-	saveLog(r_version, pkg, "Tarball")
-	return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
+	except subprocess.CalledProcessError as e:
+		return [False, f"An exception occured when trying to install {pkg} in R/{r_version} with tarball"]
 
 def installFromGitHub(r_version: str, repo: str, pkg: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
@@ -279,13 +285,17 @@ def migrateVersions(v_new, v_old, working_dir):
 	#comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of some known missing packages
-	for dep in ["ggforce", "terra", "pak", "remotes", "multicross", "drieslab/Giotto"]:
+	i=0
+	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
+		if i>1:
+			break
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, f"{dep}: {msg}")
 		if success:
 			print(f"Install of {dep} was successfull{': ' + msg if msg else ''}")
 		else:
 			print(f"Install of {dep} failed{': ' + msg if msg else ''}")
+		i+=1
 
 	# Install Git packages
 	#git_pkgs = {
