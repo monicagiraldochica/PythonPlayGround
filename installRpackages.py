@@ -211,8 +211,6 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 		return [True, ""]
 	
 	fail_txt = f"{working_dir}/failures/" + re.sub(r"[^\w]", "_", package) + ".txt"
-	print(f"fail_txt: {fail_txt}")
-	print(os.path.isfile(fail_txt))
 	if check_pastFail and os.path.isfile(fail_txt):
 		print(f"{package} installation already failed")
 		return [False, ""]
@@ -245,8 +243,10 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 	base_dir.mkdir(parents=True, exist_ok=True)
 
 	filename = base_dir / ("success.txt" if success else "fail.txt")
-	with filename.open("a", encoding="utf-8") as f:
-		f.write(pkg+"\n")
+	line = pkg + "\n"
+	if not filename.exists() or line not in filename.read_text(encoding="utf-8").splitlines(keepends=True):
+		with filename.open("a", encoding="utf-8") as f:
+			f.write(line)
 
 	if (not success):
 		line = message.rstrip("\r\n")+"\n"
@@ -254,7 +254,7 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 		log_dir.mkdir(parents=True, exist_ok=True)
 
 		pkg = re.sub(r"[^\w]", "_", pkg)
-		with (log_dir / f"{pkg}.txt").open("a", encoding="utf-8") as f:
+		with (log_dir / f"{pkg}.txt").open("w", encoding="utf-8") as f:
 			f.write(line)
 
 def isBiocPackage(pkg_name):
