@@ -300,25 +300,27 @@ def migrateVersions(v_new, v_old, working_dir):
 			print(f"Install of {dep} failed\n")
 
 	# Install Git packages
-	#git_pkgs = {
-	#	"SeuratData":"satijalab/seurat-data",
-	#	"SeuratDisk":"mojaveazure/seurat-disk",
-	#	"SeuratWrappers":"satijalab/seurat-wrappers",
-	#	"CellChat":"jinworks/CellChat",
-	#	"monocle3":"cole-trapnell-lab/monocle3",
-	#	"presto":"immunogenomics/presto",
-	#	"proteoDA":"ByrumLab/proteoDA",
-	#	"rbokeh":"hafen/rbokeh",
-	#	"SCENIC":"aertslab/SCENIC",
-	#	"SCopeLoomR":"aertslab/SCopeLoomR",
-	#	"velocyto.R":"velocyto-team/velocyto.R",
-	#	"SCPA":"jackbibby1/SCPA"
-	#}
-	#for pkg,repo in git_pkgs.items():
-	#	[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
-	#	if msg!="":
-	#		saveInstallAttempt(success, pkg, msg, working_dir)
-	#		print(msg)
+	git_pkgs = {
+		"SeuratData":"satijalab/seurat-data",
+		"SeuratDisk":"mojaveazure/seurat-disk",
+		"SeuratWrappers":"satijalab/seurat-wrappers",
+		"CellChat":"jinworks/CellChat",
+		"monocle3":"cole-trapnell-lab/monocle3",
+		"presto":"immunogenomics/presto",
+		"proteoDA":"ByrumLab/proteoDA",
+		"rbokeh":"hafen/rbokeh",
+		"SCENIC":"aertslab/SCENIC",
+		"SCopeLoomR":"aertslab/SCopeLoomR",
+		"velocyto.R":"velocyto-team/velocyto.R",
+		"SCPA":"jackbibby1/SCPA"
+	}
+	for pkg,repo in git_pkgs.items():
+		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
+		saveInstallAttempt(success, dep, msg, working_dir)
+		if success:
+			print(f"Install of {dep} was successfull\n")
+		else:
+			print(f"Install of {dep} failed\n")
 
 	# Install other packages
 	#with open(f"{working_dir}/missing.txt", "r") as fin:
