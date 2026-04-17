@@ -200,22 +200,6 @@ def saveLog(rversion:str, pkgname:str, install_method:str, working_dir: str):
 			writer.writerow(["rversion", "pkgname", "install_method", "date"])
 		writer.writerow([rversion, pkgname, install_method, datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
 
-# Check if a package install had already failed
-def hadFailed(package:str, working_dir:str):
-	if not os.path.isfile(f"{working_dir}/fail.txt"):
-		return False
-	
-	cmd = f"grep {quote(package)} {working_dir}/fail.txt | head -n1"
-	print(cmd)
-	out = subprocess.run(cmd, shell=True, check=False).stdout
-	print(f"**{out}**")
-	if out==None:
-		return False
-	print(out.strip())
-	print(out.strip()==package)
-
-	return out.strip()==package
-
 def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, check_pastFail=True, gitRepo=None, bioc=False):
 	package = pkg_install if pkg_install else pkg_update
 	if package is None:
@@ -226,7 +210,8 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 		print(f"{package} is already installed in R/{r_version}")
 		return [True, ""]
 	
-	if check_pastFail and hadFailed(package, working_dir):
+	fail_txt = f"{working_dir}/failures/" + re.sub(r"[^\w]", "_", package)
+	if check_pastFail and os.path.isfile(fail_txt):
 		print(f"{package} installation already failed")
 		return [False, ""]
 	
