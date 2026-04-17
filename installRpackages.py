@@ -255,7 +255,7 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 
 		safe_pkg = re.sub(r"[^\w]", "_", pkg)
 		log_file = log_dir / f"{safe_pkg}.txt"
-		if not os.path.isfile():
+		if not os.path.isfile(log_file):
 			with (log_file).open("w", encoding="utf-8") as f:
 				f.write(line)
 
