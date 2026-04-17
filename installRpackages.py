@@ -295,7 +295,6 @@ def migrateVersions(v_new, v_old, working_dir):
 			print(f"Install of {dep} was successfull\n")
 		else:
 			print(f"Install of {dep} failed\n")
-		i+=1
 
 	# Install Git packages
 	#git_pkgs = {
