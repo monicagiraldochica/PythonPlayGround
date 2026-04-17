@@ -135,7 +135,8 @@ def installWithTarball(r_version: str, pkg: str):
 		return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 	
 	except subprocess.CalledProcessError as e:
-		return [False, f"An exception occured when trying to install {pkg} in R/{r_version} with tarball"]
+		err = (e.stderr or e.stdout or "").strip()
+		return [False, f"Installation of {pkg} in R/{r_version} failed with tarball: {err}"]
 
 def installFromGitHub(r_version: str, repo: str, pkg: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
