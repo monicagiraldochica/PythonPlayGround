@@ -202,7 +202,7 @@ def saveLog(rversion:str, pkgname:str, install_method:str, working_dir: str):
 
 # Check if a package install had already failed
 def hadFailed(package:str, working_dir:str):
-	if not os.path.isfile("fail.txt"):
+	if not os.path.isfile(f"{working_dir}/fail.txt"):
 		return False
 	
 	cmd = f"grep -F {quote(package)} {working_dir}/fail.txt | head -n 1 | cut -d: -f1"
