@@ -205,12 +205,12 @@ def hadFailed(package:str, working_dir:str):
 	if not os.path.isfile(f"{working_dir}/fail.txt"):
 		return False
 	
-	cmd = f"grep {quote(package)} {working_dir}/fail.txt"
+	cmd = f"grep {quote(package)} {working_dir}/fail.txt | head -n1"
 	print(cmd)
 	out = subprocess.run(cmd, shell=True, check=False).stdout
 	if out==None:
 		return False
-	print(out)
+	print(f"**{out}**")
 	
 	return out.strip()==package
 
