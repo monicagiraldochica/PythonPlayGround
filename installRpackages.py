@@ -84,7 +84,7 @@ def isInstalled(r_version: str, package: str) -> bool:
 
 	return dir_exists and can_be_loaded
 
-def installWithRscript(r_version: str, pkg: str):
+def installWithRscript(r_version: str, pkg: str, working_dir: str):
 	print(f"Installing {pkg} in R/{r_version} using Rscript...")
 	r_exp = f'install.packages("{pkg}")'
 	[returncode, stderr, stdout] = runRcmd(r_exp)
@@ -96,10 +96,10 @@ def installWithRscript(r_version: str, pkg: str):
 		else:
 			return [False, f"Installation of {pkg} using Rscript failed with return code {returncode} (no output captured)"]
 	
-	saveLog(r_version, pkg, "Rscript")
+	saveLog(r_version, pkg, "Rscript", working_dir)
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Rscript"]
 
-def installWithTarball(r_version: str, pkg: str):
+def installWithTarball(r_version: str, pkg: str, working_dir: str):
 	try:
 		print(f"Installing {pkg} in R/{r_version} using Tarball...")
 
@@ -133,14 +133,14 @@ def installWithTarball(r_version: str, pkg: str):
 			else:
 				return [False, f"Installation of {pkg} using tarball Rscript failed with return code {result.returncode} (no output captured)"]
 		
-		saveLog(r_version, pkg, "Tarball")
+		saveLog(r_version, pkg, "Tarball", working_dir)
 		return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 	
 	except subprocess.CalledProcessError as e:
 		err = (e.stderr or e.stdout or "").strip()
 		return [False, f"Installation of {pkg} in R/{r_version} failed with tarball: {err}"]
 
-def installFromGitHub(r_version: str, repo: str, pkg: str):
+def installFromGitHub(r_version: str, repo: str, pkg: str, working_dir: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
 
 	msg = ""
@@ -149,7 +149,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 		[returncode, stderr, stdout] = runRcmd(r_expr)
 
 		if returncode==0 and isInstalled(r_version, pkg):
-			saveLog(r_version, pkg, "GitHub")
+			saveLog(r_version, pkg, "GitHub", working_dir)
 			return [True, f"Successfully installed {pkg} in R/{r_version} with GitHub {opt}"]
 		
 		err = (stderr or stdout).strip()
@@ -161,7 +161,7 @@ def installFromGitHub(r_version: str, repo: str, pkg: str):
 	
 	return [False, f"Installation of {pkg} using GitHub failed (no output captured)"]
 
-def installGiotto(r_version: str, giotto_pkg:str):
+def installGiotto(r_version: str, giotto_pkg:str, working_dir: str):
 	print(f"Installing {giotto_pkg} in R/{r_version} using Giotto...")
 	r_expr = f'pak::pkg_install("{giotto_pkg}")'
 	[returncode, stderr, stdout] = runRcmd(r_expr)
@@ -173,10 +173,10 @@ def installGiotto(r_version: str, giotto_pkg:str):
 		else:
 			return [False, f"Installation of {giotto_pkg} using Giotto failed with return code {returncode} (no output captured)"]
 	
-	saveLog(r_version, giotto_pkg, "Giotto")
+	saveLog(r_version, giotto_pkg, "Giotto", working_dir)
 	return [True, f"Successfully installed {giotto_pkg} in R/{r_version} with Giotto"]
 
-def installBiocManager(r_version: str, pkg: str):
+def installBiocManager(r_version: str, pkg: str, working_dir: str):
 	print(f"Installing {pkg} in R/{r_version} using Bioconductor...")
 	r_expr = f'BiocManager::install(c("{pkg}"))'
 	[returncode, stderr, stdout] = runRcmd(r_expr)
@@ -188,11 +188,11 @@ def installBiocManager(r_version: str, pkg: str):
 		else:
 			return [False, f"Installation of {pkg} using Bioconductor failed with return code {returncode} (no output captured)"]
 		
-	saveLog(r_version, pkg, "BiocManager")
+	saveLog(r_version, pkg, "BiocManager", working_dir)
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Bioconductor"]
 
-def saveLog(rversion, pkgname, install_method):
-	filename = "added_with_script.csv"
+def saveLog(rversion:str, pkgname:str, install_method:str, working_dir: str):
+	filename = f"{working_dir}/added_with_script.csv"
 	new_file = not os.path.exists(filename)
 	with open(filename, "a", newline="") as f:
 		writer = csv.writer(f)
@@ -227,32 +227,32 @@ def installPackage(r_version, working_dir, pkg_install=None, pkg_update=None, ch
 		return [False, ""]
 	
 	if gitRepo:
-		return installFromGitHub(r_version, gitRepo, package)
+		return installFromGitHub(r_version, gitRepo, package, working_dir)
 	
 	if package.endswith("/Giotto"):
-		return installGiotto(r_version, package)
+		return installGiotto(r_version, package, working_dir)
 	
 	if (not bioc):
-		[success, msg] = installWithRscript(r_version, package)
+		[success, msg] = installWithRscript(r_version, package, working_dir)
 		if success:
 			return [success, msg]
 	else:
 		msg = ""
 	
 	if (not bioc):
-		[success, msg2] = installWithTarball(r_version, package)
+		[success, msg2] = installWithTarball(r_version, package, working_dir)
 		if success:
 			return [success, ", ".join([msg, msg2])]
 	else:
 		msg2=""
 
-	[success, msg3] = installBiocManager(r_version, package)
+	[success, msg3] = installBiocManager(r_version, package, working_dir)
 	return [success, ", ".join([msg, msg2, msg3])]
 
 def saveInstallAttempt(success: bool, message: str, working_dir: str):
 	today = date.today().strftime("%Y_%m_%d")
 	line = message.rstrip("\r\n")+"\n"
-	filename = f"{working_dir}/{'success' if success else 'failed'}_{today}.txt"
+	filename = f"{working_dir}/{'success' if success else 'fail'}.txt"
 	log_path = Path(filename)
 	log_path.open("a", encoding="utf-8").write(line)
 
@@ -290,7 +290,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	# Install known dependencies of some known missing packages
 	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-		saveInstallAttempt(success, f"{dep}: {msg}", working_dir)
+		saveInstallAttempt(success, f"{dep}: {msg}\n", working_dir)
 		if success:
 			print(f"Install of {dep} was successfull\n")
 		else:
