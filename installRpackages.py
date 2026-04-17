@@ -102,7 +102,7 @@ def installWithRscript(r_version: str, pkg: str):
 def installWithTarball(r_version: str, pkg: str):
 	try:
 		print(f"Installing {pkg} in R/{r_version} using Tarball...")
-		
+
 		dest = Path(f"/adminfs/builds/R-{r_version}/packages")
 		dest.mkdir(parents=True, exist_ok=True)
 
@@ -123,7 +123,8 @@ def installWithTarball(r_version: str, pkg: str):
 		cmd = f"R CMD INSTALL {quote(str(tarball))}"
 		# capture_output=True: do NOT print the command's output to the terminal
 		# check=True: if there's an error, an exception is produced
-		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, check=True)
+		# text=True: makes stdout and stderr strings instead of bytes
+		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, check=True, text=True)
 
 		if result.returncode!=0 or not isInstalled(r_version, pkg):
 			err = (result.stderr or result.stdout).strip()
