@@ -420,6 +420,9 @@ def main():
 	if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
+	if input("Did you load the latest version of gcc (not the default)? [y/N]: ") not in ("y", "yes"):
+		sys.exit("You need to load the latest version of gcc first")
+
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir)
 
