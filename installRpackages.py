@@ -291,7 +291,7 @@ def migrateVersions(v_new, v_old, working_dir):
 	comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of some known missing packages
-	for dep in ["ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
+	for dep in ["Rcpp", "ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, dep, msg, working_dir)
 		if success:
