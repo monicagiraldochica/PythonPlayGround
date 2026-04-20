@@ -124,7 +124,7 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
                 list_txt = "\n\t".join(dic1[status])
                 print(f"{msg}:\n\t{list_txt}")
 
-def txt2dic(txt, working_dir):
+def txt2dic(txt:str, working_dir:str):
     """
     Read a tab-delimited file into a dict {key: value}.
     Skips blank lines and lines without at least 2 columns.
