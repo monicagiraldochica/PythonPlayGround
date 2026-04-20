@@ -295,7 +295,7 @@ def migrateVersions(v_new, v_old, working_dir):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
 		saveInstallAttempt(success, dep, msg, working_dir)
 		if success:
-			print(f"Install of {dep} was successfull\n")
+			print(f"Install of {dep} was successful\n")
 		else:
 			print(f"Install of {dep} failed\n")
 
@@ -424,11 +424,20 @@ def main():
 		migrateVersions(v_new, v_old, working_dir)
 
 	if pkg_install and (not git_repo):
-		installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False)	
+		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False)	
+		saveInstallAttempt(success, pkg_install, msg, working_dir)
+		if success:
+			print(f"Install of {pkg_install} was successful\n")
+		else:
+			print(f"Install of {pkg_install} failed\n")
 
 	elif pkg_install:
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False, gitRepo=git_repo)
-		print(f"{success}: {msg}")
+		saveInstallAttempt(success, pkg_install, msg, working_dir)
+		if success:
+			print(f"Install of {pkg_install} was successful\n")
+		else:
+			print(f"Install of {pkg_install} failed\n")
 
 	if pkg_update:
 		bioc_packages = []
