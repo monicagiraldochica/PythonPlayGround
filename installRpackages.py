@@ -469,5 +469,7 @@ def main():
 				with open(file2,'a') as f2:
 					f2.write(f"{pkg},{msg}")
 
+	print("*** SCRIPT DONE ***")
+
 if __name__ == "__main__":
     main()

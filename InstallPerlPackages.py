@@ -233,7 +233,9 @@ def main():
             sys.exit(1)
 
     if install:
-        loop(install.split(","), True)         
+        loop(install.split(","), True)
+
+    print("*** SCRIPT DONE ***")    
 
 if __name__ == "__main__":
     main()
