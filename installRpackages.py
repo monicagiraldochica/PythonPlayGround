@@ -21,11 +21,12 @@ def parse_arguments():
 	parser.add_argument("--vnew", help="New R version")
 	parser.add_argument("--vold", help="Old R version")
 	parser.add_argument("--git-repo", help="GitHub repository")
+	parser.add_argument("--quiet", action="store_true", help="Do not give any prompt")
 
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument("--migrate", action="store_true", help="Install all vold packages in vnew")
-	group.add_argument("--install", help="package to install in vnew")
-	group.add_argument("--update", help="package(s) to update in vnew divided by comma, or path of csv file with the following columns: Index, Package, LibPath (not used), Install_Path (not used), Built (not used), ReposVer (not used), Repository.")
+	group.add_argument("--install", help="Package to install in vnew")
+	group.add_argument("--update", help="Package(s) to update in vnew divided by comma, or path of csv file with the following columns: Index, Package, LibPath (not used), Install_Path (not used), Built (not used), ReposVer (not used), Repository.")
 
 	args = parser.parse_args()
 	
@@ -37,7 +38,7 @@ def parse_arguments():
 		sys.exit(f"{working_dir} doesn't exist")
 	working_dir = working_dir[:-1] if working_dir.endswith("/") else working_dir
 	
-	return [v_new, v_old, args.migrate, args.install, args.git_repo, working_dir, args.update]
+	return [v_new, v_old, args.migrate, args.install, args.git_repo, working_dir, args.update, args.quiet]
 
 def savePackageList(r_version: str, working_dir: str):
 	try:
@@ -318,7 +319,7 @@ def migrateVersions(v_new, v_old, working_dir):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 		saveInstallAttempt(success, pkg, msg, working_dir)
 		if success:
-			print(f"Install of {pkg} was successfull\n")
+			print(f"Install of {pkg} was successful\n")
 		else:
 			print(f"Install of {pkg} failed\n")
 
@@ -337,7 +338,7 @@ def migrateVersions(v_new, v_old, working_dir):
 
 			saveInstallAttempt(success, line, msg, working_dir)
 			if success:
-				print(f"Install of {line} was successfull\n")
+				print(f"Install of {line} was successful\n")
 			else:
 				print(f"Install of {line} failed\n")
 
@@ -406,7 +407,7 @@ def main():
 		print("This script requires Python 3.7 or higher.")
 		sys.exit(1)
 
-	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update] = parse_arguments()
+	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update, quiet] = parse_arguments()
 
 	# Check R version
 	rVers = getRversion()
@@ -417,10 +418,10 @@ def main():
 		print(f"Wrong version of R loaded ({rVers}). Need {v_new}.")
 		sys.exit(1)
 
-	if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
+	if (not quiet) and input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
-	if input("Did you load the latest version of gcc (not the default)? [y/N]: ") not in ("y", "yes"):
+	if (not quiet) and input("Did you load the latest version of gcc (not the default)? [y/N]: ") not in ("y", "yes"):
 		sys.exit("You need to load the latest version of gcc first")
 
 	if migrate:
