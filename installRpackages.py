@@ -145,8 +145,11 @@ def installFromGitHub(r_version: str, repo: str, pkg: str, working_dir: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
 
 	msg = ""
-	for opt in ["remotes", "devtools"]:
-		r_expr = f'{opt}::install_github("{repo}")'
+	for opt in ["pak", "remotes", "devtools"]:
+		if opt=="pak":
+			r_expr = f'pak::pak("{repo}")'
+		else:
+			r_expr = f'{opt}::install_github("{repo}")'
 		[returncode, stderr, stdout] = runRcmd(r_expr)
 
 		if returncode==0 and isInstalled(r_version, pkg):
@@ -292,36 +295,26 @@ def migrateVersions(v_new, v_old, working_dir):
 	comparePackages(v_new, v_old, working_dir)
 
 	# Install known dependencies of some known missing packages
-	for dep in ["Rcpp", "ggforce", "pak", "remotes", "multicross", "drieslab/Giotto", "terra"]:
-		[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
-		saveInstallAttempt(success, dep, msg, working_dir)
-		if success:
-			print(f"Install of {dep} was successful\n")
-		else:
-			print(f"Install of {dep} failed\n")
+	with open("r_deps.txt", "r") as f:
+		for dep in f:
+			dep = dep.rstrip("\n")
+			[success, msg] = installPackage(v_new, working_dir, pkg_install=dep)
+			saveInstallAttempt(success, dep, msg, working_dir)
+			if success:
+				print(f"Install of {dep} was successful\n")
+			else:
+				print(f"Install of {dep} failed\n")
 
 	# Install Git packages
-	git_pkgs = {
-		"SeuratData":"satijalab/seurat-data",
-		"SeuratDisk":"mojaveazure/seurat-disk",
-		"SeuratWrappers":"satijalab/seurat-wrappers",
-		"CellChat":"jinworks/CellChat",
-		"monocle3":"cole-trapnell-lab/monocle3",
-		"presto":"immunogenomics/presto",
-		"proteoDA":"ByrumLab/proteoDA",
-		"rbokeh":"hafen/rbokeh",
-		"SCENIC":"aertslab/SCENIC",
-		"SCopeLoomR":"aertslab/SCopeLoomR",
-		"velocyto.R":"velocyto-team/velocyto.R",
-		"SCPA":"jackbibby1/SCPA"
-	}
-	for pkg,repo in git_pkgs.items():
-		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
-		saveInstallAttempt(success, pkg, msg, working_dir)
-		if success:
-			print(f"Install of {pkg} was successful\n")
-		else:
-			print(f"Install of {pkg} failed\n")
+	with open("r_gitdeps.txt", "r") as f:
+		for line in f:
+			pkg, repo = line.rstrip("\n").split(":")
+			[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
+			saveInstallAttempt(success, pkg, msg, working_dir)
+			if success:
+				print(f"Install of {pkg} was successful\n")
+			else:
+				print(f"Install of {pkg} failed\n")
 
 	# Install other packages
 	with open(f"{working_dir}/missing.txt", "r") as fin:
@@ -421,8 +414,11 @@ def main():
 	if (not quiet) and input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
-	if (not quiet) and input("Did you load the latest version of gcc (not the default)? [y/N]: ") not in ("y", "yes"):
+	if (not quiet) and input("Did you load the latest available version of gcc (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
 		sys.exit("You need to load the latest version of gcc first")
+
+	if (not quiet) and input("Did you load the latest available version of cmake (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
+		sys.exit("You need to load the latest version of cmake first")
 
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir)

@@ -1,0 +1,17 @@
+SeuratData:satijalab/seurat-data
+SeuratDisk:mojaveazure/seurat-disk
+SCENIC:aertslab/SCENIC
+SCopeLoomR:aertslab/SCopeLoomR
+drieslab/Giotto
+CellChat:jinworks/CellChat
+proteoDA:ByrumLab/proteoDA
+BPCells:bnprks/BPCells/r
+monocle3:cole-trapnell-lab/monocle3
+hadley/pryr
+stnava/ITKR
+rbokeh":hafen/rbokeh
+SeuratWrappers:satijalab/seurat-wrappers
+3SCPA:jackbibby1/SCPA
+liana:saezlab/liana
+presto:immunogenomics/presto
+velocyto.R:velocyto-team/velocyto.R
