@@ -250,7 +250,7 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 			f.write(line)
 
 	if (not success):
-		line = message.rstrip("\r\n")+"\n"
+		line = "\n"+message.rstrip("\r\n")+"\n"
 		log_dir = base_dir / "failures"
 		log_dir.mkdir(parents=True, exist_ok=True)
 
