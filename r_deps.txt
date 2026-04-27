@@ -9,3 +9,4 @@ devtools
 pkgdown
 crossmatch
 multicross
+BiocManager

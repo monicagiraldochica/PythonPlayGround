@@ -13,5 +13,8 @@ rbokeh":hafen/rbokeh
 SeuratWrappers:satijalab/seurat-wrappers
 3SCPA:jackbibby1/SCPA
 liana:saezlab/liana
+linkcomm:alextkalinka/linkcomm
+loupeR:10XGenomics/loupeR
+survMisc:cran/survMisc
 presto:immunogenomics/presto
 velocyto.R:velocyto-team/velocyto.R
