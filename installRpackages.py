@@ -284,7 +284,7 @@ def isBiocPackage(pkg_name):
 	except subprocess.CalledProcessError:
 		return False
 
-def migrateVersions(v_new, v_old, working_dir):
+def migrateVersions(v_new, v_old, working_dir, quiet):
 	# Get the list of packages in the new version
 	savePackageList(v_new, working_dir)
 
@@ -311,8 +311,14 @@ def migrateVersions(v_new, v_old, working_dir):
 			pkg, repo = line.rstrip("\n").split(":")
 			[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg, gitRepo=repo)
 			saveInstallAttempt(success, pkg, msg, working_dir)
+
 			if success:
 				print(f"Install of {pkg} was successful\n")
+				if pkg=="loupeR" and (not quiet):
+					runRcmd(f"loupeR::setup()")
+				else:
+					print("YOU MUST RUN loupeR::setup() TO COMPLETE INSTALL!!")
+
 			else:
 				print(f"Install of {pkg} failed\n")
 
@@ -421,7 +427,7 @@ def main():
 		sys.exit("You need to load the latest version of cmake first")
 
 	if migrate:
-		migrateVersions(v_new, v_old, working_dir)
+		migrateVersions(v_new, v_old, working_dir, quiet)
 
 	if pkg_install and (not git_repo):
 		[success, msg] = installPackage(v_new, working_dir, pkg_install=pkg_install, check_pastFail=False)	
