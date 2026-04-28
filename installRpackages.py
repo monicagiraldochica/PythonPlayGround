@@ -426,6 +426,9 @@ def main():
 	if (not quiet) and input("Did you load the latest available version of cmake (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
 		sys.exit("You need to load the latest version of cmake first")
 
+	if (not quiet) and input("Did you load the latest available version of gsl (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
+		sys.exit("You need to load the latest version of gsl first")
+
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir, quiet)
 
