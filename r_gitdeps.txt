@@ -18,3 +18,4 @@ loupeR:10XGenomics/loupeR
 survMisc:cran/survMisc
 presto:immunogenomics/presto
 velocyto.R:velocyto-team/velocyto.R
+sahirbhatnagar/manhattanly
