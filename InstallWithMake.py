@@ -65,5 +65,21 @@ def main():
         print(f"Error downloading {mdl_name}: {err}")
         sys.exit(1)
 
+    # Compile
+
+    # Test in /hpc/apps/app/bin
+
+    # Download DB if needed
+
+    # Create lua file (hidden module)
+
+    # Test
+
+    # Make module visible
+
+    # Remove from builds if desired
+
+    # Specific software
+
 if __name__ == "__main__":
     main()
