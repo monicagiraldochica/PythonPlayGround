@@ -3,6 +3,7 @@ import subprocess
 import pandas as pd
 import re
 import os
+import installib
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id):
@@ -11,16 +12,15 @@ def get_jobInfo_scontrol(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if job is not found in Slurm memory.
     """
-    try:
-        # Run scontrol command
-        result = subprocess.run(["scontrol", "show", "job", str(job_id)], capture_output=True, text=True, check=True)
+    # Run scontrol command
+    [returncode, stderr, stdout] = installib.runBash(["scontrol", "show", "job", str(job_id)])
+    if returncode!=0:
+        err = (stderr or stdout or "").strip()
+        print(f"scontrol failed: {err}")
+        return pd.DataFrame()        
 
-    except subprocess.CalledProcessError:
-        # Job not found or command failed
-        return pd.DataFrame()
-
-    output = result.stdout.strip()
-    if not output or "JobId" not in output:
+    output = stdout.strip() if stdout else ""
+    if (not output) or ("JobId" not in output):
         # Job not in memory or invalid
         return pd.DataFrame()
 
@@ -116,12 +116,11 @@ def get_jobInfo_sacct(job_id):
 
     df = df.reset_index(drop=True)
     return df
-    
+
+# Only works for running, queued or recently finished jobs
 #df = get_jobInfo_scontrol()
 #print(df)
 
-df = get_jobInfo_sacct(5886414)
-print(df)
-print("\n")
-df = get_jobInfo_sacct(5896738)
+# Better to use for failed or completed jobs
+df = get_jobInfo_sacct(6645625)
 print(df)
