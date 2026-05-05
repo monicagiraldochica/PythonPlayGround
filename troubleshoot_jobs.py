@@ -4,6 +4,7 @@ import pandas as pd
 import re
 import os
 import installib
+import sys
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id):
@@ -116,6 +117,10 @@ def get_jobInfo_sacct(job_id):
 
     df = df.reset_index(drop=True)
     return df
+
+if input("Did you load python/3.10.16 or greater? [y/N]: ").strip().lower()!="n":
+    print("Load python/3.10.16 or greater before running this script")
+    sys.exit(1)
 
 # Only works for running, queued or recently finished jobs
 #df = get_jobInfo_scontrol()
