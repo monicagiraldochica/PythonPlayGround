@@ -23,30 +23,3 @@ if len(sys.argv)!=2:
 subject=sys.argv[1]
 
 print_kwargs(kwargs_1="Shark", kwargs_2=4.5, kwargs_3=True)
-
-def main():
-        netID = None
-        piID = None
-
-        argv = sys.argv[1:]
-        try:
-                opts, args = getopt.getopt(argv, "u:p:h:", ["user=", "pi=", "help="])
-        except:
-                printHelp()
-                exit("Error reading arguments")
-
-        for opt,arg in opts:
-                if opt in ["-u", "--user"]:
-                        netID = arg
-                elif opt in ["-p", "--pi"]:
-                        piID = arg
-                elif opt in ["h","--help"]:
-                        printHelp()
-                        exit()
-
-        if netID==None or piID==None:
-                printHelp()
-                exit("Missing arguments")
-
-	if myldaplib.getUserInfo(netID)["uid"]!="":
-                exit(f"User {netID} already has an account. Send the following link that contains information on how to login: https://docs.rcc.mcw.edu/user-guide/access/login/")

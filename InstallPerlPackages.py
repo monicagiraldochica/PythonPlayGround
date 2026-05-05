@@ -3,11 +3,11 @@ __author__ = "Monica Keith"
 __status__ = "Production"
 __purpose__ = "Install Perl packages"
 
-import subprocess
 import sys
 import os
 import argparse
 import re
+import installib
 
 def check_module(mdl: str) -> int:
     """
@@ -17,37 +17,20 @@ def check_module(mdl: str) -> int:
     1 -> Module not installed
     2 -> Compilation/runtime errors
     """
-    try:
-        is_logreport = ("Log::Report" in mdl) or ("LogReport" in mdl)
+    is_logreport = ("Log::Report" in mdl) or ("LogReport" in mdl)
+    cmd = ["perl", f"-M{mdl}", "-e", 'print "Installed"'] if is_logreport else ["perl", "-e", f'use Log::Report (); require "{mdl}"; print "Installed"']
 
-        cmd = f"perl -M{mdl} -e print \"Installed\""
-        print(f"Running: {cmd}\n")
-        # capture_output=True: do NOT print the command's output to the terminal
-        # text=True: makes stdout and stderr strings instead of bytes
-        # check=True: if there's an error, an exception is produced
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True) if is_logreport else subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
-        
-        if result.returncode==0 and result.stdout.strip()=="Installed":
-            return 0
-        
-        elif is_logreport:
-            cmd = f"perl -e 'use Log::Report (); require {mdl}; print \"Installed\"'"
-            print(f"Running: {cmd}\n")
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
-            if result.returncode==0 and result.stdout.strip()=="Installed":
-                return 0
+    print(f"Running: {' '.join(cmd)}\n")
+    [returncode, stderr, stdout] = installib.runBash(cmd)
+    if returncode==0 and stdout.strip()=="Installed":
+        return 0
 
-        err = (result.stderr or result.stdout or "").strip()
-        if re.search(r"^Can't locate .* in \@INC\b", err, flags=re.M):
-            return 1
+    err = (stderr or stdout or "").strip()
+    if re.search(r"^Can't locate .* in \@INC\b", err, flags=re.M):
+         return 1
         
-        print(f"{err}\n")
-        return 2
-
-    except subprocess.CalledProcessError as e:
-        err = (e.stderr or e.stdout or str(e)).strip()
-        print(f"{err}\n")
-        return 2
+    print(f"{err}\n")
+    return 2
 
 def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt"):
     dic1 = {0:[], 1:[], 2:[]}
@@ -64,28 +47,14 @@ def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt
         if status==1 and install:
             print(f"Installing {mdl}")
 
-            try:
-                cmds = [f"cpan -T{mdl}", f"cpanm -T{mdl}"]
-                for i in range(1):
-                    cmd = cmds[i]
-                    print(f"\nRunning: {cmd}")
-
-                    if i==1:
-                        # capture_output=True: do NOT print the command's output to the terminal
-                        # text=True: makes stdout and stderr strings instead of bytes
-                        result = subprocess.run(cmd, capture_output=True, text=True)
-                        if result.returncode==0:
-                            break
-                    else:
-                        # check=True: if there's an error, an exception is produced
-                        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                        err = (result.stderr or result.stdout or "").strip()
-                        dic3[mdl] = f"Unexpected error installing {mdl}: {err}"
-
-            except subprocess.CalledProcessError as e:
-                err = (e.stderr or e.stdout or str(e)).strip()
-                dic3[mdl] = f"Unexpected error installing {mdl}: {err}"
-            
+            for prefix in ["cpanm", "cpan"]:
+                [returncode, stderr, stdout] = installib.runBash([prefix, f"-T{mdl}"])
+                print(f"\nRunning {prefix} -T{mdl}")
+                
+                if returncode==0:
+                    break
+                err = (stderr or stdout or "").strip()
+                dic3[mdl] = f"Unexpected error installing {mdl}: {err}"            
             status = check_module(mdl)
 
         dic1[status].append(mdl)
@@ -178,15 +147,7 @@ def parse_arguments():
     return [v_new, v_old, args.migrate, args.install, working_dir]
 
 def get_perl_version():
-    try:
-        v = subprocess.check_output(["perl", "-e", "print $^V"], text=True).strip()
-        return v.lstrip("v")
-    
-    except FileNotFoundError:
-        return None
-    
-    except subprocess.CalledProcessError:
-        return None
+    return installib.runBash(["perl", "-e", "print $^V"]).strip().lstrip("v")
 
 def main():
     # Check python version

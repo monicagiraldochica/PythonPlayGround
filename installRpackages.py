@@ -5,15 +5,13 @@ __purpose__ = "Install R packages"
 
 import os
 import argparse
-import subprocess
-from shlex import quote
-from datetime import date
 from pathlib import Path
 import sys
 import re
 import pandas as pd
 import csv
 from datetime import datetime
+import installib
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -62,20 +60,10 @@ def savePackageList(r_version: str, working_dir: str):
 # Save the list of packages that are in v_old but not in v_new
 def comparePackages(v_new: str, v_old: str, working_dir: str):
 	with open(f"{working_dir}/missing.txt", "w") as f:
-		subprocess.run(["grep", "-Fvx", "-f", f"{working_dir}/{v_new}.txt", f"{working_dir}/{v_old}.txt"], stdout=f)
+		installib.runBash(["grep", "-Fvx", "-f", f"{working_dir}/{v_new}.txt", f"{working_dir}/{v_old}.txt"], output_file=f)
 
 def runRcmd(r_expr: str):
-	try:
-		cmd = f"Rscript -e {quote(r_expr)}"
-		# capture_output=True: do NOT print the command's output to the terminal
-		# text=True: makes stdout and stderr strings instead of bytes
-		# check=True: if there's an error, an exception is produced
-		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, text=True, check=True)
-		return [result.returncode, result.stderr, result.stdout]
-	
-	except subprocess.CalledProcessError as e:
-		err = (e.stderr or e.stdout or str(e)).strip()
-		return [2, err, ""]
+	return installib.runBash(["Rscript", "-e", r_expr])
 
 # Check if a package exists and is correctly installed
 def isInstalled(r_version: str, package: str) -> bool:
@@ -101,45 +89,35 @@ def installWithRscript(r_version: str, pkg: str, working_dir: str):
 	return [True, f"Successfully installed {pkg} in R/{r_version} with Rscript"]
 
 def installWithTarball(r_version: str, pkg: str, working_dir: str):
-	try:
-		print(f"Installing {pkg} in R/{r_version} using Tarball...")
+	print(f"Installing {pkg} in R/{r_version} using Tarball...")
 
-		dest = Path(f"/adminfs/builds/R-{r_version}/packages")
-		dest.mkdir(parents=True, exist_ok=True)
+	dest = Path(f"/adminfs/builds/R-{r_version}/packages")
+	dest.mkdir(parents=True, exist_ok=True)
 
-		# Download the latest tarball
-		print(f"Downloading latest source tarball for {pkg}")
-		r_expr = f'download.packages("{pkg}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
-		if runRcmd(r_expr)[0]!=0:
-			return [False, f"Could not download latest tarball for {pkg} from cran.r-project.org"]
+	# Download the latest tarball
+	print(f"Downloading latest source tarball for {pkg}")
+	r_expr = f'download.packages("{pkg}", destdir="{dest}", repos="https://cran.r-project.org", type="source")'
+	if runRcmd(r_expr)[0]!=0:
+		return [False, f"Could not download latest tarball for {pkg} from cran.r-project.org"]
 
-		matches = sorted(dest.glob(f"{pkg}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
-		if not matches:
-			return [False, f"No tarball found for {pkg}"]
+	matches = sorted(dest.glob(f"{pkg}_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+	if not matches:
+		return [False, f"No tarball found for {pkg}"]
 		
-		tarball = matches[0]
-		print(f"Downloaded {tarball} in {dest}")
+	tarball = matches[0]
+	print(f"Downloaded {tarball} in {dest}")
 
-		# Install tarball
-		cmd = f"R CMD INSTALL {quote(str(tarball))}"
-		# capture_output=True: do NOT print the command's output to the terminal
-		# check=True: if there's an error, an exception is produced
-		# text=True: makes stdout and stderr strings instead of bytes
-		result = subprocess.run(["bash", "-lc", cmd], capture_output=True, check=True, text=True)
-
-		if result.returncode!=0 or not isInstalled(r_version, pkg):
-			err = (result.stderr or result.stdout).strip()
-			if err:
-				return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
-			else:
-				return [False, f"Installation of {pkg} using tarball Rscript failed with return code {result.returncode} (no output captured)"]
+	# Install tarball
+	[returncode, stderr, stdout] = installib.runBash(["R", "CMD", "INSTALL", str(tarball)])
+	if returncode!=0 or not isInstalled(r_version, pkg):
+		err = (stderr or stdout).strip()
+		if err:
+			return [False, f"Installation of {pkg} using tarball failed with error: {err}"]
+		else:
+			return [False, f"Installation of {pkg} using tarball Rscript failed with return code {returncode} (no output captured)"]
 		
-		saveLog(r_version, pkg, "Tarball", working_dir)
-		return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
-	
-	except subprocess.CalledProcessError as e:
-		err = (e.stderr or e.stdout or "").strip()
-		return [False, f"Installation of {pkg} in R/{r_version} failed with tarball: {err}"]
+	saveLog(r_version, pkg, "Tarball", working_dir)
+	return [True, f"Successfully installed {pkg} in R/{r_version} with tarball"]
 
 def installFromGitHub(r_version: str, repo: str, pkg: str, working_dir: str):
 	print(f"Installing {pkg} in R/{r_version} using GitHub...")
@@ -263,7 +241,7 @@ def saveInstallAttempt(success: bool, pkg:str, message: str, working_dir: str):
 			with (log_file).open("w", encoding="utf-8") as f:
 				f.write(line)
 
-def isBiocPackage(pkg_name):
+def isBiocPackage(pkg_name: str):
 	r_code = f'''
 		if (!requireNamespace("BiocManager", quietly=TRUE)) {{
 			cat("UNKNOWN"); quit(status=0)
@@ -272,17 +250,11 @@ def isBiocPackage(pkg_name):
 		avail <- tryCatch(BiocManager::available(), error=function(e) character())
 		cat(if ("{pkg_name}" %in% avail) "YES" else "NO")
 	'''
-
-	try:
-		result = subprocess.run(["R", "--slave", "-e", r_code], capture_output=True, text=True, check=True)
-		out = (result.stdout or "").strip()
-		return out=="YES"
-	
-	except FileNotFoundError:
+	[returncode, stderr, stdout] = installib.runBash(["R", "--slave", "-e", r_code])
+	if returncode!=0:
+		print(stderr)
 		return False
-	
-	except subprocess.CalledProcessError:
-		return False
+	return (stdout or "").strip()=="YES"
 
 def migrateVersions(v_new, v_old, working_dir, quiet):
 	# Get the list of packages in the new version
@@ -384,16 +356,9 @@ def r_mandatory_deps_recursive(package, repo_mode="bioc", cran_repo="https://cra
 	return [ln for ln in stdout.splitlines() if ln.strip()]
 
 def getRversion():
-	try:
-		result = subprocess.run(["R","--version"], check=True, capture_output=True, text=True).stdout
-		match = re.search(r"(\d+\.\d+\.\d+)", result)
-		return match.group(1) if match else None
-	
-	except FileNotFoundError:
-		return None
-	
-	except subprocess.CalledProcessError:
-		return None
+	result = installib.runBash(["R","--version"], check=True, capture_output=True, text=True)[2]
+	match = re.search(r"(\d+\.\d+\.\d+)", result)
+	return match.group(1) if match else None
 
 def main():
 	# Check python version
