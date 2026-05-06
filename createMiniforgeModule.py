@@ -8,6 +8,7 @@ import os
 import shutil
 import textwrap
 import installib
+from pathlib import Path
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -126,18 +127,14 @@ def main():
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit()
 
-    use_pip = input("\nAre you installing using pip inside this conda environment? [Y/n]: ").strip().lower() not in ("n", "not")
-    env_name = f"{main_pkg}-{version}"
     if create_env:
-        venv_python = input(f"What python version is required by {main_pkg}/{version} (i.e. python>=3.10, Enter if no specific version required): ")
-        if (not venv_python) and use_pip:
-            print("*** YOU NEED TO INSTALL PYTHON INSIDE THE CONDA ENV OR IT WILL INSTALL THE PROGRAM IN BASE ***")
-            venv_python = f"python={major}.{minor}.{micro}"
-        
-        if (not venv_python):
-            input(f"\nconda create -n {env_name} [Enter]")
+        if micro:
+            default_py = f"{major}.{minor}.{micro}"
         else:
-            input(f"\nconda create -n {env_name} {venv_python} [Enter]")
+            default_py = f"{major}.{minor}"
+
+        venv_python = input(f"What python version is required by {main_pkg}/{version} (i.e. python>=3.10, Enter if no specific version required): ") or f"python={default_py}"
+        input(f"\nconda create -n {env_name} {venv_python} [Enter]")
 
     input(f"\nconda activate {env_name} [Enter]")
 
@@ -172,7 +169,7 @@ def main():
                 if os.path.isfile(req_file):
                     req_files+=[req_file]
 
-    if use_pip:
+    if input("Do you need to run any pip installs? [y/N]").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
         if which_pip!=f"{forge_path}/pip":
             input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS {forge_path}/pip *** [Enter]")
@@ -197,9 +194,10 @@ def main():
                     line = fin.readline()
                     input(f"conda list | grep {line} [Enter]")
 
+    input(f"conda deactivate {env_name} [Enter]")
+
     if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
-        if not os.path.isdir(db_folder):
-            os.mkdir(db_folder)
+        Path(db_folder).mkdir(parents=True, exist_ok=True)
         input(f"Download any databases to {db_folder} [Enter]")
 
     # Copy module file from a previous version
@@ -284,9 +282,7 @@ def main():
             if any(dep.startswith("python/3") for dep in mdl_deps):
                 content+="\n--set_alias(\"python\", \"python3\")"
 
-        if not os.path.isdir(ml_folder):
-            os.mkdir(ml_folder)
-
+        Path(ml_folder).mkdir(parents=True, exist_ok=True)
         with open(new_ml, "w") as f1:
             f1.write(content)
 
