@@ -29,7 +29,7 @@ def getCondaVersion():
     return match.group(1) if match else None
 
 def availableModules(pkg: str):
-    [returncode, stderr, stdout] = installib.runBash(["ml", "avail", pkg])
+    [returncode, stderr, stdout] = installib.runBash(["module", "avail", pkg])
     
     if returncode!=0:
         err = (stderr or stdout or "").strip()
@@ -81,6 +81,7 @@ def main():
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
 
+    input("ssh login node [Enter]")
     input("sudo su - [Enter]")
     input("ml load miniforge [Enter]")
 
