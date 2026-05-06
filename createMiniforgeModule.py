@@ -193,7 +193,7 @@ def main():
 
     input(f"\nTest the conda environment. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
 
-    input(f"\nconda deactivate {env_name} [Enter]")
+    input(f"\nconda deactivate [Enter]")
 
     if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
         Path(db_folder).mkdir(parents=True, exist_ok=True)
