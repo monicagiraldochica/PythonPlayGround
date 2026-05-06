@@ -181,7 +181,7 @@ def main():
             input(f"conda list | grep {pip_install} [Enter]")
             input(f"Run a test command for {pip_install} [Enter]")
 
-    input("\nRun any conda install commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
+    input("\nRun any conda install commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment!\nCheck each conda install with 'conda list | grep <pkg>' [Enter]")
 
     if len(req_files)>0:
         msg = f"\nFound {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
