@@ -200,6 +200,7 @@ def main():
         input(f"Download any databases to {db_folder} [Enter]")
 
     # Copy module file from a previous version
+    print(ml_avail)
     if (not os.path.isfile(new_ml)) and (ml_avail is not None):
         for ml in ml_avail.reverse():
             ml_path = f"{ml_folder}/{ml}.lua"
