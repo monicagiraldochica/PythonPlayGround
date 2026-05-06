@@ -169,7 +169,7 @@ def main():
                 if os.path.isfile(req_file):
                     req_files+=[req_file]
 
-    if input("Do you need to run any pip installs? [y/N]").strip().lower() in ["y", "yes"]:
+    if input("\nDo you need to run any pip installs? [y/N]").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
         if which_pip!=f"{forge_path}/pip":
             input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF 'which pip' IS {forge_path}/pip *** [Enter]")
@@ -191,9 +191,9 @@ def main():
                     line = fin.readline()
                     input(f"conda list | grep {line} [Enter]")
 
-    print(f"\nTest the conda environment. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
+    input(f"\nTest the conda environment. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
 
-    input(f"conda deactivate {env_name} [Enter]")
+    input(f"\nconda deactivate {env_name} [Enter]")
 
     if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
         Path(db_folder).mkdir(parents=True, exist_ok=True)
