@@ -1,54 +1,61 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
 
-import subprocess
 import sys
 import argparse
 import re
 import os
 import shutil
 import textwrap
+import installib
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
-    parser.add_argument("--main-package", help="Name of the module to be created", required=True)
+    parser.add_argument("--main-pkg", help="Name of the module to be created", required=True)
     parser.add_argument("--version", help="Module version", required=True)
     args = parser.parse_args()
 
-    return [args.main_package, args.version]
+    return [args.main_pkg, args.version]
 
 def getCondaVersion():
-    try:
-        result = subprocess.run(["conda","--version"], check=True, capture_output=True, text=True).stdout
-        match = re.search(r"(\d+\.\d+\.\d+)", result)
-        return match.group(1) if match else None
-    
-    except FileNotFoundError:
+    [returncode, stderr, stdout] = installib.runBash(["conda", "--version"])
+
+    if returncode!=0:
+        err = (stderr or stdout or "").strip()
+        print(f"Could not check conda version: {err}")
         return None
     
-    except subprocess.CalledProcessError:
-        return None
+    match = re.search(r"(\d+\.\d+\.\d+)", stdout)
+    return match.group(1) if match else None
 
-def availableModules(pkg: str):
-    cmd = f"module avail {pkg}"
-    result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
-    out = (result.stdout or "") + (result.stderr or "")
-    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', out)
+def availableModules(pkg: str) -> list[str]:
+    [returncode, stderr, stdout] = installib.runBash(["ml", "avail", pkg])
+    
+    if returncode!=0:
+        err = (stderr or stdout or "").strip()
+        print(f"Could not check available modules for {pkg}: {err}")
+        return []
 
+    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
     return matches
 
 def contentFolder(path: str):
     path = path[:-1] if path.endswith("/") else path
-    cmd = f"ls -1 {path}"
-    result = subprocess.run(["bash", "-lc", cmd], check=True, capture_output=True, text=True)
-    out = (result.stdout or "") + (result.stderr or "")
-
-    return out
+    [returncode, stderr, stdout] = installib.runBash(["ls", "-l", path])
+    
+    if returncode!=0:
+        err = (stderr or stdout or "").strip()
+        print(f"Could not get the content of {path}: {err}")
+        return None
+    
+    return stdout
 
 def downloadedMiniforgeVersions(pkg: str, path:str):
     out = contentFolder(path)
+    if out is None:
+        return []
+    
     names = re.findall(rf'^{re.escape(pkg)}-[^/\s]+$', out, flags=re.MULTILINE)
-
     return [f"{path}/{name}" for name in names]
 
 def main():
@@ -68,38 +75,38 @@ def main():
         print("This script requires Python 3.7 or higher.")
         sys.exit(1)
 
-    [main_package, version] = parse_arguments()
+    [main_pkg, version] = parse_arguments()
 
     # Paths
-    build_path = f"/adminfs/builds/{main_package}/git_repos"
-    ml_folder = f"/hpc/modulefiles/{main_package}"
+    build_path = f"/adminfs/builds/{main_pkg}/git_repos"
+    ml_folder = f"/hpc/modulefiles/{main_pkg}"
     new_ml = f"{ml_folder}/{version}.lua"
     forge_envs = "/hpc/apps/miniforge/envs"
     forge_path = f"{forge_envs}/{env_name}/bin"
-    apps_path = f"/hpc/apps/{main_package}"
-    db_folder = f"/hpc/refdata/{main_package}"
+    apps_path = f"/hpc/apps/{main_pkg}"
+    db_folder = f"/hpc/refdata/{main_pkg}"
 
     input("sudo su - [Enter]")
     input("ml load miniforge [Enter]")
 
-    ml_avail = availableModules(main_package)
+    ml_avail = availableModules(main_pkg)
     create_env = True
 
     # The module is already installed
-    if f"{main_package}/{version}" in ml_avail:
-        print(f"\nGood news! {main_package}/{version} is already installed!")
+    if f"{main_pkg}/{version}" in ml_avail:
+        print(f"\nGood news! {main_pkg}/{version} is already installed!")
         sys.exit(1)
     
     # A different version of the module was installed
     elif len(ml_avail)>0:
-        if input(f"\nA different version of {main_package} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_package}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
+        if input(f"\nA different version of {main_pkg} is installed: {', '.join(ml_avail)}\nDo you want to proceed installing {main_pkg}/{version}? [y/N]: ").strip().lower() not in ("yes", "y"):
             sys.exit(1)
     
     else:
-        downloads = downloadedMiniforgeVersions(main_package, forge_envs)
+        downloads = downloadedMiniforgeVersions(main_pkg, forge_envs)
 
         if len(downloads)>0:
-            msg = f"\nA previous miniforge environment was created for {main_package} ({', '.join(downloads)}), "
+            msg = f"\nA previous miniforge environment was created for {main_pkg} ({', '.join(downloads)}), "
 
             # The miniforge environment was previously created, but not the module
             if (not os.path.isdir(ml_folder)):
@@ -114,15 +121,15 @@ def main():
                 sys.exit()
 
         elif os.path.isdir(apps_path):
-            msg = f"{main_package} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
+            msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
 
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit()
 
     use_pip = input("\nAre you installing using pip inside this conda environment? [Y/n]: ").strip().lower() not in ("n", "not")
-    env_name = f"{main_package}-{version}"
+    env_name = f"{main_pkg}-{version}"
     if create_env:
-        venv_python = input(f"What python version is required by {main_package}/{version} (i.e. python>=3.10, Enter if no specific version required): ")
+        venv_python = input(f"What python version is required by {main_pkg}/{version} (i.e. python>=3.10, Enter if no specific version required): ")
         if (not venv_python) and use_pip:
             print("*** YOU NEED TO INSTALL PYTHON INSIDE THE CONDA ENV OR IT WILL INSTALL THE PROGRAM IN BASE ***")
             venv_python = f"python={major}.{minor}.{micro}"
@@ -149,10 +156,10 @@ def main():
                     input(f"\nDownloading {repo} to {dest} [Enter]")
                     cmd = ["git", "clone", repo, dest]
                     print(" ".join(cmd))
-                    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
-                    if result.returncode!=0 or (not os.path.isdir(dest)):
-                        err = result.stderr or result.stdout
+                    [returncode, stderr, stdout] = installib.runBash(cmd)
+                    if returncode!=0 or (not os.path.isdir(dest)):
+                        err = (stderr or stdout or "")
                         print(f"Could not download {repo_name}: {err}")
                         sys.exit(1)
 
@@ -177,7 +184,7 @@ def main():
             input(f"conda list | grep {pip_install} [Enter]")
             msg = f"Run a test command for {pip_install}."
             if os.path.isdir(forge_path):
-                msg+=f"\nThe list of commands for {main_package} can be found in {forge_path}"
+                msg+=f"\nThe list of commands for {main_pkg} can be found in {forge_path}"
             input(f"{msg} [Enter]")
 
     input("\nRun any conda commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
@@ -210,7 +217,7 @@ def main():
 
         print("Module help can have new lines. Press Ctrl-D when done.\nModule help:\n")
         ml_help = sys.stdin.read().strip()
-        if input(f"Does {main_package} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
+        if input(f"Does {main_pkg} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
             msg="Make sure you connect using -XY flag if planning to use the GUI.\nFor Mac users: make sure you have XQuartz installed."
             if len(ml_help)>0:
                 ml_help+=f"\n\n{msg}"
