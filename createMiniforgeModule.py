@@ -172,7 +172,7 @@ def main():
     if input("Do you need to run any pip installs? [y/N]").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
         if which_pip!=f"{forge_path}/pip":
-            input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF which pip IS {forge_path}/pip *** [Enter]")
+            input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF 'which pip' IS {forge_path}/pip *** [Enter]")
 
         print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed, and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
         pips = input("List of programs to install using pip divided by comma: ").split(",")
