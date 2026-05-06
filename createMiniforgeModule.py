@@ -29,8 +29,12 @@ def getCondaVersion():
     return match.group(1) if match else None
 
 def availableModules(pkg: str):
-    [returncode, stderr, stdout] = installib.runBash(["module", "avail", pkg])
+    lmod_cmd = os.environ.get("LMOD_CMD")
+    if not lmod_cmd:
+        print("LMOD_CMD is not set; Lmod is not initialized")
+        return []
     
+    [returncode, stderr, stdout] = installib.runBash([lmod_cmd, "shell", "avail", pkg])    
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"Could not check available modules for {pkg}: {err}")
