@@ -28,7 +28,7 @@ def getCondaVersion():
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
     return match.group(1) if match else None
 
-def availableModules(pkg: str) -> list[str]:
+def availableModules(pkg: str):
     [returncode, stderr, stdout] = installib.runBash(["ml", "avail", pkg])
     
     if returncode!=0:
