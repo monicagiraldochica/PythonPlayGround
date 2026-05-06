@@ -76,6 +76,7 @@ def main():
     ml_folder = f"/hpc/modulefiles/{main_pkg}"
     new_ml = f"{ml_folder}/{version}.lua"
     forge_envs = "/hpc/apps/miniforge/envs"
+    env_name = f"{main_pkg}-{version}"
     forge_path = f"{forge_envs}/{env_name}/bin"
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
