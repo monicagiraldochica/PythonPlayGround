@@ -212,6 +212,7 @@ def main():
     else:
         print(f"\nCreating {new_ml}:")
 
+        # Create module help content
         print("Module help can have new lines. Press Ctrl-D when done.\nModule help:\n")
         ml_help = sys.stdin.read().strip()
         if input(f"Does {main_pkg} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
@@ -225,6 +226,7 @@ def main():
         if len(py_files)>0 and len(msg)>0:
             ml_help+=f"\n\nRun '{py_files[0]} -h' instead of 'python {py_files[0]} -h'"
 
+        # Create category string
         print("\nCategory ideas: Applications, Bioinformatics, biology, genomics, imaging, neuroimaging, chemistry, statistics, devel, math, fluid dynamics, data analytics, deep learning, machine learning, system, graphics")
         categories = input("Categories: ").strip()
         desc = input("Description: ").strip()
@@ -273,6 +275,7 @@ def main():
                     content+=f'setenv("{pair[0]}", "{pair[1]}")'
 
         mdl_deps = input("List dependencies divided by comma: ").strip().lower().split(",")
+        mdl_deps = [x for x in mdl_deps if x != ""]
         if len(mdl_deps)>0:
             content+="\n"
             for dep in mdl_deps:
