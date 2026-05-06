@@ -175,16 +175,13 @@ def main():
             input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF 'which pip' IS {forge_path}/pip *** [Enter]")
 
         print("\nAfter each pip install run 'conda list | grep <program>' to check that it was indeed installed, and run any tests.\nDo not proceed with the next dependency until the previous one is installed and tested.\nRemember to add the version of each dependency if a specific version is needed!\n")
-        pips = input("List of programs to install using pip divided by comma: ").split(",")
+        pips = input("List of programs to install using pip divided by comma: ").strip().split(",")
         for pip_install in pips:
             input(f"pip install {pip_install} [Enter]")
             input(f"conda list | grep {pip_install} [Enter]")
-            msg = f"Run a test command for {pip_install}."
-            if os.path.isdir(forge_path):
-                msg+=f"\nThe list of commands for {main_pkg} can be found in {forge_path}"
-            input(f"{msg} [Enter]")
+            input(f"Run a test command for {pip_install} [Enter]")
 
-    input("\nRun any conda commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
+    input("\nRun any conda install commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment! [Enter]")
 
     if len(req_files)>0:
         msg = f"\nFound {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
@@ -193,6 +190,8 @@ def main():
                 with open(req_file, "r") as fin:
                     line = fin.readline()
                     input(f"conda list | grep {line} [Enter]")
+
+    print(f"\nTest the conda environment. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
 
     input(f"conda deactivate {env_name} [Enter]")
 
