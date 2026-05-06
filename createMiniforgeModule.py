@@ -59,12 +59,6 @@ def downloadedMiniforgeVersions(pkg: str, path:str):
     return [f"{path}/{name}" for name in names]
 
 def main():
-    # Check conda version
-    rVers = getCondaVersion()
-    if rVers is None:
-        print("Miniforge NOT loaded. Run: module load miniforge")
-        sys.exit(1)
-
     # Check python version
     python_info = sys.version_info
     major = python_info.major or 0
