@@ -82,7 +82,8 @@ def main():
     new_ml = f"{ml_folder}/{version}.lua"
     forge_envs = "/hpc/apps/miniforge/envs"
     env_name = f"{main_pkg}-{version}"
-    forge_path = f"{forge_envs}/{env_name}/bin"
+    forge_dir = f"{forge_envs}/{env_name}"
+    forge_path = f"{forge_dir}/bin"
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
 
@@ -119,13 +120,13 @@ def main():
                 msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "            
 
             if input(msg).strip().lower() not in ("yes", "y"):
-                sys.exit()
+                sys.exit(1)
 
         elif os.path.isdir(apps_path):
             msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
 
             if input(msg).strip().lower() not in ("yes", "y"):
-                sys.exit()
+                sys.exit(1)
 
     if create_env:
         if micro:
@@ -136,7 +137,11 @@ def main():
         venv_python = input(f"What python version is required by {main_pkg}/{version} (i.e. python>=3.10, Enter if no specific version required): ") or f"python={default_py}"
         input(f"\nconda create -n {env_name} {venv_python} [Enter]")
 
-    input(f"\nconda activate {env_name} [Enter]")
+    if os.path.isdir(forge_dir):
+        input(f"\nconda activate {env_name} [Enter]")
+    else:
+        print(f"Conda dir was not created: {forge_dir}")
+        sys.exit(1)
 
     req_files = []
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
@@ -298,9 +303,19 @@ def main():
                     os.symlink(default_lua, f"{ml_folder}/default")
                     print(f"Symlink created from {default_lua} to {ml_folder}/default")
 
+    print("\nCompare new module file with an older one that also uses conda:")
+    [returncode, stderr, stdout] = installib.runBash([["bash", "-lc", "grep -r conda | tail -n 1 | cut -d: -f1"]])
+    if returncode!=0:
+        print(f"vi /hpc/modulefiles/{stdout}")
     input(f"vi {new_ml} [Enter]")
 
-    # MODULE AVAIL, MODULE LOAD, MODULE HELP, MODULE INFO, MODULE TEST
+    # Test final module
+    print(f"\nAvailable packages for {main_pkg}:")
+    input(f"ml avail {main_pkg} [Enter]")
+    print(f"\nModule information:")
+    input(f"ml show {main_pkg}/{version} [Enter]")
+
+    input(f"\nTest the final module. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
 
 if __name__ == "__main__":
     main()
