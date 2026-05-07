@@ -87,7 +87,7 @@ def main():
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
 
-    input("ssh into login node [Enter]")
+    input("\nssh into login node [Enter]")
     input("sudo su - [Enter]")
     input("ml load miniforge [Enter]")
 
@@ -224,9 +224,15 @@ def main():
         print(f"\nCreating {new_ml}:")
 
         # Create module help content
-        print("Module help can have new lines. Press Ctrl-D when done.\nModule help:\n")
-        ml_help = sys.stdin.read().strip()
-        if input(f"Does {main_pkg} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
+        help_file = input("\nPath to txt file with the content of the module help ([Enter] if you want to input the help manually or include no help text): ").strip()
+        if not os.path.isfile(help_file):
+            print("Module help can have new lines. Press Ctrl-D when done.\nModule help (leave empty if no help):")
+            ml_help = sys.stdin.read().strip()
+        else:
+            with open(help_file, "r") as fin:
+                ml_help = fin.read()
+
+        if input(f"\nDoes {main_pkg} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
             msg="Make sure you connect using -XY flag if planning to use the GUI.\nFor Mac users: make sure you have XQuartz installed."
             if len(ml_help)>0:
                 ml_help+=f"\n\n{msg}"
@@ -240,8 +246,11 @@ def main():
         # Create category string
         print("\nCategory ideas: Applications, Bioinformatics, biology, genomics, imaging, neuroimaging, chemistry, statistics, devel, math, fluid dynamics, data analytics, deep learning, machine learning, system, graphics")
         categories = input("Categories: ").strip()
-        desc = input("Description: ").strip()
-        url = input("URL: ")
+
+        # Description and URL
+        desc = input("\nDescription: ").strip()
+        url = input("\nURL: ").strip()
+
         init_line = 'execute{cmd="source " .. conda_dir .. "/etc/profile.d/conda.sh; conda activate " .. myModuleName() .. "-" .. myModuleVersion() .. "; export -f " .. funcs, modeA={"load"}}'
         python_line = 'family("python")'
 
@@ -276,7 +285,7 @@ def main():
         {python_line}
         """)
 
-        if input("Does any variables need to be set? [y/N]: ").strip().lower() in ("yes", "y"):
+        if input("\nDoes any variables need to be set? [y/N]: ").strip().lower() in ("yes", "y"):
             array = input("VAR:value divided by comma: ").split(",")
             if len(array)>0:
                 content+="\n"
@@ -285,7 +294,7 @@ def main():
                 if len(pair)==2:
                     content+=f'setenv("{pair[0]}", "{pair[1]}")'
 
-        mdl_deps = input("List dependencies divided by comma: ").strip().lower().split(",")
+        mdl_deps = input("\nList dependencies divided by comma: ").strip().lower().split(",")
         mdl_deps = [x for x in mdl_deps if x != ""]
         if len(mdl_deps)>0:
             content+="\n"
@@ -295,10 +304,12 @@ def main():
             if any(dep.startswith("python/3") for dep in mdl_deps):
                 content+="\n--set_alias(\"python\", \"python3\")"
 
+        # Write the created content in the module file
         Path(ml_folder).mkdir(parents=True, exist_ok=True)
         with open(new_ml, "w") as f1:
             f1.write(content)
 
+        # Create symlink to 'latest' if this will not be the default version
         if len(ml_avail)>0:
             print(f"\nOther available versions for this module: {', '.join(ml_avail)}")
 
@@ -309,8 +320,9 @@ def main():
                     os.symlink(default_lua, f"{ml_folder}/default")
                     print(f"Symlink created from {default_lua} to {ml_folder}/default")
 
+    # Check module file
     print("\nCompare new module file with an older one that also uses conda:")
-    [returncode, stderr, stdout] = installib.runBash([["bash", "-lc", "grep -r conda | tail -n 1 | cut -d: -f1"]])
+    [returncode, stderr, stdout] = installib.runBash(["bash", "-lc", "grep -r conda | tail -n 1 | cut -d: -f1"])
     if returncode!=0:
         print(f"vi /hpc/modulefiles/{stdout}")
     input(f"vi {new_ml} [Enter]")
