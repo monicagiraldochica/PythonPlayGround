@@ -322,7 +322,7 @@ def main():
 
     # Check module file
     print("\nCompare new module file with an older one that also uses conda:")
-    [returncode, stderr, stdout] = installib.runBash(["bash", "-lc", "grep -r conda | tail -n 1 | cut -d: -f1"])
+    [returncode, stderr, stdout] = installib.runBash(["bash", "-lc", "grep -r conda /hpc/modulefiles | tail -n 1 | cut -d: -f1"])
     if returncode!=0:
         print(f"vi /hpc/modulefiles/{stdout}")
     input(f"vi {new_ml} [Enter]")
