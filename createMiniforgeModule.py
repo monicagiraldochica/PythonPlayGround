@@ -228,6 +228,7 @@ def main():
         if not os.path.isfile(help_file):
             print("Module help can have new lines. Press Ctrl-D when done.\nModule help (leave empty if no help):")
             ml_help = sys.stdin.read().strip()
+            ml_help = ''.join(c for c in ml_help if c.isprintable())
         else:
             with open(help_file, "r") as fin:
                 ml_help = fin.read()
@@ -246,10 +247,13 @@ def main():
         # Create category string
         print("\nCategory ideas: Applications, Bioinformatics, biology, genomics, imaging, neuroimaging, chemistry, statistics, devel, math, fluid dynamics, data analytics, deep learning, machine learning, system, graphics")
         categories = input("Categories: ").strip()
+        categories = ''.join(c for c in categories if c.isprintable())
 
         # Description and URL
         desc = input("\nDescription: ").strip()
+        desc = ''.join(c for c in desc if c.isprintable())
         url = input("\nURL: ").strip()
+        url = ''.join(c for c in url if c.isprintable())
 
         init_line = 'execute{cmd="source " .. conda_dir .. "/etc/profile.d/conda.sh; conda activate " .. myModuleName() .. "-" .. myModuleVersion() .. "; export -f " .. funcs, modeA={"load"}}'
         python_line = 'family("python")'
