@@ -69,9 +69,9 @@ def main():
     major = python_info.major or 0
     minor = python_info.minor or 0
     micro = python_info.micro or 0
-    print(f"Python version: {major}.{minor}.{micro}\n")
+    print(f"Python version: {major}.{minor}.{micro}")
     if major==0 or minor==0 or major<3 or minor<7:
-        print("This script requires Python 3.7 or higher.")
+        print("This script requires Python 3.7 or higher\n")
         sys.exit(1)
 
     [main_pkg, version] = parse_arguments()
@@ -87,7 +87,7 @@ def main():
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
 
-    input("ssh login node [Enter]")
+    input("ssh into login node [Enter]")
     input("sudo su - [Enter]")
     input("ml load miniforge [Enter]")
 
@@ -134,8 +134,11 @@ def main():
         else:
             default_py = f"{major}.{minor}"
 
-        venv_python = input(f"What python version is required by {main_pkg}/{version} (i.e. python>=3.10, Enter if no specific version required): ") or f"python={default_py}"
+        venv_python = input(f"\nWhat python version is required by {main_pkg}/{version} (i.e. python>=3.10, python=3.13. [Enter] if no specific version required): ") or f"python={default_py}"
+        if not venv_python.startswith("python="):
+            venv_python = f"python={venv_python}"
         input(f"\nconda create -n {env_name} {venv_python} [Enter]")
+        input(f"conda env list | grep {env_name} [Enter]")
 
     if os.path.isdir(forge_dir):
         input(f"\nconda activate {env_name} [Enter]")
@@ -186,7 +189,10 @@ def main():
             input(f"conda list | grep {pip_install} [Enter]")
             input(f"Run a test command for {pip_install} [Enter]")
 
-    input("\nRun any conda install commands.\nDon't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment!\nCheck each conda install with 'conda list | grep <pkg>' [Enter]")
+    if input("\nDo you need to run any 'conda install' commands? [y/N]").strip().lower() in ["y", "yes"]:
+        print("Don't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment!")
+        print("Check each conda install with 'conda list | grep <pkg>'")
+        input(f"i.e. conda list | grep {main_pkg} [Enter]")
 
     if len(req_files)>0:
         msg = f"\nFound {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
