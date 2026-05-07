@@ -325,7 +325,7 @@ def main():
                     print(f"Symlink created from {default_lua} to {ml_folder}/default")
 
     # Check module file
-    print("\nCompare new module file with an older one that also uses conda:")
+    print("\nCompare new module file with another one that also uses conda:")
     [returncode, stderr, stdout] = installib.runBash(["bash", "-lc", "grep -r conda /hpc/modulefiles | tail -n 1 | cut -d: -f1"])
     if returncode!=0:
         print(f"vi /hpc/modulefiles/{stdout}")
