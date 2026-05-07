@@ -300,5 +300,7 @@ def main():
 
     input(f"vi {new_ml} [Enter]")
 
+    # MODULE AVAIL, MODULE LOAD, MODULE HELP, MODULE INFO, MODULE TEST
+
 if __name__ == "__main__":
     main()
