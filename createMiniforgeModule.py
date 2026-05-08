@@ -135,7 +135,7 @@ def main():
             default_py = f"{major}.{minor}"
 
         venv_python = input(f"\nWhat python version is required by {main_pkg}/{version} (i.e. python>=3.10, python=3.13. [Enter] if no specific version required): ") or f"python={default_py}"
-        if not venv_python.startswith("python="):
+        if (not venv_python.startswith("python=")) and (not venv_python.startswith("python>")):
             venv_python = f"python={venv_python}"
         input(f"\nconda create -n {env_name} {venv_python} [Enter]")
         input(f"conda env list | grep {env_name} [Enter]")
