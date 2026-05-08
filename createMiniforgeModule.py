@@ -146,16 +146,16 @@ def main():
         print(f"Conda dir was not created: {forge_dir}")
         sys.exit(1)
 
-    req_files = []
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
         repos = input("https git repos divided by comma: ").split(",")
         if len(repos)>0:
-            if not os.path.isdir(build_path):
-                os.makedirs(build_path)
-
             for repo in repos:
                 repo_name = repo.split("/")[-1].replace(".git", "")
-                dest = f"{build_path}/{repo_name}"
+                if input(f"Does {repo_name} need to be downloaded in /hpc/apps? [y/N]: ").strip().lower() in ["y", "yes"]:
+                    dest = f"{apps_path}/{version}"
+                else:
+                    Path(build_path).mkdir(parents=True, exist_ok=True)
+                    dest = f"{build_path}/{repo_name}"
 
                 if not os.path.isdir(dest):
                     input(f"\nDownloading {repo} to {dest} [Enter]")
@@ -165,6 +165,14 @@ def main():
                     [returncode, stderr, stdout] = installib.runBash(cmd)
                     if returncode!=0 or (not os.path.isdir(dest)):
                         err = (stderr or stdout or "")
+
+                        if err.contains("remote: Not Found"):
+                            repo = (f"The repository was not found, try one more time. git repo url: ")
+                            [returncode, stderr, stdout] = installib.runBash(["git", "clone", repo, dest])
+                            if returncode!=0 or (not os.path.isdir(dest)):
+                                 err = (stderr or stdout or "")
+
+                    if returncode!=0 or (not os.path.isdir(dest)):
                         print(f"Could not download {repo_name}: {err}")
                         sys.exit(1)
 
@@ -175,9 +183,18 @@ def main():
 
                 req_file = f"{dest}/requirements.txt"
                 if os.path.isfile(req_file):
-                    req_files+=[req_file]
+                    if input(f"A requirements.txt file was found in {repo_name}. Do you want to install? [Y/n]: ").strip().lower() not in ["n", "not"]:
+                        input(f"cd {dest} [Enter]")
+                        input("python -m pip install -r requirements.txt [Enter]")
 
-    if input("\nDo you need to run any pip installs? [y/N]").strip().lower() in ["y", "yes"]:
+                        print("Check that all requirements where successfully installed:")
+                        with open(req_file, "r") as fin:
+                            line = fin.readline().lower
+                            if line.contains(">="):
+                                line = line.split(">=")[0]
+                            input(f"conda list | grep {line} [Enter]")
+
+    if input("\nDo you need to run any pip installs? [y/N]: ").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
         if which_pip!=f"{forge_path}/pip":
             input(f"*** DO NOT PROCEED UNTIL YOU THE RESULT OF 'which pip' IS {forge_path}/pip *** [Enter]")
@@ -189,23 +206,28 @@ def main():
             input(f"conda list | grep {pip_install} [Enter]")
             input(f"Run a test command for {pip_install} [Enter]")
 
-    if input("\nDo you need to run any 'conda install' commands? [y/N]").strip().lower() in ["y", "yes"]:
+    if input("\nDo you need to run any 'conda install' commands? [y/N]: ").strip().lower() in ["y", "yes"]:
         print("Don't do Ctrl-C after you hit proceed! That will not do a clean end and will corrupt the environment!")
         print("Check each conda install with 'conda list | grep <pkg>'")
         input(f"i.e. conda list | grep {main_pkg} [Enter]")
 
-    if len(req_files)>0:
-        msg = f"\nFound {len(req_files)} requirement files in the downloaded repos. Do you want to check that all the requirements are installed in the environment? [y/N]: "
-        if input(msg).strip().lower() in ("y", "yes"):
-            for req_file in req_files:
-                with open(req_file, "r") as fin:
-                    line = fin.readline()
-                    input(f"conda list | grep {line} [Enter]")
+    # Run tests with the conda environment activated
+    print("\nTest the conda environment:")
 
-    input(f"\nTest the conda environment. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
+    msg = f"The list of commands for {main_pkg} can be found in {forge_path}."
+    if os.path.isdir(f"{apps_path}/{version}/bin"):
+        msg+=f" And in {apps_path}/{version}/bin."
+    input(f"{msg}. [Enter]")
+
+    tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
+    if os.path.isfile(tests):
+        with open(tests, "r") as fin:
+            line = fin.readline()
+            input(f"{line} [Enter]")
 
     input(f"\nconda deactivate [Enter]")
 
+    # Download databases
     if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
         Path(db_folder).mkdir(parents=True, exist_ok=True)
         input(f"Download any databases to {db_folder} [Enter]")
@@ -337,7 +359,13 @@ def main():
     print(f"\nModule information:")
     input(f"ml show {main_pkg}/{version} [Enter]")
 
-    input(f"\nTest the final module. The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
+    # Run final tests
+    print("\nTest the final module:")
+    input(f"The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
+    if os.path.isfile(tests):
+        with open(tests, "r") as fin:
+            line = fin.readline()
+            input(f"{line} [Enter]")
 
 if __name__ == "__main__":
     main()
