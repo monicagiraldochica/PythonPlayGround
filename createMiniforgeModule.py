@@ -211,6 +211,10 @@ def main():
         print("Check each conda install with 'conda list | grep <pkg>'")
         input(f"i.e. conda list | grep {main_pkg} [Enter]")
 
+    # If I need to install a kernel for jupyter
+    #conda install ipykernel
+    # Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels
+
     # Run tests with the conda environment activated
     print("\nTest the conda environment:")
 
