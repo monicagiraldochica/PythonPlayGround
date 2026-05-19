@@ -40,7 +40,6 @@ def readInputFiles(input_list):
 def main():
     args = parse_args()
     input_list = args.list
-    slurm_script = args.slurm
 
     try:
         input_files = readInputFiles(input_list)

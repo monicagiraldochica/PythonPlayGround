@@ -8,6 +8,7 @@ import argparse
 from pathlib import Path
 import os
 import installib
+import logging
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install a new module using make)")
@@ -26,7 +27,7 @@ def parse_arguments():
 
 def main():
     if input("Are you sudo in a login node? [Y/n]").strip().lower() not in ["n", "no"]:
-        print("You must be sudo in a login node")
+        logging.error("You must be sudo in a login node")
         sys.exit(1)
 
     [mdl_name, mdl_vers, dia, pkg_url] = parse_arguments()
@@ -41,7 +42,7 @@ def main():
     [returncode, stderr, stdout] = installib.runBash(["wget", pkg_url])
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        print(f"Error downloading {mdl_name}: {err}")
+        logging.error(f"Error downloading {mdl_name}: {err}")
         sys.exit(1)
 
     filename = pkg_url.rsplit("/", 1)[-1]
@@ -62,7 +63,7 @@ def main():
         [returncode, stderr, stdout] = [2, f"Dont know how to extract {filename}", ""]
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        print(f"Error downloading {mdl_name}: {err}")
+        logging.error(f"Error downloading {mdl_name}: {err}")
         sys.exit(1)
 
     # Compile

@@ -9,6 +9,7 @@ import shutil
 import textwrap
 import installib
 from pathlib import Path
+import logging
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -23,7 +24,7 @@ def getCondaVersion():
 
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        print(f"Could not check conda version: {err}")
+        logging.error(f"Could not check conda version: {err}")
         return None
     
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
@@ -32,13 +33,13 @@ def getCondaVersion():
 def availableModules(pkg: str):
     lmod_cmd = os.environ.get("LMOD_CMD")
     if not lmod_cmd:
-        print("LMOD_CMD is not set; Lmod is not initialized")
+        logging.error("LMOD_CMD is not set; Lmod is not initialized")
         return []
     
     [returncode, stderr, stdout] = installib.runBash([lmod_cmd, "shell", "avail", pkg])    
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        print(f"Could not check available modules for {pkg}: {err}")
+        logging.error(f"Could not check available modules for {pkg}: {err}")
         return []
 
     matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
@@ -50,7 +51,7 @@ def contentFolder(path: str):
     
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        print(f"Could not get the content of {path}: {err}")
+        logging.error(f"Could not get the content of {path}: {err}")
         return None
     
     return stdout
@@ -71,7 +72,7 @@ def main():
     micro = python_info.micro or 0
     print(f"Python version: {major}.{minor}.{micro}")
     if major==0 or minor==0 or major<3 or minor<7:
-        print("This script requires Python 3.7 or higher\n")
+        logging.error("This script requires Python 3.7 or higher\n")
         sys.exit(1)
 
     [main_pkg, version] = parse_arguments()
@@ -173,7 +174,7 @@ def main():
                                  err = (stderr or stdout or "")
 
                     if returncode!=0 or (not os.path.isdir(dest)):
-                        print(f"Could not download {repo_name}: {err}")
+                        logging.error(f"Could not download {repo_name}: {err}")
                         sys.exit(1)
 
                     input(f"Successfully downloaded {repo_name} [Enter]")
