@@ -97,13 +97,10 @@ def availableModules(pkg: str):
         print(f"Error: Could not check available modules for {pkg}: {err}")
         return []
 
-    print("#####")
-    print(stderr)
-    print("#####")
-
-    print("-----")
-    print(stdout)
-    print("------")
-
-    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
-    return matches
+    if f"{pkg}/" in stdout:
+        txt = stdout
+    elif f"{pkg}/" in stderr:
+        txt = stderr
+    else:
+        return []
+    return re.findall(rf'\b{re.escape(pkg)}/[^\s]+', txt)
