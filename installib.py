@@ -11,11 +11,9 @@ import re
 
 def runBash(cmd: Sequence[str], output_file:str=None):
     file_handle = None
-
     try:
         if output_file:
             file_handle = open(output_file, "w")
-
         stdout_target = file_handle if output_file else subprocess.PIPE
 
         # text=True: makes stdout and stderr strings instead of bytes
@@ -93,14 +91,14 @@ def availableModules(pkg: str):
         print("Error: LMOD_CMD is not set; Lmod is not initialized")
         return []
     
-    print(lmod_cmd)
     returncode, stderr, stdout = runBash([lmod_cmd, "shell", "avail", pkg])    
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"Error: Could not check available modules for {pkg}: {err}")
         return []
 
-    print(stderr)
+    print("-----")
     print(stdout)
-    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
+    print("------")
+    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout, flags=re.MULTILINE)
     return matches
