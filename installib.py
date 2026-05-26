@@ -100,5 +100,5 @@ def availableModules(pkg: str):
     print("-----")
     print(stdout)
     print("------")
-    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout, flags=re.MULTILINE)
+    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
     return matches
