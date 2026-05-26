@@ -101,6 +101,7 @@ def main():
             input("Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels [Enter]")
 
     # Compile
+    #openmpi = availableModules
 
     # Test in /hpc/apps/app/bin
 
