@@ -20,7 +20,7 @@ def parse_arguments():
     return [args.main_pkg, args.version]
 
 def getCondaVersion():
-    [returncode, stderr, stdout] = installib.runBash(["conda", "--version"])
+    returncode, stderr, stdout = installib.runBash(["conda", "--version"])
 
     if returncode!=0:
         err = (stderr or stdout or "").strip()
@@ -30,24 +30,9 @@ def getCondaVersion():
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
     return match.group(1) if match else None
 
-def availableModules(pkg: str):
-    lmod_cmd = os.environ.get("LMOD_CMD")
-    if not lmod_cmd:
-        logging.error("LMOD_CMD is not set; Lmod is not initialized")
-        return []
-    
-    [returncode, stderr, stdout] = installib.runBash([lmod_cmd, "shell", "avail", pkg])    
-    if returncode!=0:
-        err = (stderr or stdout or "").strip()
-        logging.error(f"Could not check available modules for {pkg}: {err}")
-        return []
-
-    matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
-    return matches
-
 def contentFolder(path: str):
     path = path[:-1] if path.endswith("/") else path
-    [returncode, stderr, stdout] = installib.runBash(["ls", "-l", path])
+    returncode, stderr, stdout = installib.runBash(["ls", "-l", path])
     
     if returncode!=0:
         err = (stderr or stdout or "").strip()
@@ -66,19 +51,19 @@ def downloadedMiniforgeVersions(pkg: str, path:str):
 
 def main():
     # Check python version
-    python_info = sys.version_info
-    major = python_info.major or 0
-    minor = python_info.minor or 0
-    micro = python_info.micro or 0
-    print(f"Python version: {major}.{minor}.{micro}")
-    if major==0 or minor==0 or major<3 or minor<7:
+    correct_python, major, minor, micro = installib.checkPythonVers(3, 7)
+    if not correct_python:
         logging.error("This script requires Python 3.7 or higher\n")
         sys.exit(1)
+
+    # Make sure I'm root in a login node, and miniforge is loaded
+    input("\nssh into login node [Enter]")
+    input("sudo su - [Enter]")
+    input("ml load miniforge [Enter]")
 
     [main_pkg, version] = parse_arguments()
 
     # Paths
-    build_path = f"/adminfs/builds/{main_pkg}/git_repos"
     ml_folder = f"/hpc/modulefiles/{main_pkg}"
     new_ml = f"{ml_folder}/{version}.lua"
     forge_envs = "/hpc/apps/miniforge/envs"
@@ -88,11 +73,7 @@ def main():
     apps_path = f"/hpc/apps/{main_pkg}"
     db_folder = f"/hpc/refdata/{main_pkg}"
 
-    input("\nssh into login node [Enter]")
-    input("sudo su - [Enter]")
-    input("ml load miniforge [Enter]")
-
-    ml_avail = availableModules(main_pkg)
+    ml_avail = installib.availableModules(main_pkg)
     create_env = True
 
     # The module is already installed
@@ -147,53 +128,38 @@ def main():
         print(f"Conda dir was not created: {forge_dir}")
         sys.exit(1)
 
+    git_dirs = []
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
         repos = input("https git repos divided by comma: ").split(",")
-        if len(repos)>0:
-            for repo in repos:
-                repo_name = repo.split("/")[-1].replace(".git", "")
-                if input(f"Does {repo_name} need to be downloaded in /hpc/apps? [y/N]: ").strip().lower() in ["y", "yes"]:
-                    dest = f"{apps_path}/{version}"
-                else:
-                    Path(build_path).mkdir(parents=True, exist_ok=True)
-                    dest = f"{build_path}/{repo_name}"
+        for repo in repos:
+            repo_name = repo.split("/")[-1].replace(".git", "")
+            download_in_apps = input(f"Does {repo_name} need to be downloaded in /hpc/apps? [y/N]: ").strip().lower() in ["y", "yes"]
+            download_dir = f"/hpc/apps/{main_pkg}/{version}" if download_in_apps else f"/adminfs/builds/{main_pkg}/{version}"
 
-                if not os.path.isdir(dest):
-                    input(f"\nDownloading {repo} to {dest} [Enter]")
-                    cmd = ["git", "clone", repo, dest]
-                    print(" ".join(cmd))
+            # Check that the repository wasn't already downloaded, otherwise, download
+            if os.path.isdir(download_dir):
+                print(f"{download_dir} already exists, skipping this download.")
+            else:
+                returncode, stderr, stdout, download_dir = installib.downloadPackage(download_in_apps, repo, main_pkg, version, True)
+                if returncode!=0:
+                    err = (stderr or stdout or "").strip()
+                    logging.error(f"Error downloading {main_pkg}: {err}")
+                    sys.exit(1)
+                print(f"Package successfully downloaded to {download_dir}")
+            git_dirs+=[download_dir]
 
-                    [returncode, stderr, stdout] = installib.runBash(cmd)
-                    if returncode!=0 or (not os.path.isdir(dest)):
-                        err = (stderr or stdout or "")
+            req_file = f"{download_dir}/requirements.txt"
+            if os.path.isfile(req_file):
+                if input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
+                    input(f"cd {download_dir} [Enter]")
+                    input("python -m pip install -r requirements.txt [Enter]")
 
-                        if err.contains("remote: Not Found"):
-                            repo = (f"The repository was not found, try one more time. git repo url: ")
-                            [returncode, stderr, stdout] = installib.runBash(["git", "clone", repo, dest])
-                            if returncode!=0 or (not os.path.isdir(dest)):
-                                 err = (stderr or stdout or "")
-
-                    if returncode!=0 or (not os.path.isdir(dest)):
-                        logging.error(f"Could not download {repo_name}: {err}")
-                        sys.exit(1)
-
-                    input(f"Successfully downloaded {repo_name} [Enter]")
-
-                else:
-                    print(f"\n{dest} already exists")
-
-                req_file = f"{dest}/requirements.txt"
-                if os.path.isfile(req_file):
-                    if input(f"A requirements.txt file was found in {repo_name}. Do you want to install? [Y/n]: ").strip().lower() not in ["n", "not"]:
-                        input(f"cd {dest} [Enter]")
-                        input("python -m pip install -r requirements.txt [Enter]")
-
-                        print("Check that all requirements where successfully installed:")
-                        with open(req_file, "r") as fin:
-                            line = fin.readline().lower
-                            if line.contains(">="):
-                                line = line.split(">=")[0]
-                            input(f"conda list | grep {line} [Enter]")
+                    print("Check that all requirements where successfully installed:")
+                    with open(req_file, "r") as fin:
+                        line = fin.readline().lower
+                        if line.contains(">="):
+                            line = line.split(">=")[0]
+                        input(f"conda list | grep {line} [Enter]")
 
     if input("\nDo you need to run any pip installs? [y/N]: ").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
@@ -213,8 +179,9 @@ def main():
         input(f"i.e. conda list | grep {main_pkg} [Enter]")
 
     # If I need to install a kernel for jupyter
-    #conda install ipykernel
-    # Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels
+    if input("\nIs this program going to be run from Jupyter Notebook? [y/N]: "):
+        input("conda install ipykernel [Enter]")
+        input("Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels [Enter]")
 
     # Run tests with the conda environment activated
     print("\nTest the conda environment:")
@@ -233,9 +200,13 @@ def main():
     input(f"\nconda deactivate [Enter]")
 
     # Download databases
+    db_env_var = ""
     if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
         Path(db_folder).mkdir(parents=True, exist_ok=True)
         input(f"Download any databases to {db_folder} [Enter]")
+        db = input("Name of the environment variable that the program requires to point to the DB path: ")
+        if db:
+            db_env_var = db
 
     # Copy module file from a previous version
     if (not os.path.isfile(new_ml)) and (ml_avail is not None) and len(ml_avail)>0:
@@ -302,7 +273,16 @@ def main():
         whatis("Category: {categories}")
         whatis("Description: {desc}")
         whatis("URL: {url}")
+        """)
 
+        for git_dir in git_dirs:
+            content+=f'pretend_path("PATH", "{git_dir}")\n'
+
+        if db_env_var:
+            content+=f'setenv("{db_env_var}", "{db_folder}"\n)'
+
+        content+=textwrap.dedent(f"""\
+                                 
         local conda_dir = "/hpc/apps/miniforge"
         local funcs = "conda __conda_activate __conda_hashr __conda_reactivate __conda_exe"
 
@@ -325,15 +305,12 @@ def main():
                 if len(pair)==2:
                     content+=f'setenv("{pair[0]}", "{pair[1]}")'
 
-        mdl_deps = input("\nList dependencies divided by comma: ").strip().lower().split(",")
+        mdl_deps = input("\nList any module dependencies divided by comma: ").strip().lower().split(",")
         mdl_deps = [x for x in mdl_deps if x != ""]
         if len(mdl_deps)>0:
             content+="\n"
             for dep in mdl_deps:
                 content+=f'depends_on("{dep}")'
-
-            if any(dep.startswith("python/3") for dep in mdl_deps):
-                content+="\n--set_alias(\"python\", \"python3\")"
 
         # Write the created content in the module file
         Path(ml_folder).mkdir(parents=True, exist_ok=True)
@@ -353,7 +330,7 @@ def main():
 
     # Check module file
     print("\nCompare new module file with another one that also uses conda:")
-    [returncode, stderr, stdout] = installib.runBash(["bash", "-lc", "grep -r conda /hpc/modulefiles | tail -n 1 | cut -d: -f1"])
+    returncode, stderr, stdout = installib.runBash(["bash", "-lc", "grep -r conda /hpc/modulefiles | tail -n 1 | cut -d: -f1"])
     if returncode!=0:
         print(f"vi /hpc/modulefiles/{stdout}")
     input(f"vi {new_ml} [Enter]")
