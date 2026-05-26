@@ -93,11 +93,14 @@ def availableModules(pkg: str):
         print("Error: LMOD_CMD is not set; Lmod is not initialized")
         return []
     
+    print(lmod_cmd)
     returncode, stderr, stdout = runBash([lmod_cmd, "shell", "avail", pkg])    
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"Error: Could not check available modules for {pkg}: {err}")
         return []
 
+    print(stderr)
+    print(stdout)
     matches = re.findall(rf'\b{re.escape(pkg)}/[^\s]+', stdout)
     return matches
