@@ -99,16 +99,23 @@ def main():
 
             # The module was created at some point, but it was disabled
             else:
-                msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "            
+                msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "           
 
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
 
         elif os.path.isdir(apps_path):
             msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
-
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
+
+    if input("Is this running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
+        print(f"Take note in which node you're located, then run: screen -S {main_pkg}_python")
+        sys.exit(0)
+
+    # Create screen process for the actual install
+    node = input("In which node are you running the install?: ")
+    input(f"Create a screen process for the actual install: screen -S {main_pkg}_install [Enter]")
 
     if create_env:
         if micro:
@@ -348,6 +355,10 @@ def main():
         with open(tests, "r") as fin:
             line = fin.readline()
             input(f"{line} [Enter]")
+
+    # Close screen processes
+    input(f"screen -S {main_pkg}_install -X quit [Enter]")
+    input("*** Remember to kill this screen process ***")
 
 if __name__ == "__main__":
     main()

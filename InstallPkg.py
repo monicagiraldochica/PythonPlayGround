@@ -36,6 +36,11 @@ def main():
     input("sudo su - [Enter]")
 
     mdl_name, mdl_vers, download_in_apps, pkg_url = parse_arguments()
+
+    if input("Is this running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
+        print(f"Take note in which node you're located, then run: screen -S {mdl_name}_python")
+        sys.exit(0)
+
     if (not pkg_url.startswith("https://")) and (not pkg_url.startswith("http://")):
         pkg_url = "https://"+pkg_url
     git = pkg_url.startswith("https://github.com")
@@ -44,7 +49,7 @@ def main():
         "it doesn't fit well with our centrally managed, read-only software environment on the cluster. " \
         "A good option is to install it in your scratch space where you have full write access, " \
         "and then update your Slurm job scripts to cd into that directory before running it. " \
-        "This should allow it to run as intended without permission issues. Let us know if you’d like any help setting that up.\n\n" \
+        "This should allow it to run as intended without permission issues. Let us know if you'd like any help setting that up.\n\n" \
         "Thanks, RCC"
     
     # Check if the module was already installed
@@ -100,8 +105,40 @@ def main():
         if input("\nIs this program going to be run from Jupyter Notebook? [y/N]: "):
             input("Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels [Enter]")
 
-    # Compile
-    #openmpi = availableModules
+    if compile:
+        os.chdir(download_dir)
+        if not os.path.isfile("configure"):
+            logging.error(f"No configure file found in {download_dir}. Can't compile.")
+            sys.exit(1)
+        input(f"cd {download_dir}")
+
+        # Load the necessary modules
+        ml_load = []
+
+        for mdl in ["openmpi", "cuda"]:
+            if input(f"Does {mdl_name} uses {mdl} [y/N]? ").strip().lower() in ["y", "yes"]:
+                avail = installib.availableModules(mdl)
+                if (not avail) and (input(f"{mdl} not available. Do you want to proceed? [y/N]").strip().lower() not in ["y", "yes"]):
+                    logging.error(f"{mdl} not available. Can't compile.")
+                    sys.exit(1)
+                ml_load.append(avail[-1])
+                    
+        for mdl in ["cmake", "gcc"]:
+            avail = installib.availableModules(mdl)
+            if not avail:
+                logging.error(f"{mdl} not available. Can't compile.")
+                sys.exit(1)
+            ml_load.append(avail[-1])
+
+        input(f"ml load {' '.join(ml_load)} [Enter]")
+
+        # Set the correct environment variables for compilation
+        input("CC=/hpc/apps/gcc/<version>/bin/gcc [Enter]")
+        input("CXX=/hpc/apps/gcc/<version>/bin/g++ [Enter]")
+
+        # Compile
+        node = input("In which node are you running the install?: ")
+        input(f"screen -S {mdl_name}_install [Enter]")
 
     # Test in /hpc/apps/app/bin
 
@@ -114,6 +151,10 @@ def main():
     # Make module visible
 
     # Remove from builds if desired
+
+    # Close screen processes (mdl_name_install - in variable node - and md_name_python)
+    #input(f"screen -S {mdl_name}_install -X quit [Enter]")
+    #input("*** Remember to kill this screen process ***")
 
     # Specific software
 

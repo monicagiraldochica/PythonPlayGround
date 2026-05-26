@@ -103,7 +103,6 @@ def availableModules(pkg: str):
         txt = stderr
     else:
         return []
-    #return re.findall(rf'\b{re.escape(pkg)}/[^\s]+', txt)
 
     modules = re.findall(r'\S+', txt)
     result = [m for m in modules if m.startswith(f"{pkg}/")]
