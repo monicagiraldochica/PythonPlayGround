@@ -10,7 +10,7 @@ import re
 import shutil
 import textwrap
 
-def runBash(cmd: list[str], output_file: str=""):
+def runBash(cmd, output_file: str=""):
     file_handle = None
     try:
         if output_file:
@@ -86,7 +86,7 @@ def decompress(filename: str):
     else:
         return 2, f"Dont know how to extract {filename}", ""
 
-def availableModules(pkg: str) -> list[str]:
+def availableModules(pkg: str):
     lmod_cmd = os.environ.get("LMOD_CMD")
     if not lmod_cmd:
         print("Error: LMOD_CMD is not set; Lmod is not initialized")
@@ -120,7 +120,7 @@ def contentFolder(path: str) -> str:
     
     return stdout
 
-def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, git_paths: list[str], db_env_var: str="", db_folder: str="", known_ml_deps: list[str]=[]) -> bool:
+def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, git_paths, db_env_var: str="", db_folder: str="", known_ml_deps=[]) -> bool:
     ml_folder = f"/hpc/modulefiles/{mdl_name}"
     new_ml = f"{ml_folder}/{mdl_version}.lua"
     ml_avail = availableModules(mdl_name)
@@ -284,7 +284,7 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
 
         return True
     
-def cloneRepos(mdl_name: str, mdl_version: str) -> list[str]:
+def cloneRepos(mdl_name: str, mdl_version: str):
     git_dirs = []
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
         repos = input("https git repos divided by comma: ").split(",")
