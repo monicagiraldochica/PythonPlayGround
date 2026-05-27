@@ -72,7 +72,8 @@ def main():
         sys.exit(1)
 
     # Check that the repository wasn't already downloaded, otherwise, download and unzip if needed
-    download_dir = f"/hpc/apps/{mdl_name}/{mdl_vers}" if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
+    app_path = f"/hpc/apps/{mdl_name}/{mdl_vers}"
+    download_dir = app_path if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
     if os.path.isdir(download_dir):
         print(f"{download_dir} already exists, skipping this download.")
     else:    
@@ -141,13 +142,13 @@ def main():
         # Compile
         node = input("In which node are you running the install?: ")
         input(f"screen -S {mdl_name}_install [Enter]")
-        input(f'./configure --prefix /hpc/apps/{mdl_name}/{mdl_vers} LDFLAGS="-Wl,-rpath,/hpc/apps/{latest}/lib64" [Enter]')
+        input(f'./configure --prefix {app_path} LDFLAGS="-Wl,-rpath,/hpc/apps/{latest}/lib64" [Enter]')
         input("make -j 4 [Enter]")
         input("make install")
 
     # Run Tests
-    input(f"cd /hpc/apps/{mdl_name}/{mdl_vers}/bin [Enter]")
-    input("Test an executable in that directory")
+    input(f"cd {app_path}/bin [Enter]")
+    input("Test an executable in that directory [Enter]")
 
     # Download DB if needed
     db_env_var = ""
@@ -159,18 +160,48 @@ def main():
         if db:
             db_env_var = db
 
-    # Create lua file (hidden module), add required_modules if any, use db_env_var
+    # Clone git repos if applicable
+    git_dirs = installib.cloneRepos(mdl_name, mdl_vers)
 
-    # Test
+    # Create module file
+    new_ml = f"/hpc/modulefiles/{mdl_name}/{mdl_vers}.lua"
+    if not installib.createMdlFile(mdl_name, mdl_vers, f"{app_path}/bin", False, git_dirs, db_env_var, db_folder, required_modules):        
+        input(f"Create {new_ml} manually [Enter]")
 
-    # Make module visible
+    # Check module file
+    input(f"vi {new_ml} [Enter]")
+
+    # Check module file
+    print("\nCompare new module file with another one that also uses conda:")
+    returncode, stderr, stdout = installib.runBash(["bash", "-lc", "grep -r conda /hpc/modulefiles | tail -n 1 | cut -d: -f1"])
+    if returncode!=0:
+        print(f"vi /hpc/modulefiles/{stdout}")
+    input(f"vi {new_ml} [Enter]")
+
+    # Test final module
+    print(f"\nAvailable packages for {mdl_name}:")
+    input(f"ml avail {mdl_name} [Enter]")
+    print(f"\nModule information:")
+    input(f"ml show {mdl_name}/{mdl_vers} [Enter]")
+
+    # Run final tests
+    print("\nTest the final module:")
+    input(f"The list of commands for {mdl_name} can be found in {app_path}/bin. [Enter]")
+
+    tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
+    try:
+        with open(tests, "r") as fin:
+            line = fin.readline()
+            input(f"{line} [Enter]")
+    except Exception as e:
+        print(f"WARNING: could not read {tests}: {e}")
+
+    # Close screen processes
+    input(f"Login to {node} as root [Enter]")
+    input(f"screen -S {mdl_name}_install -X quit [Enter]")
+    print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
 
     # Remove from builds if desired
-
-    # Close screen processes (mdl_name_install - in variable node - and md_name_python)
-    #login to 'node'
-    #input(f"screen -S {mdl_name}_install -X quit [Enter]")
-    #input("*** Remember to kill this screen process ***")
 
     # Specific software
 

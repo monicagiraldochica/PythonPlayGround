@@ -30,19 +30,8 @@ def getCondaVersion():
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
     return match.group(1) if match else None
 
-def contentFolder(path: str):
-    path = path[:-1] if path.endswith("/") else path
-    returncode, stderr, stdout = installib.runBash(["ls", "-l", path])
-    
-    if returncode!=0:
-        err = (stderr or stdout or "").strip()
-        logging.error(f"Could not get the content of {path}: {err}")
-        return None
-    
-    return stdout
-
 def downloadedMiniforgeVersions(pkg: str, path:str):
-    out = contentFolder(path)
+    out = installib.contentFolder(path)
     if out is None:
         return []
     
@@ -105,7 +94,7 @@ def main():
                 sys.exit(1)
 
         elif os.path.isdir(apps_path):
-            msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
+            msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{installib.contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
 
@@ -135,38 +124,8 @@ def main():
         print(f"Conda dir was not created: {forge_dir}")
         sys.exit(1)
 
-    git_dirs = []
-    if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
-        repos = input("https git repos divided by comma: ").split(",")
-        for repo in repos:
-            repo_name = repo.split("/")[-1].replace(".git", "")
-            download_in_apps = input(f"Does {repo_name} need to be downloaded in /hpc/apps? [y/N]: ").strip().lower() in ["y", "yes"]
-            download_dir = f"/hpc/apps/{main_pkg}/{version}" if download_in_apps else f"/adminfs/builds/{main_pkg}/{version}"
-
-            # Check that the repository wasn't already downloaded, otherwise, download
-            if os.path.isdir(download_dir):
-                print(f"{download_dir} already exists, skipping this download.")
-            else:
-                returncode, stderr, stdout, download_dir = installib.downloadPackage(download_in_apps, repo, main_pkg, version, True)
-                if returncode!=0:
-                    err = (stderr or stdout or "").strip()
-                    logging.error(f"Error downloading {main_pkg}: {err}")
-                    sys.exit(1)
-                print(f"Package successfully downloaded to {download_dir}")
-            git_dirs+=[download_dir]
-
-            req_file = f"{download_dir}/requirements.txt"
-            if os.path.isfile(req_file):
-                if input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
-                    input(f"cd {download_dir} [Enter]")
-                    input("python -m pip install -r requirements.txt [Enter]")
-
-                    print("Check that all requirements where successfully installed:")
-                    with open(req_file, "r") as fin:
-                        line = fin.readline().lower
-                        if line.contains(">="):
-                            line = line.split(">=")[0]
-                        input(f"conda list | grep {line} [Enter]")
+    # Clone git repos if applicable
+    git_dirs = installib.cloneRepos(main_pkg, version)
 
     if input("\nDo you need to run any pip installs? [y/N]: ").strip().lower() in ["y", "yes"]:
         which_pip = input("\nrun 'which pip' and paste here the output: ")
@@ -198,12 +157,6 @@ def main():
         msg+=f" And in {apps_path}/{version}/bin."
     input(f"{msg}. [Enter]")
 
-    tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
-    if os.path.isfile(tests):
-        with open(tests, "r") as fin:
-            line = fin.readline()
-            input(f"{line} [Enter]")
-
     input(f"\nconda deactivate [Enter]")
 
     # Download databases
@@ -215,125 +168,9 @@ def main():
         if db:
             db_env_var = db
 
-    # Copy module file from a previous version
-    if (not os.path.isfile(new_ml)) and ml_avail:
-        for ml in ml_avail.reverse():
-            ml_path = f"{ml_folder}/{ml}.lua"
-            if os.path.isfile(ml_path):
-                shutil.copy(ml_path, new_ml)
-                print(f"\nCopied {ml_path} to {new_ml}")
-                break
-
-    # Create a new module file
-    else:
-        print(f"\nCreating {new_ml}:")
-
-        # Create module help content
-        help_file = input("\nPath to txt file with the content of the module help ([Enter] if you want to input the help manually or include no help text): ").strip()
-        if not os.path.isfile(help_file):
-            print("Module help can have new lines. Press Ctrl-D when done.\nModule help (leave empty if no help):")
-            ml_help = sys.stdin.read().strip()
-            ml_help = ''.join(c for c in ml_help if c.isprintable())
-        else:
-            with open(help_file, "r") as fin:
-                ml_help = fin.read()
-
-        if input(f"\nDoes {main_pkg} has a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
-            msg="Make sure you connect using -XY flag if planning to use the GUI.\nFor Mac users: make sure you have XQuartz installed."
-            if len(ml_help)>0:
-                ml_help+=f"\n\n{msg}"
-            else:
-                ml_help=msg
-        py_files = contentFolder(forge_path).split("\n")
-        py_files = [f for f in py_files if f.endswith(".py")]
-        if len(py_files)>0 and len(msg)>0:
-            ml_help+=f"\n\nRun '{py_files[0]} -h' instead of 'python {py_files[0]} -h'"
-
-        # Create category string
-        print("\nCategory ideas: Applications, Bioinformatics, biology, genomics, imaging, neuroimaging, chemistry, statistics, devel, math, fluid dynamics, data analytics, deep learning, machine learning, system, graphics")
-        categories = input("Categories: ").strip()
-        categories = ''.join(c for c in categories if c.isprintable())
-
-        # Description and URL
-        desc = input("\nDescription: ").strip()
-        desc = ''.join(c for c in desc if c.isprintable())
-        url = input("\nURL: ").strip()
-        url = ''.join(c for c in url if c.isprintable())
-
-        init_line = 'execute{cmd="source " .. conda_dir .. "/etc/profile.d/conda.sh; conda activate " .. myModuleName() .. "-" .. myModuleVersion() .. "; export -f " .. funcs, modeA={"load"}}'
-        python_line = 'family("python")'
-
-        if not os.path.isfile("unload_cmd.txt"):
-            print("*** lua file will be incomplete, the content that goes under -- Unload environments and clear conda from environment could not be loaded ***")
-            unload_line = ""
-        else:
-            with open("unload_cmd.txt", "r") as fin:
-                unload_line = fin.read()
-
-        content = textwrap.dedent(f"""\
-        help([[
-        {ml_help}
-        ]])
-
-        whatis("Name:     "..myModuleName())
-        whatis("Version:  "..myModuleVersion())
-        whatis("Category: {categories}")
-        whatis("Description: {desc}")
-        whatis("URL: {url}")
-        """)
-
-        for git_dir in git_dirs:
-            content+=f'pretend_path("PATH", "{git_dir}")\n'
-
-        if db_env_var:
-            content+=f'setenv("{db_env_var}", "{db_folder}"\n)'
-
-        content+=textwrap.dedent(f"""\
-                                 
-        local conda_dir = "/hpc/apps/miniforge"
-        local funcs = "conda __conda_activate __conda_hashr __conda_reactivate __conda_exe"
-
-        -- Initialize conda and activate environment
-        {init_line}
-
-        -- Unload environments and clear conda from environment
-        {unload_line}
-
-        -- Prevent from being loaded with another system python or conda environment
-        {python_line}
-        """)
-
-        if input("\nDoes any variables need to be set? [y/N]: ").strip().lower() in ("yes", "y"):
-            array = input("VAR:value divided by comma: ").split(",")
-            if len(array)>0:
-                content+="\n"
-            for var_info in array:
-                pair = var_info.split(":")
-                if len(pair)==2:
-                    content+=f'setenv("{pair[0]}", "{pair[1]}")'
-
-        mdl_deps = input("\nList any module dependencies divided by comma: ").strip().lower().split(",")
-        mdl_deps = [x for x in mdl_deps if x != ""]
-        if len(mdl_deps)>0:
-            content+="\n"
-            for dep in mdl_deps:
-                content+=f'depends_on("{dep}")'
-
-        # Write the created content in the module file
-        Path(ml_folder).mkdir(parents=True, exist_ok=True)
-        with open(new_ml, "w") as f1:
-            f1.write(content)
-
-        # Create symlink to 'latest' if this will not be the default version
-        if len(ml_avail)>0:
-            print(f"\nOther available versions for this module: {', '.join(ml_avail)}")
-
-            if input("Will this be the default and highest version? [Y/n]: ").strip().lower() in ("n", "no"):
-                default = input("Default version: ").strip()
-                default_lua = f"{ml_folder}/{default}.lua"
-                if os.path.isfile(default_lua):
-                    os.symlink(default_lua, f"{ml_folder}/default")
-                    print(f"Symlink created from {default_lua} to {ml_folder}/default")
+    # Create module file
+    if not installib.createMdlFile(main_pkg, version, forge_path, True, git_dirs, db_env_var, db_folder):
+        input(f"Create {new_ml} manually [Enter]")
 
     # Check module file
     print("\nCompare new module file with another one that also uses conda:")
@@ -351,14 +188,19 @@ def main():
     # Run final tests
     print("\nTest the final module:")
     input(f"The list of commands for {main_pkg} can be found in {forge_path}. [Enter]")
-    if os.path.isfile(tests):
+
+    tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
+    try:
         with open(tests, "r") as fin:
             line = fin.readline()
             input(f"{line} [Enter]")
+    except Exception as e:
+        print(f"WARNING: could not read {tests}: {e}")
 
     # Close screen processes
+    input(f"Login to {node} as root [Enter]")
     input(f"screen -S {main_pkg}_install -X quit [Enter]")
-    input("*** Remember to kill this screen process ***")
+    print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
 
 if __name__ == "__main__":
     main()
