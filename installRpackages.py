@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Production"
 __purpose__ = "Install R packages"
 
 import os

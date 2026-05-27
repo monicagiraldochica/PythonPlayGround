@@ -6,7 +6,6 @@ __purpose__ = "Install modules with make"
 import sys
 import argparse
 import installib
-import logging
 import os
 from pathlib import Path
 import shutil
@@ -30,7 +29,7 @@ def parse_arguments():
 def main():
     # Check python version
     if not installib.checkPythonVers(3, 7)[0]:
-        logging.error("This script requires Python 3.7 or higher\n")
+        print("ERROR: This script requires Python 3.7 or higher\n")
         sys.exit(1)
 
     # Make sure I'm root in a login node
@@ -69,7 +68,7 @@ def main():
 
     # Check that the software can run in the cluster before download if possible
     if git and (not compile) and input("Can the script run from any location? [Y/n]").strip().lower() not in ["n", "no"]:
-        logging.error(f"This program can't be installed centrally as a module. Send the user the following message:/n/n{msg1}")
+        print(f"ERROR: This program can't be installed centrally as a module. Send the user the following message:/n/n{msg1}")
         sys.exit(1)
 
     # Check that the repository wasn't already downloaded, otherwise, download and unzip if needed
@@ -81,7 +80,7 @@ def main():
         returncode, stderr, stdout, download_dir, compile = installib.downloadPackage(download_in_apps, pkg_url, mdl_name, mdl_vers)    
         if returncode!=0:
             err = (stderr or stdout or "").strip()
-            logging.error(f"Error downloading {mdl_name}: {err}")
+            print(f"ERROR: could not download {mdl_name}: {err}")
             sys.exit(1)
         print(f"Package successfully downloaded to {download_dir}")
         
@@ -94,14 +93,14 @@ def main():
 
     # Check that the software can run in the cluster
     if (not git) and (not compile) and input("Can the script run from any location? [Y/n]").strip().lower() not in ["n", "no"]:
-        logging.error(f"This program can't be installed centrally as a module. Send the user the following message:/n/n{msg1}")
+        print(f"ERROR: This program can't be installed centrally as a module. Send the user the following message:/n/n{msg1}")
         sys.exit(1)
     
     elif git and os.path.isfile(req_file):
         print(msg2)
         req_py = input("Input the python module that contains all the requirements (Enter if none found): ")
         if not req_py:
-            logging.error(f"You need to create this module as a conda environment. Run: python3 createMiniforgeModule.py --main-pkg {mdl_name} --version {mdl_vers}")
+            print(f"ERROR: You need to create this module as a conda environment. Run: python3 createMiniforgeModule.py --main-pkg {mdl_name} --version {mdl_vers}")
             sys.exit(1)
         required_modules+=[req_py]
 
@@ -111,7 +110,7 @@ def main():
     if compile:
         os.chdir(download_dir)
         if not os.path.isfile("configure"):
-            logging.error(f"No configure file found in {download_dir}. Can't compile.")
+            print(f"ERROR: No configure file found in {download_dir}. Can't compile.")
             sys.exit(1)
         input(f"cd {download_dir}")
 
@@ -121,7 +120,7 @@ def main():
             if input(f"Does {mdl_name} uses {mdl} [y/N]? ").strip().lower() in ["y", "yes"]:
                 avail = installib.availableModules(mdl)
                 if (not avail) and (input(f"{mdl} not available. Do you want to proceed? [y/N]").strip().lower() not in ["y", "yes"]):
-                    logging.error(f"{mdl} not available. Can't compile.")
+                    print(f"ERROR: {mdl} not available. Can't compile.")
                     sys.exit(1)
                 ml_load.append(avail[-1])
 
@@ -129,7 +128,7 @@ def main():
         for mdl in ["cmake", "gcc"]:
             avail = installib.availableModules(mdl)
             if not avail:
-                logging.error(f"{mdl} not available. Can't compile.")
+                print(f"ERROR: {mdl} not available. Can't compile.")
                 sys.exit(1)
             latest = avail[-1]
             ml_load.append(latest)
@@ -213,8 +212,6 @@ def main():
     input(f"Login to {node} as root [Enter]")
     input(f"screen -S {mdl_name}_install -X quit [Enter]")
     print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
-
-    # Specific software
 
 if __name__ == "__main__":
     main()

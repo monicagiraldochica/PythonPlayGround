@@ -5,11 +5,8 @@ import sys
 import argparse
 import re
 import os
-import shutil
-import textwrap
 import installib
 from pathlib import Path
-import logging
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
@@ -24,7 +21,7 @@ def getCondaVersion():
 
     if returncode!=0:
         err = (stderr or stdout or "").strip()
-        logging.error(f"Could not check conda version: {err}")
+        print(f"ERROR: Could not check conda version: {err}")
         return None
     
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
@@ -42,7 +39,7 @@ def main():
     # Check python version
     correct_python, major, minor, micro = installib.checkPythonVers(3, 7)
     if not correct_python:
-        logging.error("This script requires Python 3.7 or higher\n")
+        print("ERROR: This script requires Python 3.7 or higher\n")
         sys.exit(1)
 
     # Make sure I'm root in a login node, and miniforge is loaded

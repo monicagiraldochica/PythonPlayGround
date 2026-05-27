@@ -32,7 +32,7 @@ def check_module(mdl: str) -> int:
     print(f"{err}\n")
     return 2
 
-def loop(missing_modules, install, success_out="success.txt", fail_out="fail.txt"):
+def loop(missing_modules: list[str], install: bool, success_out="success.txt", fail_out="fail.txt"):
     dic1 = {0:[], 1:[], 2:[]}
     dic2 = {
         0: "installed",
