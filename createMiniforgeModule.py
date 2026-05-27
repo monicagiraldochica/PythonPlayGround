@@ -27,7 +27,7 @@ def getCondaVersion():
     match = re.search(r"(\d+\.\d+\.\d+)", stdout)
     return match.group(1) if match else None
 
-def downloadedMiniforgeVersions(pkg: str, path:str):
+def downloadedMiniforgeVersions(pkg: str, path:str) -> list[str]:
     out = installib.contentFolder(path)
     if out is None:
         return []

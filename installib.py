@@ -10,7 +10,7 @@ import re
 import shutil
 import textwrap
 
-def runBash(cmd: list[str], output_file:str=None):
+def runBash(cmd: list[str], output_file: str="") -> tuple[int, str, str]:
     file_handle = None
     try:
         if output_file:
@@ -31,7 +31,7 @@ def runBash(cmd: list[str], output_file:str=None):
         if file_handle:
             file_handle.close()
 
-def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0):
+def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0) -> tuple[bool, int, int, int]:
     python_info = sys.version_info
     major = python_info.major or 0
     minor = python_info.minor or 0
@@ -86,7 +86,7 @@ def decompress(filename: str):
     else:
         return 2, f"Dont know how to extract {filename}", ""
 
-def availableModules(pkg: str):
+def availableModules(pkg: str) -> list[str]:
     lmod_cmd = os.environ.get("LMOD_CMD")
     if not lmod_cmd:
         print("Error: LMOD_CMD is not set; Lmod is not initialized")
@@ -109,7 +109,7 @@ def availableModules(pkg: str):
     result = [m for m in modules if m.startswith(f"{pkg}/")]
     return sorted(result)
 
-def contentFolder(path: str):
+def contentFolder(path: str) -> str:
     path = path[:-1] if path.endswith("/") else path
     returncode, stderr, stdout = runBash(["ls", "-l", path])
     
