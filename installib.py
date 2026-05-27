@@ -233,12 +233,22 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
         # Add any additional variables
         if input("\nDoes any variables need to be set? [y/N]: ").strip().lower() in ("yes", "y"):
             array = input("VAR:value divided by comma: ").split(",")
-            if len(array)>0:
+            if array:
                 content+="\n"
             for var_info in array:
                 pair = var_info.split(":")
                 if len(pair)==2:
                     content+=f'setenv("{pair[0]}", "{pair[1]}")'
+
+        # Add aliases
+        if input("\nDo you want to set any aliases? [y/N]: ").strip().lower() in ("yes", "y"):
+            array = input("alias:orig_func divided by comma: ").split(",")
+            if array:
+                content+="\n"
+            for alias_info in array:
+                pair = alias_info.split(":")
+                if len(pair)==2:
+                    content+=f'set_alias("{pair[0]}", "{pair[1]}")'
 
         # Add any module dependencies
         if not known_ml_deps:
