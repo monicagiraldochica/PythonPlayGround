@@ -123,6 +123,7 @@ def get_jobInfo_sacct(job_id: str):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Troubleshoot a job")
     parser.add_argument("--user", help="netID", required=True)
+    parser.add_argument("--stopped", action="store_true", help="Job finished running or failed")
 
     parser.add_argument("--jobid", help="jobID")
     parser.add_argument("--submit-date", help="Date when job was submitted (YYYY-MM-DD)")
@@ -136,28 +137,36 @@ def parse_arguments():
         except ValueError:
             parser.error("submit-date must be in format YYYY-MM-DD")
 
-    return args.jobid, args.user, args.submit_date
+    return args.jobid, args.user, args.submit_date, args.stopped
 
 def getJobID(user: str, submit_date: str):
-    installib.runBash(["sacct", "-X", "-n", "-u", user, "-o", "JobID", "-S", f'"$(date -d {submit_date} +%F)T00:00:00"', "-E", f'"$(date -d {submit_date} +%F)T23:59:59"'])
+    start = f"{submit_date}T00:00:00"
+    end = f"{submit_date}T23:59:59"
+    returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-u", user, "-o", "JobID", "-S", start, "-E", end])
+    if returncode!=0:
+        print(f"ERROR: could not get jobID: {stderr}")
+        return None
+    return stdout.strip()
 
 def main():
     # Check python version
     if not installib.checkPythonVers(3, 10, 16)[0]:
-        print("ERROR: This script requires Python 3.7 or higher\n")
+        print("ERROR: This script requires Python 3.10.16 or higher\n")
         sys.exit(1)
 
     # Make sure I'm root in a login node
     input("\nssh into login node (do NOT sudo) [Enter]")
 
-    jobID, netID, submitDate = parse_arguments()
+    jobID, netID, submitDate, stopped = parse_arguments()
+    jobID = jobID or getJobID(netID, submitDate)
+    if not jobID:
+        print("ERROR: missing jobID")
+        sys.exit(1)
 
-    # Only works for running, queued or recently finished jobs
-    #df = get_jobInfo_scontrol()
-    #print(df)
-
-    # Better to use for failed or completed jobs
-    df = get_jobInfo_sacct(6645625)
+    if stopped:
+        df = get_jobInfo_sacct(jobID)
+    else:
+        df = get_jobInfo_scontrol(jobID)    
     print(df)
 
 if __name__ == "__main__":
