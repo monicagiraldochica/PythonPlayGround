@@ -9,6 +9,7 @@ import installib
 import logging
 import os
 from pathlib import Path
+import shutil
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install a new module using make)")
@@ -196,12 +197,22 @@ def main():
     except Exception as e:
         print(f"WARNING: could not read {tests}: {e}")
 
+    # Remove from builds if desired
+    if not download_in_apps:
+        print(f"Content of {download_dir}:\n{installib.contentFolder(download_dir)}")
+        if input(f"Do you want to remove {download_dir}? [Y/n]: ") not in ["y", "yes"]:
+            shutil.rmtree(download_dir)
+            parent_dir = os.path.dirname(download_dir)
+            try:
+                os.rmdir(parent_dir)
+            except OSError as e:
+                if "not empty" not in str(e).lower():
+                    print(f"WARNING: could not delete {parent_dir}")
+
     # Close screen processes
     input(f"Login to {node} as root [Enter]")
     input(f"screen -S {mdl_name}_install -X quit [Enter]")
     print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
-
-    # Remove from builds if desired
 
     # Specific software
 
