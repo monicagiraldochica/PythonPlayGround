@@ -200,7 +200,7 @@ def main():
     # Close screen processes
     input(f"Login to {node} as root [Enter]")
     input(f"screen -S {main_pkg}_install -X quit [Enter]")
-    print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
+    print(f"*** Remember to kill this screen process: screen -S {main_pkg}_python -X quit ***")
 
 if __name__ == "__main__":
     main()
