@@ -216,7 +216,7 @@ def main():
             db_env_var = db
 
     # Copy module file from a previous version
-    if (not os.path.isfile(new_ml)) and (ml_avail is not None) and len(ml_avail)>0:
+    if (not os.path.isfile(new_ml)) and ml_avail:
         for ml in ml_avail.reverse():
             ml_path = f"{ml_folder}/{ml}.lua"
             if os.path.isfile(ml_path):

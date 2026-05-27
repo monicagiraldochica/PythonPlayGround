@@ -8,6 +8,7 @@ import argparse
 import installib
 import logging
 import os
+from pathlib import Path
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Install a new module using make)")
@@ -114,7 +115,6 @@ def main():
 
         # Load the necessary modules
         ml_load = []
-
         for mdl in ["openmpi", "cuda"]:
             if input(f"Does {mdl_name} uses {mdl} [y/N]? ").strip().lower() in ["y", "yes"]:
                 avail = installib.availableModules(mdl)
@@ -122,13 +122,15 @@ def main():
                     logging.error(f"{mdl} not available. Can't compile.")
                     sys.exit(1)
                 ml_load.append(avail[-1])
-                    
+
+        latest = ""
         for mdl in ["cmake", "gcc"]:
             avail = installib.availableModules(mdl)
             if not avail:
                 logging.error(f"{mdl} not available. Can't compile.")
                 sys.exit(1)
-            ml_load.append(avail[-1])
+            latest = avail[-1]
+            ml_load.append(latest)
 
         input(f"ml load {' '.join(ml_load)} [Enter]")
 
@@ -139,12 +141,25 @@ def main():
         # Compile
         node = input("In which node are you running the install?: ")
         input(f"screen -S {mdl_name}_install [Enter]")
+        input(f'./configure --prefix /hpc/apps/{mdl_name}/{mdl_vers} LDFLAGS="-Wl,-rpath,/hpc/apps/{latest}/lib64" [Enter]')
+        input("make -j 4 [Enter]")
+        input("make install")
 
-    # Test in /hpc/apps/app/bin
+    # Run Tests
+    input(f"cd /hpc/apps/{mdl_name}/{mdl_vers}/bin [Enter]")
+    input("Test an executable in that directory")
 
     # Download DB if needed
+    db_env_var = ""
+    if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
+        db_folder = f"/hpc/refdata/{mdl_name}"
+        Path(db_folder).mkdir(parents=True, exist_ok=True)
+        input(f"Download any databases to {db_folder} [Enter]")
+        db = input("Name of the environment variable that the program requires to point to the DB path: ")
+        if db:
+            db_env_var = db
 
-    # Create lua file (hidden module), add required_modules if any
+    # Create lua file (hidden module), add required_modules if any, use db_env_var
 
     # Test
 
@@ -153,6 +168,7 @@ def main():
     # Remove from builds if desired
 
     # Close screen processes (mdl_name_install - in variable node - and md_name_python)
+    #login to 'node'
     #input(f"screen -S {mdl_name}_install -X quit [Enter]")
     #input("*** Remember to kill this screen process ***")
 
