@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Install a new module using make)")
+    parser = argparse.ArgumentParser(description="Install a new module using make")
     parser.add_argument("--mdl-name", help="Name of the new module", required=True)
     parser.add_argument("--mdl-vers", help="Version of the new module", required=True)
     parser.add_argument("--pkg-url", help="URL to download the package", required=True)

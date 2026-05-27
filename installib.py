@@ -10,7 +10,7 @@ import re
 import shutil
 import textwrap
 
-def runBash(cmd: list[str], output_file: str="") -> tuple[int, str, str]:
+def runBash(cmd: list[str], output_file: str=""):
     file_handle = None
     try:
         if output_file:
@@ -31,7 +31,7 @@ def runBash(cmd: list[str], output_file: str="") -> tuple[int, str, str]:
         if file_handle:
             file_handle.close()
 
-def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0) -> tuple[bool, int, int, int]:
+def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0):
     python_info = sys.version_info
     major = python_info.major or 0
     minor = python_info.minor or 0

@@ -5,9 +5,11 @@ import re
 import os
 import installib
 import sys
+import argparse
+from datetime import datetime
 
 # Only works for running, queued or recently finished jobs
-def get_jobInfo_scontrol(job_id):
+def get_jobInfo_scontrol(job_id: str):
     """
     Get selected job information from scontrol for a given job ID.
     Returns a pandas DataFrame with columns ['Field', 'Value'].
@@ -46,7 +48,7 @@ def get_jobInfo_scontrol(job_id):
     return df
 
 # Better to use for failed or completed jobs
-def get_jobInfo_sacct(job_id):
+def get_jobInfo_sacct(job_id: str):
     """
     Get selected job information from sacct for a given job ID.
     Returns a pandas DataFrame with columns ['Field', 'Value'].
@@ -118,14 +120,45 @@ def get_jobInfo_sacct(job_id):
     df = df.reset_index(drop=True)
     return df
 
-if input("Did you load python/3.10.16 or greater? [y/N]: ").strip().lower()!="n":
-    print("Load python/3.10.16 or greater before running this script")
-    sys.exit(1)
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Troubleshoot a job")
+    parser.add_argument("--user", help="netID", required=True)
 
-# Only works for running, queued or recently finished jobs
-#df = get_jobInfo_scontrol()
-#print(df)
+    parser.add_argument("--jobid", help="jobID")
+    parser.add_argument("--submit-date", help="Date when job was submitted (YYYY-MM-DD)")
 
-# Better to use for failed or completed jobs
-df = get_jobInfo_sacct(6645625)
-print(df)
+    args = parser.parse_args()
+    if not (args.jobid or args.submit_date):
+        parser.error("You must provide --jobid and/or --submit-date")
+    if args.submit_date:
+        try:
+            datetime.strptime(args.submit_date, "%Y-%m-%d")
+        except ValueError:
+            parser.error("submit-date must be in format YYYY-MM-DD")
+
+    return args.jobid, args.user, args.submit_date
+
+def getJobID(user: str, submit_date: str):
+    installib.runBash(["sacct", "-X", "-n", "-u", user, "-o", "JobID", "-S", f'"$(date -d {submit_date} +%F)T00:00:00"', "-E", f'"$(date -d {submit_date} +%F)T23:59:59"'])
+
+def main():
+    # Check python version
+    if not installib.checkPythonVers(3, 10, 16)[0]:
+        print("ERROR: This script requires Python 3.7 or higher\n")
+        sys.exit(1)
+
+    # Make sure I'm root in a login node
+    input("\nssh into login node (do NOT sudo) [Enter]")
+
+    jobID, netID, submitDate = parse_arguments()
+
+    # Only works for running, queued or recently finished jobs
+    #df = get_jobInfo_scontrol()
+    #print(df)
+
+    # Better to use for failed or completed jobs
+    df = get_jobInfo_sacct(6645625)
+    print(df)
+
+if __name__ == "__main__":
+    main()
