@@ -151,13 +151,8 @@ def get_perl_version():
 
 def main():
     # Check python version
-    python_info = sys.version_info
-    major = python_info.major or 0
-    minor = python_info.minor or 0
-    micro = python_info.micro or 0
-    print(f"Python version: {major}.{minor}.{micro}\n")
-    if major==0 or minor==0 or major<3 or minor<7:
-        print("This script requires Python 3.7 or higher.")
+    if not installib.checkPythonVers(3, 7)[0]:
+        print("ERROR: This script requires Python 3.7 or higher\n")
         sys.exit(1)
 
     [v_new, v_old, migrate, install, working_dir] = parse_arguments()

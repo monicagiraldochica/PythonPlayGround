@@ -355,19 +355,14 @@ def r_mandatory_deps_recursive(package, repo_mode="bioc", cran_repo="https://cra
 	return [ln for ln in stdout.splitlines() if ln.strip()]
 
 def getRversion():
-	result = installib.runBash(["R","--version"], check=True, capture_output=True, text=True)[2]
+	result = installib.runBash(["R", "--version"])[2]
 	match = re.search(r"(\d+\.\d+\.\d+)", result)
 	return match.group(1) if match else None
 
 def main():
 	# Check python version
-	python_info = sys.version_info
-	major = python_info.major or 0
-	minor = python_info.minor or 0
-	micro = python_info.micro or 0
-	print(f"Python version: {major}.{minor}.{micro}\n")
-	if major==0 or minor==0 or major<3 or minor<7:
-		print("This script requires Python 3.7 or higher.")
+	if not installib.checkPythonVers(3, 7)[0]:
+		print("ERROR: This script requires Python 3.7 or higher\n")
 		sys.exit(1)
 
 	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update, quiet] = parse_arguments()
