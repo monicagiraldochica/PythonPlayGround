@@ -376,17 +376,14 @@ def main():
 		print(f"Wrong version of R loaded ({rVers}). Need {v_new}.")
 		sys.exit(1)
 
-	if (not quiet) and input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
-		sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
+	if not quiet:
+		if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
+			sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
-	if (not quiet) and input("Did you load the latest available version of gcc (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
-		sys.exit("You need to load the latest version of gcc first")
-
-	if (not quiet) and input("Did you load the latest available version of cmake (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
-		sys.exit("You need to load the latest version of cmake first")
-
-	if (not quiet) and input("Did you load the latest available version of gsl (not necessarily the default)? [y/N]: ") not in ("y", "yes"):
-		sys.exit("You need to load the latest version of gsl first")
+		for mdl in ["gcc", "cmake", "gsl"]:
+			latest = installib.availableModules(mdl)[-1]
+			if input(f"Did you do 'md load {mdl}/{latest}'? [y/N]: ") not in ("y", "yes"):
+				sys.exit("You need to load the latest version of gcc first")
 
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir, quiet)
