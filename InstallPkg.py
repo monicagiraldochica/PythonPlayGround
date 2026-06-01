@@ -73,11 +73,20 @@ def main():
 
     # Check that the repository wasn't already downloaded, otherwise, download and unzip if needed
     app_path = f"/hpc/apps/{mdl_name}/{mdl_vers}"
-    download_dir = app_path if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
-    if os.path.isdir(download_dir):
-        print(f"{download_dir} already exists, skipping this download.")
+    build_path = f"/adminfs/builds/{mdl_name}/{mdl_vers}"
+    file_name = pkg_url.rsplit("/", 1)[-1].replace(".rpm", "").replace(".zip", "").replace(".gz", "").replace(".tar", "").replace(".tgz", "").replace(".bz2", "").replace(".xz", "")
+
+    if download_in_apps and os.path.isdir(app_path):
+        download_dir = app_path
+        print(f"\n{download_dir} already exists, skipping this download.")
+    elif (not download_dir) and os.path.isdir(f"{build_path}/{file_name}"):
+        download_dir = f"{build_path}/{file_name}"
+        print(f"\n{download_dir} already exists, skipping this download.")
+    elif (not download_dir) and os.path.isdir(build_path):
+        download_dir = build_path
+        print(f"\n{download_dir} already exists, skipping this download.")
     else:
-        print(f"Downloading {mdl_name}/{mdl_vers} from {pkg_url}")
+        print(f"\nDownloading {mdl_name}/{mdl_vers} from {pkg_url}")
         returncode, stderr, stdout, download_dir = installib.downloadPackage(download_in_apps, pkg_url, mdl_name, mdl_vers)    
         if returncode!=0:
             err = (stderr or stdout or "").strip()
