@@ -42,7 +42,7 @@ def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0):
         return False, major, minor, micro
     return True, major, minor, micro
 
-def downloadPackage(download_in_apps: bool, pkg_url: str, mdl_name: str, mdl_vers: str, git:False):
+def downloadPackage(download_in_apps: bool, pkg_url: str, mdl_name: str, mdl_vers: str, git: bool=False):
     download_dir = f"/hpc/apps/{mdl_name}/{mdl_vers}" if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
 
     # Create and navigate to the download directory
