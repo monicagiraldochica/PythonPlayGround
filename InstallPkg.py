@@ -76,8 +76,9 @@ def main():
     download_dir = app_path if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
     if os.path.isdir(download_dir):
         print(f"{download_dir} already exists, skipping this download.")
-    else:    
-        returncode, stderr, stdout, download_dir, compile = installib.downloadPackage(download_in_apps, pkg_url, mdl_name, mdl_vers)    
+    else:
+        print(f"Downloading {mdl_name}/{mdl_vers} from {pkg_url}")
+        returncode, stderr, stdout, download_dir = installib.downloadPackage(download_in_apps, pkg_url, mdl_name, mdl_vers)    
         if returncode!=0:
             err = (stderr or stdout or "").strip()
             print(f"ERROR: could not download {mdl_name}: {err}")
