@@ -355,9 +355,12 @@ def r_mandatory_deps_recursive(package, repo_mode="bioc", cran_repo="https://cra
 	return [ln for ln in stdout.splitlines() if ln.strip()]
 
 def getRversion():
-	result = installib.runBash(["R", "--version"])[2]
-	match = re.search(r"(\d+\.\d+\.\d+)", result)
-	return match.group(1) if match else None
+	try:
+		result = installib.runBash(["R", "--version"])[2]
+		match = re.search(r"(\d+\.\d+\.\d+)", result)
+		return match.group(1) if match else None
+	except:
+		return None
 
 def main():
 	# Check python version
