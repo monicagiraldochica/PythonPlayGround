@@ -369,6 +369,7 @@ def main():
 
 	# Check R version
 	rVers = getRversion()
+	print(f"Active R version: {rVers}")
 	if rVers is None:
 		print(f"No R loaded. Run: module load R/{v_new}")
 		sys.exit(1)
