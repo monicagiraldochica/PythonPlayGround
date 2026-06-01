@@ -384,10 +384,12 @@ def main():
 		if input("\nAre you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 			sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
+		print("")
 		for mdl in ["gcc", "cmake", "gsl"]:
 			latest = installib.availableModules(mdl)[-1]
 			if input(f"Did you do 'md load {latest}' (unless a different version is loaded by R)? [y/N]: ") not in ("y", "yes"):
 				sys.exit("You need to load the latest version of gcc first")
+		print("")
 
 	if migrate:
 		migrateVersions(v_new, v_old, working_dir, quiet)
