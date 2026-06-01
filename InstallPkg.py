@@ -79,10 +79,10 @@ def main():
     if download_in_apps and os.path.isdir(app_path):
         download_dir = app_path
         print(f"\n{download_dir} already exists, skipping this download.")
-    elif (not download_dir) and os.path.isdir(f"{build_path}/{file_name}"):
+    elif (not download_in_apps) and os.path.isdir(f"{build_path}/{file_name}"):
         download_dir = f"{build_path}/{file_name}"
         print(f"\n{download_dir} already exists, skipping this download.")
-    elif (not download_dir) and os.path.isdir(build_path):
+    elif (not download_in_apps) and os.path.isdir(build_path):
         download_dir = build_path
         print(f"\n{download_dir} already exists, skipping this download.")
     else:
