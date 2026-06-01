@@ -108,9 +108,6 @@ def availableModules(pkg: str):
     else:
         return []
 
-    #modules = re.findall(r'\S+', txt)
-    #result = [m for m in modules if m.startswith(f"{pkg}/")]
-    #return sorted(result)
     modules = [m for m in re.findall(r'\S+', txt) if m.startswith(f"{pkg}/")]
     return sorted(modules, key=version_key)
 
