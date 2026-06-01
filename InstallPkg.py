@@ -122,7 +122,7 @@ def main():
         if not os.path.isfile("configure"):
             print(f"ERROR: No configure file found in {download_dir}. Can't compile.")
             sys.exit(1)
-        input(f"cd {download_dir}")
+        input(f"\ncd {download_dir} [Enter]")
 
         # Load the necessary modules
         ml_load = []
@@ -135,6 +135,7 @@ def main():
                 ml_load.append(avail[-1])
 
         latest = ""
+        gcc_latest = "<version>"
         for mdl in ["cmake", "gcc"]:
             avail = installib.availableModules(mdl)
             if not avail:
@@ -142,28 +143,30 @@ def main():
                 sys.exit(1)
             latest = avail[-1]
             ml_load.append(latest)
+            if mdl=="gcc":
+                gcc_latest = latest
 
         input(f"ml load {' '.join(ml_load)} [Enter]")
 
         # Set the correct environment variables for compilation
-        input("CC=/hpc/apps/gcc/<version>/bin/gcc [Enter]")
-        input("CXX=/hpc/apps/gcc/<version>/bin/g++ [Enter]")
+        input(f"CC=/hpc/apps/gcc/{gcc_latest}/bin/gcc [Enter]")
+        input(f"CXX=/hpc/apps/gcc/{gcc_latest}/bin/g++ [Enter]")
 
         # Compile
         node = input("In which node are you running the install?: ")
         input(f"screen -S {mdl_name}_install [Enter]")
         input(f'./configure --prefix {app_path} LDFLAGS="-Wl,-rpath,/hpc/apps/{latest}/lib64" [Enter]')
         input("make -j 4 [Enter]")
-        input("make install")
+        input("make install [Enter]")
 
     # Run Tests
-    input(f"cd {app_path}/bin [Enter]")
+    input(f"\ncd {app_path}/bin [Enter]")
     input("Test an executable in that directory [Enter]")
 
     # Download DB if needed
     db_env_var = ""
-    if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):
-        db_folder = f"/hpc/refdata/{mdl_name}"
+    db_folder = f"/hpc/refdata/{mdl_name}"
+    if input("\nDo you need to download any databases? [y/N]: ").strip().lower() in ("yes", "y"):        
         Path(db_folder).mkdir(parents=True, exist_ok=True)
         input(f"Download any databases to {db_folder} [Enter]")
         db = input("Name of the environment variable that the program requires to point to the DB path: ")
