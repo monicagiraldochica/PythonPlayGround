@@ -36,7 +36,7 @@ def main():
     input("\nssh into login node [Enter]")
     input("sudo su - [Enter]")
 
-    mdl_name, mdl_vers, download_in_apps, pkg_url = parse_arguments()
+    mdl_name, mdl_vers, download_in_apps, pkg_url, compile = parse_arguments()
 
     if input("Is this running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
         print(f"Take note in which node you're located, then run: screen -S {mdl_name}_python")
