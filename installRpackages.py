@@ -377,7 +377,7 @@ def main():
 		sys.exit(1)
 
 	if not quiet:
-		if input("Are you running this on a screen process? [y/N]: ") not in ("y", "yes"):
+		if input("\nAre you running this on a screen process? [y/N]: ") not in ("y", "yes"):
 			sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
 		for mdl in ["gcc", "cmake", "gsl"]:

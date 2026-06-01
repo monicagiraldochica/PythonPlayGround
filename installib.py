@@ -86,6 +86,9 @@ def decompress(filename: str):
     else:
         return 2, f"Dont know how to extract {filename}", ""
 
+def version_key(s):
+    return tuple(map(int, s.split('/')[1].split('.')))
+
 def availableModules(pkg: str):
     lmod_cmd = os.environ.get("LMOD_CMD")
     if not lmod_cmd:
@@ -105,9 +108,11 @@ def availableModules(pkg: str):
     else:
         return []
 
-    modules = re.findall(r'\S+', txt)
-    result = [m for m in modules if m.startswith(f"{pkg}/")]
-    return sorted(result)
+    #modules = re.findall(r'\S+', txt)
+    #result = [m for m in modules if m.startswith(f"{pkg}/")]
+    #return sorted(result)
+    modules = [m for m in re.findall(r'\S+', txt) if m.startswith(f"{pkg}/")]
+    return sorted(modules, key=version_key)
 
 def contentFolder(path: str) -> str:
     path = path[:-1] if path.endswith("/") else path
