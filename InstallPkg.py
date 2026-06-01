@@ -202,7 +202,7 @@ def main():
     input(f"ml load {mdl_name}/{mdl_vers} [Enter]")
     input(f"The list of commands for {mdl_name} can be found in {app_path}/bin. [Enter]")
 
-    tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
+    tests = input(f"Input file with the list of tests that you would like to run (Enter if no specific tests needed): ").strip()
     try:
         with open(tests, "r") as fin:
             line = fin.readline()
@@ -211,11 +211,11 @@ def main():
         print(f"WARNING: could not read {tests}: {e}")
 
     # Remove from builds if desired
-    if not download_in_apps:
-        print(f"Content of {download_dir}:\n{installib.contentFolder(download_dir)}")
-        if input(f"Do you want to remove {download_dir}? [Y/n]: ") not in ["y", "yes"]:
-            shutil.rmtree(download_dir)
-            parent_dir = os.path.dirname(download_dir)
+    if (not download_in_apps) and os.path.isdir(build_path):
+        print(f"Content of {build_path}:\n{installib.contentFolder(build_path)}")
+        if input(f"Do you want to remove {build_path}? [Y/n]: ") not in ["y", "yes"]:
+            shutil.rmtree(build_path)
+            parent_dir = os.path.dirname(build_path)
             try:
                 os.rmdir(parent_dir)
             except OSError as e:
@@ -223,7 +223,7 @@ def main():
                     print(f"WARNING: could not delete {parent_dir}")
 
     # Close screen processes
-    input(f"Login to {node} as root [Enter]")
+    input(f"Login to {node} as root (from a different machine than where you've been pasting the commands) [Enter]")
     input(f"screen -S {mdl_name}_install -X quit [Enter]")
     print(f"*** Remember to kill this screen process: screen -S {mdl_name}_python -X quit ***")
 
