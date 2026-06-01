@@ -232,7 +232,7 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
             {python_line}
             """)
         else:
-            content+='pathJoin("/hpc/apps", myModuleName(), myModuleVersion())'
+            content+='local root_dir  = pathJoin("/hpc/apps", myModuleName(), myModuleVersion())'
             content+='prepend_path("PATH", root_dir)'
 
             # Add variables to PATH

@@ -199,6 +199,7 @@ def main():
 
     # Run final tests
     print("\nTest the final module:")
+    input(f"ml load {mdl_name}/{mdl_vers} [Enter]")
     input(f"The list of commands for {mdl_name} can be found in {app_path}/bin. [Enter]")
 
     tests = input(f"Input file with the list of tests that you would like to run ([Enter] if no specific tests): ").strip()
