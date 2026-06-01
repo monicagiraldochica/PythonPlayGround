@@ -231,6 +231,27 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
             -- Prevent from being loaded with another system python or conda environment
             {python_line}
             """)
+        else:
+            content+='pathJoin("/hpc/apps", myModuleName(), myModuleVersion())'
+            content+='prepend_path("PATH", root_dir)'
+
+            # Add variables to PATH
+            if os.path.isdir(bin_path):
+                content+='prepend_path("PATH", pathJoin(root_dir, "bin"))'
+            if os.path.isdir(bin_path.replace("/bin", "/src")):
+                content+='prepend_path("PATH", pathJoin(root_dir, "src"))'
+            if os.path.isdir(bin_path.replace("/bin", "/include")):
+                content+='prepend_path("PATH", pathJoin(root_dir, "include"))'
+            if os.path.isdir(bin_path.replace("/bin", "share/man")):
+                content+='prepend_path("PATH", pathJoin(root_dir, "share/man"))'
+            if os.path.isdir(bin_path.replace("/bin", "/lib64")):
+                content+='prepend_path("LD_LIBRARY_PATH", pathJoin(root_dir, "lib64"))'
+                if os.path.isdir(bin_path.replace("/bin", "/lib64/pkgconfig")):
+                    content+='prepend_path("PKG_CONFIG_PATH", pathJoin(root_dir, "lib64/pkgconfig"))'
+            elif os.path.isdir(bin_path.replace("/bin", "/lib")):
+                content+='prepend_path("LD_LIBRARY_PATH", pathJoin(root_dir, "lib"))'
+                if os.path.isdir(bin_path.replace("/bin", "/lib/pkgconfig")):
+                    content+='prepend_path("PKG_CONFIG_PATH", pathJoin(root_dir, "lib/pkgconfig"))'
 
         # Add any additional variables
         if input("\nDoes any variables need to be set? [y/N]: ").strip().lower() in ("yes", "y"):

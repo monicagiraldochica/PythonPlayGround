@@ -153,7 +153,7 @@ def main():
         input(f"CXX=/hpc/apps/gcc/{gcc_latest}/bin/g++ [Enter]")
 
         # Compile
-        node = input("In which node are you running the install?: ")
+        node = input("\nIn which node are you running the install?: ")
         input(f"screen -S {mdl_name}_install [Enter]")
         input(f'./configure --prefix {app_path} LDFLAGS="-Wl,-rpath,/hpc/apps/{latest}/lib64" [Enter]')
         input("make -j 4 [Enter]")
