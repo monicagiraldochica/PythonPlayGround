@@ -38,7 +38,7 @@ def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0):
     micro = python_info.micro or 0
     print(f"Python version: {major}.{minor}.{micro}")
 
-    if major<req_major or minor<req_minor or micro<req_micro:
+    if major<req_major or (major==req_major and minor<req_minor) or (major==req_major and minor==req_minor and micro<req_micro):
         return False, major, minor, micro
     return True, major, minor, micro
 
