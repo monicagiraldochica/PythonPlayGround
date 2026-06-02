@@ -1,3 +1,4 @@
 .vscode
 module_scan.xlsx
 *.swp
+.DS_Store
