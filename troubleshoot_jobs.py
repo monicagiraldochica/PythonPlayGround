@@ -174,6 +174,7 @@ def main():
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
     print(df)
+    print(df.columns)
 
 if __name__ == "__main__":
     main()
