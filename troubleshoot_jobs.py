@@ -155,9 +155,6 @@ def printJobStats(jobID: str, df: pd.DataFrame):
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
         print(f"{field}: {value}")
-    cols = df.columns.values.tolist()
-    if len(cols)>1 and cols[1].startswith("OOD"):
-        print(f"This job ran in OOD: {cols[1].replace("OOD_", "")}")
 
 def main():
     # Check python version
@@ -170,12 +167,14 @@ def main():
         print("Can't run this script as root")
         sys.exit(1)
 
+    # Get arguments
     jobID, netID, submitDate, stopped = parse_arguments()
     jobID = jobID or getJobID(netID, submitDate)
     if not jobID:
         print("ERROR: missing jobID")
         sys.exit(1)
 
+    # Get and print job statistics
     if stopped:
         df = get_jobInfo_sacct(jobID)
     else:
@@ -186,8 +185,12 @@ def main():
     if df.empty:
         print("ERROR: could not get job info")
         sys.exit(1)
-
     printJobStats(jobID, df)
+
+    # Check if the job ran in OOD
+    cols = df.columns.values.tolist()
+    if len(cols)>1 and cols[1].startswith("OOD"):
+        print(f"This job ran in OOD: {cols[1].replace("OOD_", "")}")
 
 if __name__ == "__main__":
     main()
