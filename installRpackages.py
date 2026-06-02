@@ -385,7 +385,7 @@ def main():
 			sys.exit("This needs to run on screen process or it might disconnect in the middle of a install")
 
 		print("")
-		for mdl in ["gcc", "cmake", "gsl"]:
+		for mdl in ["gcc", "cmake", "gsl", "libarchive"]:
 			latest = installib.availableModules(mdl)[-1]
 			if input(f"Did you do 'md load {latest}' (unless a different version is loaded by R)? [y/N]: ") not in ("y", "yes"):
 				sys.exit("You need to load the latest version of gcc first")
