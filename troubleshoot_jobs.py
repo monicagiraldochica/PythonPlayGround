@@ -169,7 +169,10 @@ def main():
     if stopped:
         df = get_jobInfo_sacct(jobID)
     else:
-        df = get_jobInfo_scontrol(jobID)    
+        df = get_jobInfo_scontrol(jobID)
+        if not df:
+            print(f"Maybe job {jobID} already stopped. Trying with sacct.")
+            df = get_jobInfo_sacct(jobID)
     print(df)
 
 if __name__ == "__main__":
