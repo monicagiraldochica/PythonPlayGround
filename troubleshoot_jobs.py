@@ -7,6 +7,7 @@ import installib
 import sys
 import argparse
 from datetime import datetime
+import getpass
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
@@ -154,8 +155,10 @@ def main():
         print("ERROR: This script requires Python 3.10.16 or higher\n")
         sys.exit(1)
 
-    # Make sure I'm root in a login node
-    input("\nssh into login node (do NOT sudo) [Enter]")
+    # Make sure I'm NOT root (sacct and scontrol wont work as root)
+    if getpass.getuser()=="root":
+        print("Can't run this script as root")
+        sys.exit(1)
 
     jobID, netID, submitDate, stopped = parse_arguments()
     jobID = jobID or getJobID(netID, submitDate)
