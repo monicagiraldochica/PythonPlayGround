@@ -149,6 +149,13 @@ def getJobID(user: str, submit_date: str):
         return None
     return stdout.strip()
 
+def printJobStats(jobID: str, df: pd.DataFrame):
+    print(f"Job statistics for {jobID}:")
+    for row in df.itertuples():
+        field = row.Field
+        value = next((v for v in row[2:] if v not in ("", None)), None)
+        print(f"{field}: {value}")
+
 def main():
     # Check python version
     if not installib.checkPythonVers(3, 10, 16)[0]:
@@ -173,13 +180,11 @@ def main():
         if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
+    if df.empty:
+        print("ERROR: could not get job info")
+        sys.exit(1)
 
-    print(df)
-    print(df.columns.values.tolist())
-    for row in df.itertuples():
-        field = row.Field
-        value = next((v for v in row[2:] if v not in ("", None)), None)
-        print(field, value)
+    printJobStats(jobID, df)
 
 if __name__ == "__main__":
     main()
