@@ -173,8 +173,11 @@ def main():
         if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
+
     print(df)
-    print(df.columns)
+    print(df.columns.values.tolist())
+    for row in df.itertuples():
+        print(row)
 
 if __name__ == "__main__":
     main()
