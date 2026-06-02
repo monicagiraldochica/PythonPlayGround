@@ -170,7 +170,7 @@ def main():
         df = get_jobInfo_sacct(jobID)
     else:
         df = get_jobInfo_scontrol(jobID)
-        if not df:
+        if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
     print(df)
