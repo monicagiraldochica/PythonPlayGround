@@ -190,8 +190,10 @@ def main():
     # Check if the job ran in OOD
     cols = df.columns.values.tolist()
     if len(cols)>1 and cols[1].startswith("OOD"):
-        print(f"This job ran in OOD: {cols[1].replace("OOD_", "")}")
-        print(df.loc[cols[1], "WorkDir"])
+        ood_col = cols[1]
+        print(f"This job ran in OOD: {ood_col.replace("OOD_", "")}")
+        workdir_value = df.loc[df["Field"] == "WorkDir", ood_col].iloc[0]
+        print(workdir_value)
 
 if __name__ == "__main__":
     main()
