@@ -72,7 +72,7 @@ def get_jobInfo_sacct(job_id: str):
     
     first_line = output[0].split("|")
     if "/" in first_line[1]:
-        first_line[1] = f"OOD {os.path.basename(first_line[1])}"
+        first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
     second_line = output[1].split("|")
     third_line = output[2].split("|")
     titles = [first_line[1], second_line[1], third_line[1]]
