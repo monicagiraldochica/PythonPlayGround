@@ -177,7 +177,9 @@ def main():
     print(df)
     print(df.columns.values.tolist())
     for row in df.itertuples():
-        print(row)
+        field = row.Field
+        value = next((v for v in row[2:] if v not in ("", None)), None)
+        print(field, value)
 
 if __name__ == "__main__":
     main()
