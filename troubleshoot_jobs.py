@@ -150,11 +150,14 @@ def getJobID(user: str, submit_date: str):
     return stdout.strip()
 
 def printJobStats(jobID: str, df: pd.DataFrame):
-    print(f"Job statistics for {jobID}:")
+    print(f"\nJob statistics for {jobID}:")
     for row in df.itertuples():
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
         print(f"{field}: {value}")
+    cols = df.columns.values.tolist()
+    if len(cols)>1 and cols[1].startswith("OOD"):
+        print(f"This job ran in OOD: {cols[1].replace("OOD_", "")}")
 
 def main():
     # Check python version
