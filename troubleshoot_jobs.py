@@ -191,6 +191,7 @@ def main():
     cols = df.columns.values.tolist()
     if len(cols)>1 and cols[1].startswith("OOD"):
         print(f"This job ran in OOD: {cols[1].replace("OOD_", "")}")
+        print(df.loc["WorkDir", cols[1]])
 
 if __name__ == "__main__":
     main()
