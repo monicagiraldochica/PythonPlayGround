@@ -288,6 +288,16 @@ def main():
               - Run commands or script preceded by 'strace -o output.txt --failed-only '.
               - Run 'top'.
               """)
+        
+    # Check additional logs
+    print("\nCheck the Slurm job completion log:")
+    input("ssh hn01 [Enter]")
+    input("ssh sn01 [Enter]")
+    input("sudo su - [Enter]")
+    input(f"grep {jobID} /var/log/slurm/slurmctld.log [Enter]")
+
+    node_list = df.loc[df["Field"] == "NodeList", "Value"].iloc[0]
+    print(node_list)
 
 if __name__ == "__main__":
     main()
