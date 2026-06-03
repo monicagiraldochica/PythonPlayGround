@@ -159,7 +159,7 @@ def printJobStats(jobID: str, df: pd.DataFrame):
         rows.append([field, value])
 
     out = pd.DataFrame(rows, columns=["Field", "Value"])
-    print(out.to_string(index=False))
+    print(out.to_markdown(index=False))
 
 def main():
     # Check python version
@@ -217,7 +217,7 @@ def main():
     # If not, check the normal logs
     else:
         input("test")
-    print(df.loc[df["Field"] == "StdErr", job_col])
+    print(df.loc[df["Field"] == "StdErr", job_col]).iloc[0]
 
 if __name__ == "__main__":
     main()
