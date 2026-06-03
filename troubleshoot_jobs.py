@@ -10,23 +10,27 @@ from datetime import datetime
 import getpass
 
 # Only works for completed jobs
-def seff(job_id: str):
+def seff(job_id: str, job_col: str, df: pd.DataFrame):
     # Run seff command
-    [returncode, stderr, stdout] = installib.runBash(["seff", str(job_id)])
+    [returncode, _, stdout] = installib.runBash(["seff", str(job_id)])
     if returncode!=0:
-        err = (stderr or stdout or "").strip()
-        print(f"seff failed: {err}")
-        return pd.DataFrame()        
+        return df        
 
     output = stdout.strip() if stdout else ""
     if not output:
-        return pd.DataFrame()
+        return df
 
-    data = {}
+    mem_line = None
     for line in output.splitlines():
-        parts = line.split(": ")
-        data[parts[0]] = parts[1]
-    print(data)
+        if line.startswith("Memory Efficiency: "):
+            mem_line = line.replace("Memory Efficiency: ", "")
+            break
+
+    if mem_line is None:
+        return df
+    
+    new_row = {"Field": "MemoryEfficiency", job_col: mem_line}
+    return pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
@@ -188,7 +192,7 @@ def main():
         print("ERROR: missing jobID")
         sys.exit(1)
 
-    # Get and print job statistics
+    # Get job statistics
     if stopped:
         df = get_jobInfo_sacct(jobID)
     else:
@@ -201,15 +205,17 @@ def main():
     if df.empty:
         print("ERROR: could not get job info")
         sys.exit(1)
+
+    # Get job efficiency
+    cols = df.columns.values.tolist()
+    job_col = cols[1]
     if stopped:
-        seff(jobID)
-        input("\n[Enter]")
+        df = seff(jobID, job_col, df)
+
     printJobStats(jobID, df)
     input("\n[Enter]")
 
     # Check if the job ran in OOD
-    cols = df.columns.values.tolist()
-    job_col = cols[1]
     if job_col.startswith("OOD"):
         app_name = job_col.replace("OOD_", "")
         print(f"\nThis job ran in OOD: {app_name}")
