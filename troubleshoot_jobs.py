@@ -264,7 +264,9 @@ def main():
         input("Analytics > Capacity Explorer > homefs > check which subfolders are filling the home directory [Enter]")
 
         if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+            input("Log off the user [Enter]")
             sys.exit(0)
+    input("Log off the user [Enter]")
 
     # Run interactive tests
     if input("\ndo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
