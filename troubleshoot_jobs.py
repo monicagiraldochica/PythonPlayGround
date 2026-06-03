@@ -217,8 +217,12 @@ def main():
     # If not, check the normal logs
     else:
         input("test")
-    print(df.loc[df["Field"] == "StdErr", job_col].iloc[0])
-    print(df.loc[df["Field"] == "StdOut", job_col].iloc[0])
+    stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
+    if stdErr:
+        print(stdErr)
+    stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
+    if stdOut:
+        print(stdOut)
 
 if __name__ == "__main__":
     main()
