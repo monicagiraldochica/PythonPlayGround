@@ -187,6 +187,8 @@ def main():
         if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
+            if not df.empty:
+                stopped = True
     if df.empty:
         print("ERROR: could not get job info")
         sys.exit(1)
@@ -197,7 +199,8 @@ def main():
     cols = df.columns.values.tolist()
     job_col = cols[1]
     if job_col.startswith("OOD"):
-        print("\nThis job ran in OOD: "+job_col.replace("OOD_", ""))
+        app_name = job_col.replace("OOD_", "")
+        print(f"\nThis job ran in OOD: {app_name}")
 
         # Check the session log
         input("\nIn a different Terminal, login as root [Enter]")
@@ -211,18 +214,60 @@ def main():
         input("https://ondemand.rcc.mcw.edu/ [Enter]")
         input(f"Sign out as '{netID}' from OnDemand and KeyCloak [Enter]")
 
-        if input("Did you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
-            sys.exit(1)
+        # Edit the app if needed
+        if input("\nDo you need to edit something in the OnDemand app? [y/N]: ").strip().lower() in ["y", "yes"]:
+            input("Open the Finder [Enter]")
+            input("Mount qfs2 SMB [Enter]")
+            input("Open KeePass [Enter]")
+            input("Linux > Root > ondemand.rcc.mcw.edu > get root password (do NOT close KeePass) [Enter]")
+            input("In a different Terminal: ssh root@ondemand.rcc.mcw.edu [Enter]")
+            input("Close KeePass [Enter]")
+            input(f"vi /var/www/ood/apps/sys/bc_hpc_jupyter/template/script.sh.erb [Enter]")
 
     # If not, check the normal logs
     else:
-        input("test")
-    stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-    if stdErr:
-        print(stdErr)
-    stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-    if stdOut:
-        print(stdOut)
+        stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
+        if stdErr:
+            print(stdErr)
+        stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
+        if stdOut:
+            print(stdOut)
+
+    if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
+        sys.exit(0)
+
+    # Check if home directory is full
+    input("\nIn a different Terminal, login as root (if you haven't done so) [Enter]")
+    input(f"su - {netID} [Enter]")
+    input(f"mydisks [Enter]")
+    if input("Is the home directory full? [y/N]: ").strip().lower() in ["y", "yes"]:
+        input("https://qfs2.rcc.mcw.edu/login [Enter]")
+        input("Login as your user (include mcwcorp) [Enter]")
+        input("Analytics > Capacity Explorer > homefs > check which subfolders are filling the home directory [Enter]")
+
+        if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+            sys.exit(0)
+
+    # Run interactive tests
+    if input("\ndo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
+        if stopped:
+            input(f"Get user account (NOT as root): id {netID} [Enter]")
+            acct = input("User account: ")
+            partition = input("What partition was the job running in?: ")
+            job_time = input("Job time (HH:MM:SS): ")
+            ntasks = input("# of threads: ")
+            mem = input("Amount of memory (i.e. 128gb): ")
+            ticket = input("Ticket #: ")
+            input(f"In the same Terminal, still logged in as {netID}: screen -S ticket_{ticket} [Enter]")
+            input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account={acct} --partition={partition} --mem={mem} --pty bash [Enter]")
+        else:
+            input(f"srun --jobid={jobID} --pty bash [Enter]")
+        input("""
+              Options:
+              - Run commands preceded by 'time ' if needed.
+              - Run commands or script preceded by 'strace -o output.txt --failed-only '.
+              - Run 'top'.
+              """)
 
 if __name__ == "__main__":
     main()
