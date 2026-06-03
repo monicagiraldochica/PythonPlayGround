@@ -218,6 +218,7 @@ def main():
     else:
         input("test")
     print(df.loc[df["Field"] == "StdErr", job_col].iloc[0])
+    print(df.loc[df["Field"] == "StdOut", job_col].iloc[0])
 
 if __name__ == "__main__":
     main()
