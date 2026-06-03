@@ -26,7 +26,7 @@ def seff(job_id: str):
     output = re.sub(r'\s+', ' ', output)
 
     # Parse key=value pairs
-    data = dict(re.findall(r'(\S+?):(\S+)', output))
+    data = dict(re.findall(r'(\S+?): (\S+)', output))
     print(data)
 
 # Only works for running, queued or recently finished jobs
