@@ -269,10 +269,11 @@ def main():
     input("Log off the user [Enter]")
 
     # Run interactive tests
+    print(f"Do NOT run as root: id {netID} [Enter]")
+    acct = input("User account: ")
+    uid = input("uid: ")
     if input("\ndo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
-        if stopped:
-            input(f"Get user account (NOT as root): id {netID} [Enter]")
-            acct = input("User account: ")
+        if stopped:            
             partition = input("What partition was the job running in?: ")
             job_time = input("Job time (HH:MM:SS): ")
             ntasks = input("# of threads: ")
@@ -300,7 +301,16 @@ def main():
     input(f"grep {jobID} /var/log/slurm/slurmctld.log [Enter]")
 
     node_list = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
-    print(node_list)
+    print(f"Check logs in the specific nodes ({','.join(node_list)}):")
+    for node in node_list:
+        print(f"Option 1: from a login node: ssh {node} > sudo su -")
+        print(f"Option 2: go back to hn01, sudo, then: scyld-nodectl -i {node} ssh")
+        input(f"grep {jobID} /var/log/messages [Enter]")
+        searches = ["kill", "oom", "error"]
+        if node.startswith("gn"):
+            searches+=["nvidia"]
+        for search in searches:            
+            input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
 
 if __name__ == "__main__":
     main()
