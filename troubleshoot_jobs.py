@@ -9,19 +9,34 @@ import argparse
 from datetime import datetime
 import getpass
 
+# Only works for completed jobs
+def seff(job_id: str):
+    # Run seff command
+    [returncode, stderr, stdout] = installib.runBash(["seff", str(job_id)])
+    if returncode!=0:
+        err = (stderr or stdout or "").strip()
+        print(f"seff failed: {err}")
+        return pd.DataFrame()        
+
+    output = stdout.strip() if stdout else ""
+    if not output:
+        return pd.DataFrame()
+
+    # Flatten multiline scontrol output
+    output = re.sub(r'\s+', ' ', output)
+
+    # Parse key=value pairs
+    data = dict(re.findall(r'(\S+?):(\S+)', output))
+    print(data)
+
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
-    """
-    Get selected job information from scontrol for a given job ID.
-    Returns a pandas DataFrame with columns ['Field', 'Value'].
-    Returns an empty DataFrame if job is not found in Slurm memory.
-    """
     # Run scontrol command
     [returncode, stderr, stdout] = installib.runBash(["scontrol", "show", "job", str(job_id)])
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"scontrol failed: {err}")
-        return pd.DataFrame()        
+        return pd.DataFrame()
 
     output = stdout.strip() if stdout else ""
     if (not output) or ("JobId" not in output):
@@ -50,11 +65,6 @@ def get_jobInfo_scontrol(job_id: str):
 
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str):
-    """
-    Get selected job information from sacct for a given job ID.
-    Returns a pandas DataFrame with columns ['Field', 'Value'].
-    Returns an empty DataFrame if no sacct data exists yet.
-    """
     fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS", "StdOut", "StdErr" ]
     format_str = ",".join(fields)
 
@@ -193,6 +203,8 @@ def main():
         print("ERROR: could not get job info")
         sys.exit(1)
     printJobStats(jobID, df)
+    input("\n[Enter]")
+    seff(jobID)
     input("\n[Enter]")
 
     # Check if the job ran in OOD
