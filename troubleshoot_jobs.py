@@ -22,11 +22,10 @@ def seff(job_id: str):
     if not output:
         return pd.DataFrame()
 
-    # Flatten multiline scontrol output
-    output = re.sub(r'\s+', ' ', output)
-
-    # Parse key=value pairs
-    data = dict(re.findall(r'(\S+?): (\S+)', output))
+    data = {}
+    for line in output.splitlines():
+        parts = line.split(": ")
+        data[parts[0]] = parts[1]
     print(data)
 
 # Only works for running, queued or recently finished jobs
@@ -202,9 +201,10 @@ def main():
     if df.empty:
         print("ERROR: could not get job info")
         sys.exit(1)
+    if stopped:
+        seff(jobID)
+        input("\n[Enter]")
     printJobStats(jobID, df)
-    input("\n[Enter]")
-    seff(jobID)
     input("\n[Enter]")
 
     # Check if the job ran in OOD
