@@ -191,8 +191,8 @@ def main():
     # Check if the job ran in OOD
     cols = df.columns.values.tolist()
     if len(cols)>1 and cols[1].startswith("OOD"):
-        ood_col = cols[1]
-        print(f"\nThis job ran in OOD: {ood_col.replace("OOD_", "")}")
+        ood_col = cols[1].replace("OOD_", "")
+        print(f"\nThis job ran in OOD: {ood_col}")
 
         # Check the session log
         input("\nIn a different Terminal, login as root [Enter]")
