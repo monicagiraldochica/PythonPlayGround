@@ -151,10 +151,15 @@ def getJobID(user: str, submit_date: str):
 
 def printJobStats(jobID: str, df: pd.DataFrame):
     print(f"\nJob statistics for {jobID}:\n")
+
+    rows = []
     for row in df.itertuples():
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
-        print(f"{field}:\t{value}")
+        rows.append([field, value])
+
+    out = pd.DataFrame(rows, columns=["Field", "Value"])
+    print(out.to_string(index=False))
 
 def main():
     # Check python version
@@ -190,13 +195,13 @@ def main():
 
     # Check if the job ran in OOD
     cols = df.columns.values.tolist()
-    if len(cols)>1 and cols[1].startswith("OOD"):
-        ood_col = cols[1]
-        print("\nThis job ran in OOD: "+ood_col.replace("OOD_", ""))
+    job_col = cols[1]
+    if job_col.startswith("OOD"):
+        print("\nThis job ran in OOD: "+job_col.replace("OOD_", ""))
 
         # Check the session log
         input("\nIn a different Terminal, login as root [Enter]")
-        workdir_value = df.loc[df["Field"] == "WorkDir", ood_col].iloc[0]
+        workdir_value = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
         input(f"vi {workdir_value}/output.log [Enter]")
 
         # Impersonate the user
@@ -204,7 +209,7 @@ def main():
         input("Login as admin [Enter]")
         input(f"Manage realms > ondemand > users > search '{netID}' > click on user > Action > Impersonate [Enter]")
         input("https://ondemand.rcc.mcw.edu/ [Enter]")
-        input(f"Sign out as {netID} from OnDemand and KeuCloak [Enter]")
+        input(f"Sign out as '{netID}' from OnDemand and KeyCloak [Enter]")
 
         if input("Did you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
             sys.exit(1)
@@ -212,7 +217,7 @@ def main():
     # If not, check the normal logs
     else:
         input("test")
-    print(df)
+    print(df.loc[df["Field"] == "StdErr", job_col])
 
 if __name__ == "__main__":
     main()
