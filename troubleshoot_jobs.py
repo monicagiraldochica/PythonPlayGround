@@ -289,6 +289,9 @@ def main():
               - Run 'top'.
               """)
         
+        if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+            sys.exit(0)
+        
     # Check additional logs
     print("\nCheck the Slurm job completion log:")
     input("ssh hn01 [Enter]")
@@ -296,7 +299,7 @@ def main():
     input("sudo su - [Enter]")
     input(f"grep {jobID} /var/log/slurm/slurmctld.log [Enter]")
 
-    node_list = df.loc[df["Field"] == "NodeList", "Value"].iloc[0]
+    node_list = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
     print(node_list)
 
 if __name__ == "__main__":
