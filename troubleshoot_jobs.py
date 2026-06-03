@@ -156,15 +156,15 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     for row in df.itertuples():
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
-        rows.append([field, value])
+        rows.append([field, str(value)])
 
     out = pd.DataFrame(rows, columns=["Field", "Value"])
     print(out.to_markdown(index=False))
 
 def main():
     # Check python version
-    if not installib.checkPythonVers(3, 10, 16)[0]:
-        print("ERROR: This script requires Python 3.10.16 or higher\n")
+    if not installib.checkPythonVers(3, 12, 10, True)[0]:
+        print("ERROR: This script requires Python 3.12.10\n")
         sys.exit(1)
 
     # Make sure I'm NOT root (sacct and scontrol wont work as root)
@@ -217,7 +217,7 @@ def main():
     # If not, check the normal logs
     else:
         input("test")
-    print(df.loc[df["Field"] == "StdErr", job_col]).iloc[0]
+    print(df.loc[df["Field"] == "StdErr", job_col].iloc[0])
 
 if __name__ == "__main__":
     main()
