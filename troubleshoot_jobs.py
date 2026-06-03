@@ -150,11 +150,11 @@ def getJobID(user: str, submit_date: str):
     return stdout.strip()
 
 def printJobStats(jobID: str, df: pd.DataFrame):
-    print(f"\nJob statistics for {jobID}:")
+    print(f"\nJob statistics for {jobID}:\n")
     for row in df.itertuples():
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
-        print(f"{field}: {value}")
+        print(f"{field}:\t{value}")
 
 def main():
     # Check python version
@@ -186,18 +186,18 @@ def main():
         print("ERROR: could not get job info")
         sys.exit(1)
     printJobStats(jobID, df)
-    input("[Enter]")
+    input("\n[Enter]")
 
     # Check if the job ran in OOD
     cols = df.columns.values.tolist()
     if len(cols)>1 and cols[1].startswith("OOD"):
-        ood_col = cols[1].replace("OOD_", "")
-        print(f"\nThis job ran in OOD: {ood_col}")
+        ood_col = cols[1]
+        print("\nThis job ran in OOD: "+ood_col.replace("OOD_", ""))
 
         # Check the session log
         input("\nIn a different Terminal, login as root [Enter]")
         workdir_value = df.loc[df["Field"] == "WorkDir", ood_col].iloc[0]
-        input(f"vi {workdir_value} [Enter]")
+        input(f"vi {workdir_value}/output.log [Enter]")
 
         # Impersonate the user
         input("\nGo to KeyCloack in Google Chrome [Enter]")
@@ -208,6 +208,11 @@ def main():
 
         if input("Did you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
             sys.exit(1)
+
+    # If not, check the normal logs
+    else:
+        input("test")
+    print(df)
 
 if __name__ == "__main__":
     main()
