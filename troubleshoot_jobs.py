@@ -55,7 +55,7 @@ def get_jobInfo_sacct(job_id: str):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
+    fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS", "StdOut", "StdErr" ]
     format_str = ",".join(fields)
 
     try:
@@ -186,14 +186,28 @@ def main():
         print("ERROR: could not get job info")
         sys.exit(1)
     printJobStats(jobID, df)
+    input("[Enter]")
 
     # Check if the job ran in OOD
     cols = df.columns.values.tolist()
     if len(cols)>1 and cols[1].startswith("OOD"):
         ood_col = cols[1]
-        print(f"This job ran in OOD: {ood_col.replace("OOD_", "")}")
+        print(f"\nThis job ran in OOD: {ood_col.replace("OOD_", "")}")
+
+        # Check the session log
+        input("\nIn a different Terminal, login as root [Enter]")
         workdir_value = df.loc[df["Field"] == "WorkDir", ood_col].iloc[0]
-        print(workdir_value)
+        input(f"vi {workdir_value} [Enter]")
+
+        # Impersonate the user
+        input("\nGo to KeyCloack in Google Chrome [Enter]")
+        input("Login as admin [Enter]")
+        input(f"Manage realms > ondemand > users > search '{netID}' > click on user > Action > Impersonate [Enter]")
+        input("https://ondemand.rcc.mcw.edu/ [Enter]")
+        input(f"Sign out as {netID} from OnDemand and KeuCloak [Enter]")
+
+        if input("Did you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
