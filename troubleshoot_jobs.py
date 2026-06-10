@@ -207,10 +207,10 @@ def printJobsFromDate(submit_date: str, stopped: bool, netID: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
     for job in jobs:
         df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
+        clean_df = simplify_dataFrame(df)
+        clean_df = clean_df.rename(columns={"Value": str(job)})
         print(df)
         input("[Enter]")
-        #clean_df = simplify_dataFrame(df)
-        #clean_df = clean_df.rename(columns={"Value": str(job)})
         #all_dfs.append(clean_df)
     #joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
     #printJobStats(f"jobs submitted on {submit_date}", joint_df)    
