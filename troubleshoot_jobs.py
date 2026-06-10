@@ -9,6 +9,9 @@ import argparse
 from datetime import datetime
 import getpass
 
+SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS", "StdOut", "StdErr" ]
+SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
+
 # Only works for completed jobs
 def seff(job_id: str, job_col: str, df: pd.DataFrame):
     # Run seff command
@@ -53,8 +56,7 @@ def get_jobInfo_scontrol(job_id: str):
     data = dict(re.findall(r'(\S+?)=(\S+)', output))
 
     # Extract only requested fields
-    fields = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
-    info = [(field, data.get(field, "")) for field in fields]
+    info = [(field, data.get(field, "")) for field in SCONTROL_FIELDS]
 
     # Edit DF
     df = pd.DataFrame(info, columns=["Field", "Value"])
@@ -68,11 +70,10 @@ def get_jobInfo_scontrol(job_id: str):
 
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str):
-    fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS", "StdOut", "StdErr" ]
-    format_str = ",".join(fields)
+    format_str = ",".join(SACCT_FIELDS)
 
     try:
-        # Run scontrol command
+        # Run acct command
         result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader", "--parsable2"], capture_output=True, text=True, check=True)
 
     except subprocess.CalledProcessError:
@@ -89,9 +90,9 @@ def get_jobInfo_sacct(job_id: str):
     second_line = output[1].split("|")
     third_line = output[2].split("|")
     titles = [first_line[1], second_line[1], third_line[1]]
-    if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
+    if len(first_line)<len(SACCT_FIELDS) or len(second_line)<len(SACCT_FIELDS) or len(third_line)<len(SACCT_FIELDS):
         return pd.DataFrame()
-    df = pd.DataFrame({ "Field": fields, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
+    df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
     # Edit DF
     df = df[df["Field"]!="JobName"] # Remove JobName line since it's already the title of each column
@@ -312,6 +313,13 @@ def main():
             searches+=["nvidia"]
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
+
+    if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+        sys.exit(0)
+
+    # Check other submitted jobs on the same date
+    submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
+    selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=u): ").strip().lower()
 
 if __name__ == "__main__":
     main()
