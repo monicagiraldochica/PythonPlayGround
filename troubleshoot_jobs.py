@@ -158,11 +158,15 @@ def parse_arguments():
 def getJobID(user: str, submit_date: str):
     start = f"{submit_date}T00:00:00"
     end = f"{submit_date}T23:59:59"
+
+    # -X: exclude job steps and show only the top‑level job records.
+    # -n: remove heather.
     returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-u", user, "-o", "JobID", "-S", start, "-E", end])
     if returncode!=0:
         print(f"ERROR: could not get jobID: {stderr}")
         return None
-    return stdout.strip()
+    
+    return stdout.strip().splitlines()
 
 def printJobStats(jobID: str, df: pd.DataFrame):
     print(f"\nJob statistics for {jobID}:\n")
@@ -189,10 +193,18 @@ def main():
 
     # Get arguments
     jobID, netID, submitDate, stopped = parse_arguments()
-    jobID = jobID or getJobID(netID, submitDate)
     if not jobID:
-        print("ERROR: missing jobID")
-        sys.exit(1)
+        jobs = getJobID(netID, submitDate)
+
+        if not jobs:
+            print("ERROR: missing jobID")
+            sys.exit(1)
+
+        if len(jobs)>1:
+            print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}: {','.join(jobs)}")
+            jobID = input("Choose one ([Enter] for the first): ").strip() or jobs[0]
+        else:
+            jobID = jobs[0]
 
     # Get job statistics
     if stopped:
