@@ -94,7 +94,8 @@ def get_jobInfo_sacct(job_id: str):
     df = pd.DataFrame({ "Field": fields, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
     # Edit DF
-    df = df[df["Field"]!="JobName"] #Remove JobName line since it's already the title of each column
+    df = df[df["Field"]!="JobName"] # Remove JobName line since it's already the title of each column
+    df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime"}) # Edit Fields to match scontrol df
     
     # Merge Req resources lines into one
     new_vals = []
