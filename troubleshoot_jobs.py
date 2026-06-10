@@ -210,9 +210,8 @@ def printJobsFromDate(submit_date: str, stopped: bool, netID: str=""):
         clean_df = simplify_dataFrame(df)
         clean_df = clean_df.rename(columns={"Value": str(job)})
         all_dfs.append(clean_df)
-    print(all_dfs)
-    print(len(all_dfs))
-    #joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+    joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+    print(joint_df)
     #printJobStats(f"jobs submitted on {submit_date}", joint_df)    
 
 def main():
