@@ -166,7 +166,7 @@ def getJobID(user: str, submit_date: str):
         print(f"ERROR: could not get jobID: {stderr}")
         return None
     
-    return stdout.strip().splitlines()
+    return [val.strip() for val in stdout.strip().splitlines()]
 
 def printJobStats(jobID: str, df: pd.DataFrame):
     print(f"\nJob statistics for {jobID}:\n")
