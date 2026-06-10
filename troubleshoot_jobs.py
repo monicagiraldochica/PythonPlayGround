@@ -215,9 +215,9 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
     joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
 
     # Save DF
-    writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
-    joint_df.to_excel(writer, sheet_name=submit_date)
-    writer.save()
+    with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
+        joint_df.to_excel(writer, sheet_name=submit_date)
+    
     strg = f"Information on all jobs that ran on {submit_date}"
     if netID:
         strg+=f" by {netID}"
