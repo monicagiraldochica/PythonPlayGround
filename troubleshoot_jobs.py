@@ -135,13 +135,19 @@ def get_jobInfo_sacct(job_id: str):
     for code,desc in dic_exitCodes.items():
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
 
+    # Update StdOut
     StdOut = df.loc[df["Field"] == "StdOut", titles[0]].iloc[0]
-    print(StdOut)
+    if isinstance(StdOut, str) and StdOut.strip():
+        new_out = StdOut.replace("%x", titles[0]).replace("%j", job_id)
+        df.loc[df["Field"] == "StdOut", titles[0]] = new_out
+
+    # Update StdErr
     StdErr = df.loc[df["Field"] == "StdErr", titles[0]].iloc[0]
-    print(StdErr)
+    if isinstance(StdErr, str) and StdErr.strip():
+        new_err = StdErr.replace("%x", titles[0]).replace("%j", job_id)
+        df.loc[df["Field"] == "StdErr", titles[0]] = new_err
 
     df = df.reset_index(drop=True)
-
     return df
 
 def parse_arguments():
