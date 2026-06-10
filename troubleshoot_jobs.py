@@ -155,13 +155,16 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped
 
-def getJobID(user: str, submit_date: str):
+def getJobID(submit_date: str, user: str=""):
     start = f"{submit_date}T00:00:00"
     end = f"{submit_date}T23:59:59"
 
     # -X: exclude job steps and show only the top‑level job records.
     # -n: remove heather.
-    returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-u", user, "-o", "JobID", "-S", start, "-E", end])
+    if user:
+        returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-u", user])
+    else:
+        returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-a"])
     if returncode!=0:
         print(f"ERROR: could not get jobID: {stderr}")
         return None
@@ -194,7 +197,7 @@ def main():
     # Get arguments
     jobID, netID, submitDate, stopped = parse_arguments()
     if not jobID:
-        jobs = getJobID(netID, submitDate)
+        jobs = getJobID(submitDate, netID)
 
         if not jobs:
             print("ERROR: missing jobID")
