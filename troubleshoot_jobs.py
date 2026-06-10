@@ -185,16 +185,20 @@ def getJobID(submit_date: str, user: str=""):
     
     return [val.strip() for val in stdout.strip().splitlines()]
 
-def printJobStats(jobID: str, df: pd.DataFrame):
-    print(f"\nJob statistics for {jobID}:\n")
-
+# Returns a new DF with only two columns: Field, Value
+# Value is the value in the first non empty column for that field in the original df
+def simplify_dataFrame(df: pd.DataFrame):
     rows = []
     for row in df.itertuples():
         field = row.Field
         value = next((v for v in row[2:] if v not in ("", None)), None)
         rows.append([field, str(value)])
 
-    out = pd.DataFrame(rows, columns=["Field", "Value"])
+    return pd.DataFrame(rows, columns=["Field", "Value"])
+
+def printJobStats(jobID: str, df: pd.DataFrame):
+    print(f"\nJob statistics for {jobID}:\n")
+    out = simplify_dataFrame(df)
     print(out.to_markdown(index=False))
 
 def main():
