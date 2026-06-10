@@ -95,7 +95,8 @@ def get_jobInfo_sacct(job_id: str):
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
     # Remove JobName line since it's already the title of each column
-    print(df.columns.values.tolist()[1])
+    print(titles)
+    print(titles[0])
     df = df[df["Field"]!="JobName"]
 
     # Edit Fields to match scontrol df
