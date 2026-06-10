@@ -202,6 +202,19 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     out = simplify_dataFrame(df)
     print(out.to_markdown(index=False))
 
+def printJobsFromDate(submit_date: str, stopped: bool, netID: str=""):
+    all_dfs = []
+    jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
+    for job in jobs:
+        df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
+        print(df)
+        input("[Enter]")
+        #clean_df = simplify_dataFrame(df)
+        #clean_df = clean_df.rename(columns={"Value": str(job)})
+        #all_dfs.append(clean_df)
+    #joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+    #printJobStats(f"jobs submitted on {submit_date}", joint_df)    
+
 def main():
     # Check python version
     if not installib.checkPythonVers(3, 12, 10, True)[0]:
@@ -360,15 +373,7 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user", "a", "all"]:
-        all_dfs = []
-        jobs = getJobID(submit_date) if selection in ["a", "all"] else getJobID(submit_date, netID)
-        for job in jobs:
-            df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
-            clean_df = simplify_dataFrame(df)
-            clean_df = clean_df.rename(columns={"Value": str(job)})
-            all_dfs.append(clean_df)
-        joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
-        printJobStats(f"jobs submitted on {submit_date}", joint_df)
+        printJobsFromDate(submit_date, stopped, netID) if selection in ["u", "user"] else printJobsFromDate(submit_date, stopped)
 
 if __name__ == "__main__":
     main()
