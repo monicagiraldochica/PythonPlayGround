@@ -221,7 +221,7 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
     strg = f"Information on all jobs that ran on {submit_date}"
     if netID:
         strg+=f" by {netID}"
-    strg+" was saved on: "+os.path.abspath("tmp.txt")
+    strg+=" was saved on: "+os.path.abspath(output_file)
     print(strg)
 
 def main():
