@@ -94,9 +94,12 @@ def get_jobInfo_sacct(job_id: str):
         return pd.DataFrame()
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
-    # Edit DF
-    df = df[df["Field"]!="JobName"] # Remove JobName line since it's already the title of each column
-    df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime"}) # Edit Fields to match scontrol df
+    # Remove JobName line since it's already the title of each column
+    print(df["Field"]=="JobName")
+    df = df[df["Field"]!="JobName"]
+
+    # Edit Fields to match scontrol df
+    df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime"})
     
     # Merge Req resources lines into one
     new_vals = []
@@ -122,13 +125,13 @@ def get_jobInfo_sacct(job_id: str):
     # Add comment to exit codes
     fields_to_fix = [ "ExitCode", "DerivedExitCode" ]
     dic_exitCodes = {
-        "0:0":"Success",
-        "1:0":"Application error",
-        "0:15":"User cancelled job",
-        "0:9":"Time limit reached, forced kill, OOM, admin kill",
-        "137:0":"Job killed by SIGKILL - could be OOM or timeout",
-        "0:271":"Node failure",
-        "2:0":"CLI or arg parsing error in script"
+        "0:0": "Success",
+        "1:0": "Application error",
+        "0:15": "User cancelled job",
+        "0:9": "Time limit reached, forced kill, OOM, admin kill",
+        "137:0": "Job killed by SIGKILL - could be OOM or timeout",
+        "0:271": "Node failure",
+        "2:0": "CLI or arg parsing error in script"
     }
     for code,desc in dic_exitCodes.items():
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
