@@ -8,6 +8,7 @@ import sys
 import argparse
 from datetime import datetime
 import getpass
+from functools import reduce
 
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS", "StdOut", "StdErr" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
@@ -357,7 +358,17 @@ def main():
 
     # Check other submitted jobs on the same date
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
-    selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=u): ").strip().lower()
+    selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
+    if selection in ["u", "user", "a", "all"]:
+        all_dfs = []
+        jobs = getJobID(submit_date) if selection in ["a", "all"] else getJobID(submit_date, netID)
+        for job in jobs:
+            df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
+            clean_df = simplify_dataFrame(df)
+            clean_df = clean_df.rename(columns={"Value": str(job)})
+            all_dfs.append(clean_df)
+        joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+        printJobStats(f"jobs submitted on {submit_date}", joint_df)
 
 if __name__ == "__main__":
     main()

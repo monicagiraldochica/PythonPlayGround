@@ -225,26 +225,6 @@ df = pandas.read_excel(excel,names=["NRAnat3_ID","USE_NRAnat3_exam","Exams_Acqui
     if len(records)>0:
         df = pd.DataFrame(records)
 
-def functesting():
-    #while(input()!=userAge):
-        #print("try again")
-
-#    userInput=input()
-#    while(userInput!=userAge):
-#        print("try again, you typed: "+str(userInput))
-#        if(userInput==20):
-#            print("oops")
-#            break
-#        userInput=input()
-
-    while(True):
-        inputvar=str(raw_input())
-        if(inputvar=="end"):
-            break
-        if(inputvar=="pass"):
-            continue
-        print("input: "+inputvar)
-
 def funcexceptions():
     try:
         a=1
