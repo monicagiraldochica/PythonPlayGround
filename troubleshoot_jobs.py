@@ -202,17 +202,27 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     out = simplify_dataFrame(df)
     print(out.to_markdown(index=False))
 
-def printJobsFromDate(submit_date: str, stopped: bool, netID: str=""):
-    all_dfs = []
+def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
+
+    # Calculate the joint DF with information from all jobs submitted on that date
+    all_dfs = []
     for job in jobs:
         df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
         clean_df = simplify_dataFrame(df)
         clean_df = clean_df.rename(columns={"Value": str(job)})
         all_dfs.append(clean_df)
     joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
-    print(joint_df)
-    #printJobStats(f"jobs submitted on {submit_date}", joint_df)    
+
+    # Save DF
+    writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
+    joint_df.to_excel(writer, sheet_name=submit_date)
+    writer.save()
+    strg = f"Information on all jobs that ran on {submit_date}"
+    if netID:
+        strg+=f" by {netID}"
+    strg+" was saved on: "+os.path.abspath("tmp.txt")
+    print(strg)
 
 def main():
     # Check python version
@@ -372,7 +382,7 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user", "a", "all"]:
-        printJobsFromDate(submit_date, stopped, netID) if selection in ["u", "user"] else printJobsFromDate(submit_date, stopped)
+        printJobsFromDate(submit_date, stopped, "tmp.xls", netID) if selection in ["u", "user"] else printJobsFromDate(submit_date, stopped, "tmp.xls")
 
 if __name__ == "__main__":
     main()
