@@ -95,7 +95,7 @@ def get_jobInfo_sacct(job_id: str):
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
     # Remove JobName line since it's already the title of each column
-    print(df[df["Field"]=="JobName"])
+    print(df.columns.values.tolist()[1])
     df = df[df["Field"]!="JobName"]
 
     # Edit Fields to match scontrol df
@@ -135,6 +135,11 @@ def get_jobInfo_sacct(job_id: str):
     }
     for code,desc in dic_exitCodes.items():
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
+
+    StdOut = df.loc[df["Field"] == "StdOut", "Value"].iloc[0]
+    print(StdOut)
+    StdErr = df.loc[df["Field"] == "StdErr", "Value"].iloc[0]
+    print(StdErr)
 
     df = df.reset_index(drop=True)
     return df
