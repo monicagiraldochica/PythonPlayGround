@@ -204,7 +204,12 @@ def main():
             sys.exit(1)
 
         if len(jobs)>1:
-            print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}: {','.join(jobs)}")
+            print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}:\n")
+            for job in jobs:
+                if stopped:
+                    printJobStats(job, get_jobInfo_sacct(job))
+                else:
+                    printJobStats(job, get_jobInfo_scontrol(job))
             jobID = input("Choose one ([Enter] for the first): ").strip() or jobs[0]
         else:
             jobID = jobs[0]
