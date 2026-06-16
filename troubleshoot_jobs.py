@@ -243,6 +243,20 @@ def isValidDate(date: str):
     except ValueError:
         return False
 
+def getQueuePosition(jobID: str):
+    try:
+        p1 = subprocess.Popen(["sprio", "-p", "gpu", "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        p2 = subprocess.Popen(["awk", "{print NR-1 $0}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1.close()
+
+        p3 = subprocess.Popen(["less", "+g", "-p", jobID], stdin=p2.stdout)
+        p2.close()
+        p3.communicate()
+
+    except Exception as e:
+        print("ERROR: sprio failed")
+
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
     if stopped:
         df = get_jobInfo_sacct(jobID)
@@ -260,7 +274,16 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
         if not isValidDate(submit_date):
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
+
         checkUserJobs(submit_date, netID=netID)
+        queue_pos = getQueuePosition(jobID)
+        input(f"Job is in position {queue_pos} in queue [Enter]")
+        input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
+        input(f"Check how busy the nodes are: 'sinfo")
+        # nodes is obtained in one of the functions, it could be returned and given to this one
+        input(f"Check the specific node it is running on: 'scontrol show node <node> | grep AllocTRES'")
+        input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
+
         df = pd.DataFrame
 
     return df, stopped
