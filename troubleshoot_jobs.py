@@ -70,7 +70,7 @@ def get_jobInfo_scontrol(job_id: str):
     return df
 
 # Better to use for failed or completed jobs
-def get_jobInfo_sacct(job_id: str):
+def get_jobInfo_sacct(job_id: str, netID: str=""):
     format_str = ",".join(SACCT_FIELDS)
 
     try:
@@ -140,12 +140,16 @@ def get_jobInfo_sacct(job_id: str):
     StdOut = df.loc[df["Field"] == "StdOut", titles[0]].iloc[0]
     if isinstance(StdOut, str) and StdOut.strip():
         new_out = StdOut.replace("%x", titles[0]).replace("%j", job_id)
+        if netID:
+            new_out = new_out.replace("%u", netID)
         df.loc[df["Field"] == "StdOut", titles[0]] = new_out
 
     # Update StdErr
     StdErr = df.loc[df["Field"] == "StdErr", titles[0]].iloc[0]
     if isinstance(StdErr, str) and StdErr.strip():
         new_err = StdErr.replace("%x", titles[0]).replace("%j", job_id)
+        if netID:
+            new_err = new_err.replace("%u", netID)
         df.loc[df["Field"] == "StdErr", titles[0]] = new_err
 
     df = df.reset_index(drop=True)
@@ -214,7 +218,12 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
     # Calculate the joint DF with information from all jobs submitted on that date
     all_dfs = []
     for job in jobs:
-        df = get_jobInfo_sacct(job) if stopped else get_jobInfo_scontrol(job)
+        if stopped and netID:
+            df = get_jobInfo_sacct(job, netID)
+        elif stopped:
+            df = get_jobInfo_sacct(job)
+        else:
+            df = get_jobInfo_scontrol(job)
         clean_df = simplify_dataFrame(df)
         clean_df = clean_df.rename(columns={"Value": str(job)})
         all_dfs.append(clean_df)
@@ -259,13 +268,13 @@ def getQueuePosition(jobID: str):
 
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
     if stopped:
-        df = get_jobInfo_sacct(jobID)
+        df = get_jobInfo_sacct(jobID, netID)
 
     elif not queued:
         df = get_jobInfo_scontrol(jobID)
         if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
-            df = get_jobInfo_sacct(jobID)
+            df = get_jobInfo_sacct(jobID, netID)
             if not df.empty:
                 stopped = True
 
@@ -450,10 +459,11 @@ def main():
             sys.exit(1)
 
         if len(jobs)>1:
+            # If jobID is missing submitDate wont be missing, otherwise it would have failed in parse_arguments
             print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}:\n")
             for job in jobs:
                 if stopped:
-                    printJobStats(job, get_jobInfo_sacct(job))
+                    printJobStats(job, get_jobInfo_sacct(job, netID))
                 else:
                     printJobStats(job, get_jobInfo_scontrol(job))
             jobID = input("Choose one ([Enter] for the first): ").strip() or jobs[0]
