@@ -307,11 +307,13 @@ def getJobEff(jobID: str, df: pd.DataFrame, stopped: bool):
     printJobStats(jobID, df)
     input("\n[Enter]")
 
-    if (input("Is the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+    if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
         print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
               GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
               A CPU is always needed to run a code that uses a GPU.""")
         input("[Enter]")
+
+    return df, job_col
 
 def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
     app_name = job_col.replace("OOD_", "")
