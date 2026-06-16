@@ -154,12 +154,18 @@ def get_jobInfo_sacct(job_id: str):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Troubleshoot a job")
     parser.add_argument("--user", help="netID", required=True)
+
     parser.add_argument("--stopped", action="store_true", help="Job finished running or failed")
+    parser.add_argument("--queued", action="store_true", help="Job never ran")
 
     parser.add_argument("--jobid", help="jobID")
     parser.add_argument("--submit-date", help="Date when job was submitted (YYYY-MM-DD)")
 
     args = parser.parse_args()
+
+    if args.stopped and args.queued:
+        parser.error("You can't provide both --stopped and --queued flags.")
+
     if not (args.jobid or args.submit_date):
         parser.error("You must provide --jobid and/or --submit-date")
     if args.submit_date:
@@ -168,7 +174,7 @@ def parse_arguments():
         except ValueError:
             parser.error("submit-date must be in format YYYY-MM-DD")
 
-    return args.jobid, args.user, args.submit_date, args.stopped
+    return args.jobid, args.user, args.submit_date, args.stopped, args.queued
 
 def getJobID(submit_date: str, user: str=""):
     start = f"{submit_date}T00:00:00"
@@ -224,54 +230,45 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
     strg+=" was saved on: "+os.path.abspath(output_file)
     print(strg)
 
-def main():
-    # Check python version
-    if not installib.checkPythonVers(3, 12, 10, True)[0]:
-        print("ERROR: This script requires Python 3.12.10\n")
-        sys.exit(1)
+def checkUserJobs(submit_date: str, *, netID: str="", stopped: bool=True):
+    if not netID:
+        printJobsFromDate(submit_date, stopped, "tmp.xls")
+    else:
+        printJobsFromDate(submit_date, stopped, "tmp.xls", netID)
 
-    # Make sure I'm NOT root (sacct and scontrol wont work as root)
-    if getpass.getuser()=="root":
-        print("Can't run this script as root")
-        sys.exit(1)
+def isValidDate(date: str):
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
-    # Get arguments
-    jobID, netID, submitDate, stopped = parse_arguments()
-    if not jobID:
-        jobs = getJobID(submitDate, netID)
-
-        if not jobs:
-            print("ERROR: missing jobID")
-            sys.exit(1)
-
-        if len(jobs)>1:
-            print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}:\n")
-            for job in jobs:
-                if stopped:
-                    printJobStats(job, get_jobInfo_sacct(job))
-                else:
-                    printJobStats(job, get_jobInfo_scontrol(job))
-            jobID = input("Choose one ([Enter] for the first): ").strip() or jobs[0]
-        else:
-            jobID = jobs[0]
-
-    # Get job statistics
+def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
     if stopped:
         df = get_jobInfo_sacct(jobID)
-    else:
+
+    elif not queued:
         df = get_jobInfo_scontrol(jobID)
         if df.empty:
             print(f"Maybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID)
             if not df.empty:
                 stopped = True
-    if df.empty:
-        print("ERROR: could not get job info")
-        sys.exit(1)
 
-    # Get job efficiency
+    else:
+        submit_date = input("When was the job submitted? (YYYY-MM-DD, [Enter if not known]): ")
+        if not isValidDate(submit_date):
+            print("Not a valid date entered, using today as submission date.")
+            submit_date = datetime.now().strftime("%Y-%m-%d")
+        checkUserJobs(submit_date, netID=netID)
+        df = pd.DataFrame
+
+    return df, stopped
+
+def getJobEff(jobID: str, df: pd.DataFrame, stopped: bool):
     cols = df.columns.values.tolist()
     job_col = cols[1]
+
     if stopped:
         df = seff(jobID, job_col, df)
 
@@ -284,68 +281,63 @@ def main():
               A CPU is always needed to run a code that uses a GPU.""")
         input("[Enter]")
 
-    # Check if the job ran in OOD
-    if job_col.startswith("OOD"):
-        app_name = job_col.replace("OOD_", "")
-        print(f"\nThis job ran in OOD: {app_name}")
+def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
+    app_name = job_col.replace("OOD_", "")
+    print(f"\nThis job ran in OOD: {app_name}")
 
-        # Check the session log
-        input("\nIn a different Terminal, login as root [Enter]")
-        workdir_value = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
-        input(f"vi {workdir_value}/output.log [Enter]")
+    # Check the session log
+    input("\nIn a different Terminal, login as root [Enter]")
+    workdir_value = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
+    input(f"vi {workdir_value}/output.log [Enter]")
 
-        # Impersonate the user
-        input("\nGo to KeyCloack in Google Chrome [Enter]")
-        input("Login as admin [Enter]")
-        input(f"Manage realms > ondemand > users > search '{netID}' > click on user > Action > Impersonate [Enter]")
-        input("https://ondemand.rcc.mcw.edu/ [Enter]")
-        input(f"Sign out as '{netID}' from OnDemand and KeyCloak [Enter]")
+    # Impersonate the user
+    input("\nGo to KeyCloack in Google Chrome [Enter]")
+    input("Login as admin [Enter]")
+    input(f"Manage realms > ondemand > users > search '{netID}' > click on user > Action > Impersonate [Enter]")
+    input("https://ondemand.rcc.mcw.edu/ [Enter]")
+    input(f"Sign out as '{netID}' from OnDemand and KeyCloak [Enter]")
 
-        # Edit the app if needed
-        if input("\nDo you need to edit something in the OnDemand app? [y/N]: ").strip().lower() in ["y", "yes"]:
-            input("Open the Finder [Enter]")
-            input("Mount qfs2 SMB [Enter]")
-            input("Open KeePass [Enter]")
-            input("Linux > Root > ondemand.rcc.mcw.edu > get root password (do NOT close KeePass) [Enter]")
-            input("In a different Terminal: ssh root@ondemand.rcc.mcw.edu [Enter]")
-            input("Close KeePass [Enter]")
-            input(f"vi /var/www/ood/apps/sys/bc_hpc_jupyter/template/script.sh.erb [Enter]")
+    # Edit the app if needed
+    if input("\nDo you need to edit something in the OnDemand app? [y/N]: ").strip().lower() in ["y", "yes"]:
+        input("Open the Finder [Enter]")
+        input("Mount qfs2 SMB [Enter]")
+        input("Open KeePass [Enter]")
+        input("Linux > Root > ondemand.rcc.mcw.edu > get root password (do NOT close KeePass) [Enter]")
+        input("In a different Terminal: ssh root@ondemand.rcc.mcw.edu [Enter]")
+        input("Close KeePass [Enter]")
+        input(f"vi /var/www/ood/apps/sys/{app_name}/template/script.sh.erb [Enter]")
 
-    # If not, check the normal logs
+def checkLogs(df: pd.DataFrame, job_col: str):
+    stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
+    if stdErr:
+        with open(stdErr, "r") as f:
+            contentErr = f.read()
     else:
-        stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-        if stdErr:
-            with open(stdErr, "r") as f:
-                contentErr = f.read()
-        else:
-            contentErr = ""
+        contentErr = ""
 
-        stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-        if stdOut:
-            with open(stdOut, "r") as f:
-                contentOut = f.read()
-        else:
-            contentOut = ""
+    stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
+    if stdOut:
+        with open(stdOut, "r") as f:
+            contentOut = f.read()
+    else:
+        contentOut = ""
         
-        if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
-            nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
-            nodes = ",".join(nodes)
-            print(f"""\n'No space left on device' error found in the logs.
-                  Check if the /tmp folder is full in {nodes}.""")
-            input("Enter")
+    if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
+        nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
+        nodes = ",".join(nodes)
+        print(f"""\n'No space left on device' error found in the logs.
+            Check if the /tmp folder is full in {nodes}.""")
+        input("Enter")
 
-        print(f"""\nContent of error log:
-              {contentErr}""")
-        input("[Enter]")
+    print(f"""\nContent of error log:
+        {contentErr}""")
+    input("[Enter]")
 
-        print(f"""\nContent of error log:
-              {contentOut}""")
-        input("[Enter]")
+    print(f"""\nContent of error log:
+        {contentOut}""")
+    input("[Enter]")
 
-    if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
-        sys.exit(0)
-
-    # Check if home directory is full
+def checkHomeDir(netID: str):
     input("\nIn a different Terminal, login as root (if you haven't done so) [Enter]")
     input(f"su - {netID} [Enter]")
     input(f"mydisks [Enter]")
@@ -359,7 +351,7 @@ def main():
             sys.exit(0)
     input("Log off the user [Enter]")
 
-    # Run interactive tests
+def interactiveTests(netID: str, stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
     print(f"Do NOT run as root: id {netID} [Enter]")
     acct = input("User account: ")
     uid = input("uid: ")
@@ -392,8 +384,10 @@ def main():
         
         if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
             sys.exit(0)
-        
-    # Check additional logs
+
+    return uid
+
+def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
     print("\nCheck the Slurm job completion log:")
     input("ssh hn01 [Enter]")
     input("ssh sn01 [Enter]")
@@ -412,14 +406,78 @@ def main():
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
 
+def main():
+    # Check python version
+    if not installib.checkPythonVers(3, 12, 10, True)[0]:
+        print("ERROR: This script requires Python 3.12.10\n")
+        sys.exit(1)
+
+    # Make sure I'm NOT root (sacct and scontrol wont work as root)
+    if getpass.getuser()=="root":
+        print("Can't run this script as root")
+        sys.exit(1)
+
+    # Get arguments
+    jobID, netID, submitDate, stopped, queued = parse_arguments()
+    if not jobID:
+        jobs = getJobID(submitDate, netID)
+
+        if not jobs:
+            print("ERROR: missing jobID")
+            sys.exit(1)
+
+        if len(jobs)>1:
+            print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}:\n")
+            for job in jobs:
+                if stopped:
+                    printJobStats(job, get_jobInfo_sacct(job))
+                else:
+                    printJobStats(job, get_jobInfo_scontrol(job))
+            jobID = input("Choose one ([Enter] for the first): ").strip() or jobs[0]
+
+        else:
+            jobID = jobs[0]
+
+    # Get job statistics
+    df, stopped = getJobStats(jobID, netID, queued, stopped)
+    if df.empty:
+        if not queued:
+            print("ERROR: could not get job info")
+        sys.exit(1)
+
+    # Get job efficiency
+    df, job_col = getJobEff(jobID, df, stopped)
+
+    # Check if the job ran in OOD
+    if job_col.startswith("OOD"):
+        checkOODlogs(job_col, df, netID)
+
+    # If not, check the normal logs
+    else:
+        checkLogs(df, job_col)
+
+    if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
+        sys.exit(0)
+
+    # Check if home directory is full
+    checkHomeDir(netID)
+
+    # Run interactive tests
+    uid = interactiveTests(netID, stopped, df, job_col, jobID)
+        
+    # Check additional logs
+    checkSystemLogs(jobID, df, job_col, uid)
+
     if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
         sys.exit(0)
 
     # Check other submitted jobs on the same date
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
-    if selection in ["u", "user", "a", "all"]:
-        printJobsFromDate(submit_date, stopped, "tmp.xls", netID) if selection in ["u", "user"] else printJobsFromDate(submit_date, stopped, "tmp.xls")
+    if selection in ["u", "user"]:
+        checkUserJobs(submit_date, netID=netID, stopped=stopped)
+    elif selection in ["a", "all"]:
+        checkUserJobs(submit_date, stopped=stopped)
 
 if __name__ == "__main__":
     main()
