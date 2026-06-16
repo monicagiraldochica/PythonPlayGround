@@ -278,6 +278,12 @@ def main():
     printJobStats(jobID, df)
     input("\n[Enter]")
 
+    if (input("Is the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+        print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
+              GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
+              A CPU is always needed to run a code that uses a GPU.""")
+        input("[Enter]")
+
     # Check if the job ran in OOD
     if job_col.startswith("OOD"):
         app_name = job_col.replace("OOD_", "")
@@ -309,10 +315,32 @@ def main():
     else:
         stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
         if stdErr:
-            print(stdErr)
+            with open(stdErr, "r") as f:
+                contentErr = f.read()
+        else:
+            contentErr = ""
+
         stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
         if stdOut:
-            print(stdOut)
+            with open(stdOut, "r") as f:
+                contentOut = f.read()
+        else:
+            contentOut = ""
+        
+        if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
+            nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
+            nodes = ",".join(nodes)
+            print(f"""\n'No space left on device' error found in the logs.
+                  Check if the /tmp folder is full in {nodes}.""")
+            input("Enter")
+
+        print(f"""\nContent of error log:
+              {contentErr}""")
+        input("[Enter]")
+
+        print(f"""\nContent of error log:
+              {contentOut}""")
+        input("[Enter]")
 
     if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
         sys.exit(0)
@@ -342,15 +370,24 @@ def main():
             ntasks = input("# of threads: ")
             mem = input("Amount of memory (i.e. 128gb): ")
             ticket = input("Ticket #: ")
+            num_cpus = int(df.loc[df["Field"] == "AllocTRES", job_col].iloc[0].split(",")[0].replace("cpu=",""))
+
             input(f"In the same Terminal, still logged in as {netID}: screen -S ticket_{ticket} [Enter]")
             input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account={acct} --partition={partition} --mem={mem} --pty bash [Enter]")
+
         else:
+            num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
+
             input(f"srun --jobid={jobID} --pty bash [Enter]")
-        input("""
+
+        input(f"""
               Options:
               - Run commands preceded by 'time ' if needed.
               - Run commands or script preceded by 'strace -o output.txt --failed-only '.
-              - Run 'top'.
+              - Run 'top -i' (-i to hide zombie or idle processes):
+                - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. 
+                  That could explain some of longer run times.
+                - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
               """)
         
         if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
