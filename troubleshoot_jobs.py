@@ -387,15 +387,15 @@ def checkHomeDir(netID: str):
 
 def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):    
     if stopped:            
-        partition = input("What partition was the job running in?: ")
-        job_time = input("Job time (HH:MM:SS): ")
-        ntasks = input("# of threads: ")
-        mem = input("Amount of memory (i.e. 75gb): ")
+        partition = input("What partition was the job running in? (default: normal): ") or "normal"
+        job_time = input("Job time (default 01:00:00): ") or "01:00:00"
+        ntasks = input("# of threads (default 1): ") or "1"
+        mem = input("Amount of memory (default 7.5gb): ") or "75gb"
         ticket = input("Ticket #: ")
         num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
             
         # srun can't run as root
-        input("In a Terminal, logged as root, copy any files you might need to YOUR rccadmin scratch [Enter]")
+        input("In a Terminal, logged as root, copy any files you will need to YOUR rccadmin scratch [Enter]")
         input(f"In a Terminal, logged as YOUR user: screen -S ticket_{ticket} [Enter]")
         input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account=rccadmin --partition={partition} --mem={mem} --pty bash [Enter]")
 
