@@ -385,34 +385,33 @@ def checkHomeDir(netID: str):
             sys.exit(0)
     input("Log off the user [Enter]")
 
-def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
-    if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
-        if stopped:            
-            partition = input("What partition was the job running in?: ")
-            job_time = input("Job time (HH:MM:SS): ")
-            ntasks = input("# of threads: ")
-            mem = input("Amount of memory (i.e. 75gb): ")
-            ticket = input("Ticket #: ")
-            num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
+def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):    
+    if stopped:            
+        partition = input("What partition was the job running in?: ")
+        job_time = input("Job time (HH:MM:SS): ")
+        ntasks = input("# of threads: ")
+        mem = input("Amount of memory (i.e. 75gb): ")
+        ticket = input("Ticket #: ")
+        num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
             
-            input(f"screen -S ticket_{ticket} [Enter]")
-            input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account=rccadmin --partition={partition} --mem={mem} --pty bash [Enter]")
+        input(f"screen -S ticket_{ticket} [Enter]")
+        input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account=rccadmin --partition={partition} --mem={mem} --pty bash [Enter]")
 
-        else:
-            num_cpus = int(df.loc[df["Field"] == "AllocTRES", job_col].iloc[0].split(",")[0].replace("cpu=",""))
-            input(f"srun --jobid={jobID} --pty bash [Enter]")
+    else:
+        num_cpus = int(df.loc[df["Field"] == "AllocTRES", job_col].iloc[0].split(",")[0].replace("cpu=",""))
+        input(f"srun --jobid={jobID} --pty bash [Enter]")
 
-        input(f"""
-        Options:
-        - Run commands preceded by 'time ' if needed.
-        - Run commands or script preceded by 'strace -o output.txt --failed-only '.
-        - Run 'top -i' (-i to hide zombie or idle processes):
-            - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. That could explain some of longer run times.
-            - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
-        """)
+    input(f"""
+    Options:
+    - Run commands preceded by 'time ' if needed.
+    - Run commands or script preceded by 'strace -o output.txt --failed-only '.
+    - Run 'top -i' (-i to hide zombie or idle processes):
+        - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. That could explain some of longer run times.
+        - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
+    """)
         
-        if input("\nDo you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
-            sys.exit(0)
+    if input("\nDo you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+        sys.exit(0)
 
 def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
     print("\nCheck the Slurm job completion log:")
@@ -491,7 +490,8 @@ def main():
     checkHomeDir(netID)
 
     # Run interactive tests
-    interactiveTests(stopped, df, job_col, jobID)
+    if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
+        interactiveTests(stopped, df, job_col, jobID)
         
     # Check additional logs
     print(f"Do NOT run as root: id {netID} [Enter]")
