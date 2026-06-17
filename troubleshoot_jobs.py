@@ -394,7 +394,9 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
         ticket = input("Ticket #: ")
         num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
             
-        input(f"screen -S ticket_{ticket} [Enter]")
+        # srun can't run as root
+        input("In a Terminal, logged as root, copy any files you might need to YOUR rccadmin scratch [Enter]")
+        input(f"In a Terminal, logged as YOUR user: screen -S ticket_{ticket} [Enter]")
         input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account=rccadmin --partition={partition} --mem={mem} --pty bash [Enter]")
 
     else:
