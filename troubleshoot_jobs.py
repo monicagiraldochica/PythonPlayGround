@@ -385,7 +385,7 @@ def checkHomeDir(netID: str):
             sys.exit(0)
     input("Log off the user [Enter]")
 
-def interactiveTests(netID: str, stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
+def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
     if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
         if stopped:            
             partition = input("What partition was the job running in?: ")
@@ -491,7 +491,7 @@ def main():
     checkHomeDir(netID)
 
     # Run interactive tests
-    interactiveTests(netID, stopped, df, job_col, jobID)
+    interactiveTests(stopped, df, job_col, jobID)
         
     # Check additional logs
     print(f"Do NOT run as root: id {netID} [Enter]")
