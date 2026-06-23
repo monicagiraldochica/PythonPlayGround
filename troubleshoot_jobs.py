@@ -203,7 +203,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Update RunTime
     RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
-    TimeLimit = df.loc[df["Field"] == "TimeLimit", titles[0]].iloc[0]
+    TimeLimit = df.loc[df["Field"] == "Timelimit", titles[0]].iloc[0]
     if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
         editRunTime(TimeLimit, RunTime)
 
