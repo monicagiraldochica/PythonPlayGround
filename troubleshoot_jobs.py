@@ -10,7 +10,7 @@ from datetime import datetime
 import getpass
 from functools import reduce
 
-SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
+SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "TotalCPU" "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
 
 # Only works for running, queued or recently finished jobs
@@ -500,7 +500,29 @@ def main():
 
     # Print job statistics
     simple_df = printJobStats(jobID, df)
-    simple_df.loc[df["Field"] == "MaxRSS", "Value"]
+    if stopped:
+        try:
+            MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
+            pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
+            if pct>=100:
+                print(f"\nMemory efficiency is {pct}%. The job hit the memory limit.")
+                #python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory
+            elif pct>70:
+                print(f"\nMemory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
+            elif pct<30:
+                print(f"\nMemory efficiency is {pct}%. The user is over-requesting memory.")
+
+            RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
+            pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
+            if pct>80:
+                print(f"\nThe job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
+            elif pct<20:
+                print(f"\nThe job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
+
+            #CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
+            #If this is far below 100%, the job is not using all allocated cores.
+        except:
+            pass
     input("\n[Enter]")
 
     if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
