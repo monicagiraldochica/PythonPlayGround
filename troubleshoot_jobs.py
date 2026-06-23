@@ -114,7 +114,9 @@ def parseTime(t: str) -> int:
     print(f"{int(days)*86400}")
     print(f"{int(hours)*3600}")
     print(f"{int(minutes)*60}")
+    print("antes de res")
     res = int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
+    print("despues de res")
     print(res)
     return res
 
