@@ -107,8 +107,16 @@ def parseTime(t: str) -> int:
     print(f"{days}-->{time_part}")
     hours, minutes, seconds = time_part.split(":")
     print(f"{hours}-->{minutes}-->{seconds}")
-    print(int(hours))
-    return int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
+    print(f"{int(days)}")
+    print(f"{int(hours)}")
+    print(f"{int(minutes)}")
+    print(f"{int(seconds)}")
+    print(f"{int(days)*86400}")
+    print(f"{int(hours)*3600}")
+    print(f"{int(minutes)*60}")
+    res = int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
+    print(res)
+    return res
 
 def editRunTime(walltime: str, runtime: str) -> str:
     print("entro")
