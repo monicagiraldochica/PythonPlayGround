@@ -71,6 +71,7 @@ def get_jobInfo_scontrol(job_id: str):
 
 def parseMem(value: str):
     value = value.strip()
+    print(f"stripped value: {value}")
     unit = value[-1].upper()
     return value, unit
 
