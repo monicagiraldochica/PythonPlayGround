@@ -70,8 +70,8 @@ def get_jobInfo_scontrol(job_id: str):
     return df
 
 def parseMem(value: str):
-    value = value[:-1]
     unit = value[-1].upper()
+    value = value[:-1]
     return value, unit
 
 def editMemUsage(ReqMem: str, MaxMem: str) -> str:
