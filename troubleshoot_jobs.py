@@ -103,13 +103,20 @@ def parseTime(t: str) -> int:
     else:
         days = 0
         time_part = t
-    print(f"{days}-->{time_part}")
     hours, minutes, seconds = time_part.split(":")
-    print(f"{days}-->{hours}-->{minutes}-->{seconds}")
+    return int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
 
 def editRunTime(walltime: str, runtime: str) -> str:
-    parseTime(walltime)
-    parseTime(runtime)
+    try:
+        walltime_sec = parseTime(walltime)
+        runtime_sec = parseTime(runtime)
+        pct = (runtime_sec/walltime_sec) * 100
+        pct_str = f"{pct:.2f}".rstrip('0').rstrip('.')
+
+        return f"{runtime} ({pct_str}% of WallTime)"
+    
+    except Exception:
+        return runtime
 
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str, netID: str=""):
@@ -207,7 +214,9 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
     TimeLimit = df.loc[df["Field"] == "Timelimit", titles[0]].iloc[0]
     if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
-        editRunTime(TimeLimit, RunTime)
+        print(f"RunTime before: {RunTime}")
+        RunTime = editRunTime(TimeLimit, RunTime)
+        print(f"RunTime after: {RunTime}")
 
     df = df.reset_index(drop=True)
     return df
