@@ -105,7 +105,7 @@ def parseTime(t: str) -> int:
         time_part = t
     hours, minutes, seconds = time_part.split(":")
     print("antes de res")
-    res = int(days)*86400 + int(hours)*3600 #+ int(minutes)*60 + seconds
+    res = int(days)*86400 + int(hours)*3600 + int(minutes)*60 + int(seconds)
     print("despues de res")
     print(res)
     return res
