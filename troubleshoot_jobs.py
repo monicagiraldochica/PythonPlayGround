@@ -71,6 +71,9 @@ def get_jobInfo_scontrol(job_id: str):
 
 def parseMem(value: str):
     value = value[:-1]
+    print(value)
+    print(isinstance(value, float))
+    print(type(value))
     unit = value[-1].upper()
     return value, unit
 
