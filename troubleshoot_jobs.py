@@ -258,6 +258,8 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     out = simplify_dataFrame(df)
     print(out.to_markdown(index=False))
 
+    return out
+
 def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
 
@@ -497,7 +499,8 @@ def main():
         sys.exit(1)
 
     # Print job statistics
-    printJobStats(jobID, df)
+    simple_df = printJobStats(jobID, df)
+    simple_df.loc[df["Field"] == "MaxRSS", "Value"]
     input("\n[Enter]")
 
     if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
