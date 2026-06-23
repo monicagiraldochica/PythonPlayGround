@@ -182,7 +182,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
     MaxRSS = df.loc[df["Field"] == "MaxRSS", titles[0]].iloc[0]
-    print(MaxRSS)
+    print("**"+MaxRSS+"**")
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
@@ -191,6 +191,8 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         print(f"MaxRSS: {MaxRSS}")
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
         print(df.loc[df["Field"] == "MaxRSS", titles[0]].iloc[0])
+    else:
+        print("no entro")
 
     df = df.reset_index(drop=True)
     print(df)
