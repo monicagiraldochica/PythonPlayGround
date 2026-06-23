@@ -139,7 +139,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
     # Re-order resources lines
-    move_last = [ "AllocCPUS", "AveRSS", "MaxRSS" ]
+    move_last = [ "AllocCPUS", "TotalCPU", "AveRSS", "MaxRSS" ]
     mask = df['Field'].isin(move_last)
     df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
