@@ -89,14 +89,11 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
 
         # Compute percentage
         pct = (MaxBytes / ReqBytes) * 100
-        print(pct)
         pct_str = f"{pct:.2f}".strip('0').rstrip('.')
-        print(pct_str)
 
         return f"{MaxMem} ({pct_str}% of ReqMem)"
     
     except Exception:
-        print("Exception")
         return MaxMem
 
 # Better to use for failed or completed jobs
@@ -188,9 +185,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
-        print(f"MaxRSS antes: {MaxRSS}")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
-        print(f"MaxRSS despues: {MaxRSS}")
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
 
     df = df.reset_index(drop=True)
