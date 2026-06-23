@@ -181,6 +181,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
+    print(ReqTRES)
     MaxRSS = df.loc[df["Field"] == "MaxRSS", titles[0]].iloc[0]
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
