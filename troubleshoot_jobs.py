@@ -70,8 +70,7 @@ def get_jobInfo_scontrol(job_id: str):
     return df
 
 def parseMem(value: str):
-    value = value.strip()
-    print(f"stripped value: {value}")
+    value = value[:-1]
     unit = value[-1].upper()
     return value, unit
 
@@ -83,6 +82,8 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         # Parse both inputs
         ReqVal, ReqUnit = parseMem(ReqMem)
         MaxVal, MaxUnit = parseMem(MaxMem)
+        if (not isinstance(ReqVal, float)) or (not isinstance(MaxVal, float)):
+            return MaxMem
         print(f"{ReqVal}-->{ReqUnit} {MaxVal}-->{MaxUnit}")
         
         # Convert both values to bytes
