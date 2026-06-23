@@ -69,6 +69,33 @@ def get_jobInfo_scontrol(job_id: str):
     df = df.reset_index(drop=True)
     return df
 
+def parseMem(value: str):
+    value = value.strip()
+    unit = value[-1].upper()
+    return value, unit
+
+def editMemUsage(ReqMem: str, MaxMem: str) -> str:
+    # Define unit multipliers
+    units = {"K": 1024, "M": 1024**2, "G":1024**3, "T": 1024**4, "P": 1024**5}
+
+    try:
+        # Parse both inputs
+        ReqVal, ReqUnit = parseMem(ReqMem)
+        MaxVal, MaxUnit = parseMem(MaxMem)
+        
+        # Convert both values to bytes
+        ReqBytes = ReqVal * units[ReqUnit]
+        MaxBytes = MaxVal * units[MaxUnit]
+
+        # Compute percentage
+        pct = (MaxBytes / ReqBytes) * 100
+        pct_str = f"{pct:.2f}".strip('0').rstrip('.')
+
+        return f"{MaxMem} ({pct_str}% of ReqMem)"
+    
+    except Exception:
+        return MaxMem
+
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str, netID: str=""):
     format_str = ",".join(SACCT_FIELDS)
@@ -151,6 +178,15 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         if netID:
             new_err = new_err.replace("%u", netID)
         df.loc[df["Field"] == "StdErr", titles[0]] = new_err
+
+    # Update MaxRSS
+    ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
+    MaxRSS = df.loc[df["Field"] == "MaxRSS", titles[0]].iloc[0]
+    # .strip in this case will be checking it he string has any non white characters
+    if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
+        ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
+        MaxRSS = editMemUsage(ReqMem, MaxRSS)
+        df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
 
     df = df.reset_index(drop=True)
     return df
