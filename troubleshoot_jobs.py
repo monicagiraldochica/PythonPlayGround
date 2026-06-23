@@ -97,25 +97,15 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         return MaxMem
 
 def parseTime(t: str) -> int:
-    print(f"entro {t}")
     t = t.strip()
     if "-" in t:
         days, time_part = t.split("-")
     else:
         days = 0
         time_part = t
-    print(f"{days}-->{time_part}")
     hours, minutes, seconds = time_part.split(":")
-    print(f"{hours}-->{minutes}-->{seconds}")
-    print(f"{int(days)}")
-    print(f"{int(hours)}")
-    print(f"{int(minutes)}")
-    print(f"{int(seconds)}")
-    print(f"{int(days)*86400}")
-    print(f"{int(hours)*3600}")
-    print(f"{int(minutes)*60}")
     print("antes de res")
-    res = int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
+    res = int(days)#*86400 + int(hours)*3600 + int(minutes)*60 + seconds
     print("despues de res")
     print(res)
     return res
