@@ -109,9 +109,13 @@ def parseTime(t: str) -> int:
 def editRunTime(walltime: str, runtime: str) -> str:
     try:
         walltime_sec = parseTime(walltime)
+        print(f"walltime_sec: {walltime_sec}")
         runtime_sec = parseTime(runtime)
+        print(f"runtime_sec: {runtime_sec}")
         pct = (runtime_sec/walltime_sec) * 100
+        print(f"pct: {pct}")
         pct_str = f"{pct:.2f}".rstrip('0').rstrip('.')
+        print(f"pct_str: {pct_str}")
 
         return f"{runtime} ({pct_str}% of WallTime)"
     
