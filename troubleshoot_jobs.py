@@ -158,6 +158,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Troubleshoot a job")
     parser.add_argument("--user", help="netID", required=True)
+    parser.add_argument("--outdir", help="Output folder to save any generated files", required=True)
 
     parser.add_argument("--stopped", action="store_true", help="Job finished running or failed")
     parser.add_argument("--queued", action="store_true", help="Job never ran")
@@ -166,6 +167,9 @@ def parse_arguments():
     parser.add_argument("--submit-date", help="Date when job was submitted (YYYY-MM-DD)")
 
     args = parser.parse_args()
+
+    outdir = args.outdir
+    outdir = outdir[:-1] if outdir.endswith("/") else outdir
 
     if args.stopped and args.queued:
         parser.error("You can't provide both --stopped and --queued flags.")
@@ -178,7 +182,7 @@ def parse_arguments():
         except ValueError:
             parser.error("submit-date must be in format YYYY-MM-DD")
 
-    return args.jobid, args.user, args.submit_date, args.stopped, args.queued
+    return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
 def getJobID(submit_date: str, user: str=""):
     start = f"{submit_date}T00:00:00"
@@ -260,7 +264,7 @@ def getQueuePosition(jobID: str):
     except Exception as e:
         print("ERROR: sprio failed")
 
-def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
+def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
     if stopped:
         df = get_jobInfo_sacct(jobID, netID)
 
@@ -278,7 +282,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
-        printJobsFromDate(submit_date, True, "tmp.xls", netID)
+        printJobsFromDate(submit_date, True, output, netID)
         queue_pos = getQueuePosition(jobID)
         input(f"Job is in position {queue_pos} in queue [Enter]")
         input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
@@ -440,7 +444,7 @@ def main():
         sys.exit(1)
 
     # Get arguments
-    jobID, netID, submitDate, stopped, queued = parse_arguments()
+    jobID, netID, submitDate, stopped, queued, outdir = parse_arguments()
     if not jobID:
         jobs = getJobID(submitDate, netID)
 
@@ -462,7 +466,7 @@ def main():
             jobID = jobs[0]
 
     # Get job statistics
-    df, stopped = getJobStats(jobID, netID, queued, stopped)
+    df, stopped = getJobStats(jobID, netID, queued, stopped, f"{outdir}/{jobID}.xlsx")
     if df.empty:
         if not queued:
             print("ERROR: could not get job info")
@@ -501,9 +505,9 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user"]:
-        printJobsFromDate(submit_date, stopped, "tmp.xls", netID)
+        printJobsFromDate(submit_date, stopped, f"{outdir}/tmp.xls", netID)
     elif selection in ["a", "all"]:
-        printJobsFromDate(submit_date, stopped, "tmp.xls")
+        printJobsFromDate(submit_date, stopped, f"{outdir}/tmp.xls")
 
 if __name__ == "__main__":
     main()
