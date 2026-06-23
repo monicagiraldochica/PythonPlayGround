@@ -99,11 +99,13 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
 def parseTime(t: str) -> int:
     t = t.strip()
     if "-" in t:
-        days, time = t.split("-")
+        days, time_part = t.split("-")
     else:
         days = 0
-        time = t
-    print(f"{days}-->{time}")
+        time_part = t
+    print(f"{days}-->{time_part}")
+    hours, minutes, seconds = time_part.split(":")
+    print(f"{days}-->{hours}-->{minutes}-->{seconds}")
 
 def editRunTime(walltime: str, runtime: str) -> str:
     parseTime(walltime)
