@@ -71,9 +71,6 @@ def get_jobInfo_scontrol(job_id: str):
 
 def parseMem(value: str):
     value = value[:-1]
-    print(value)
-    print(isinstance(value, float))
-    print(type(value))
     unit = value[-1].upper()
     return value, unit
 
@@ -85,14 +82,12 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         # Parse both inputs
         ReqVal, ReqUnit = parseMem(ReqMem)
         MaxVal, MaxUnit = parseMem(MaxMem)
-        if (not isinstance(ReqVal, float)) or (not isinstance(MaxVal, float)):
-            return MaxMem
         print(f"{ReqVal}-->{ReqUnit} {MaxVal}-->{MaxUnit}")
         
         # Convert both values to bytes
-        #ReqBytes = ReqVal * units[ReqUnit]
-        #MaxBytes = MaxVal * units[MaxUnit]
-        #print(f"{ReqBytes} {MaxBytes}")
+        ReqBytes = float(ReqVal) * units[ReqUnit]
+        MaxBytes = float(MaxVal) * units[MaxUnit]
+        print(f"{ReqBytes}>>>{MaxBytes}")
 
         # Compute percentage
         #pct = (MaxBytes / ReqBytes) * 100
