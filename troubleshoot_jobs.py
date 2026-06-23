@@ -97,6 +97,7 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         return MaxMem
 
 def parseTime(t: str) -> int:
+    print(f"entro {t}")
     t = t.strip()
     if "-" in t:
         days, time_part = t.split("-")
@@ -107,6 +108,7 @@ def parseTime(t: str) -> int:
     return int(days)*86400 + int(hours)*3600 + int(minutes)*60 + seconds
 
 def editRunTime(walltime: str, runtime: str) -> str:
+    print("entro")
     try:
         walltime_sec = parseTime(walltime)
         print(f"walltime_sec: {walltime_sec}")
