@@ -239,12 +239,6 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
     strg+=" was saved on: "+os.path.abspath(output_file)
     print(strg)
 
-def checkUserJobs(submit_date: str, *, netID: str="", stopped: bool=True):
-    if not netID:
-        printJobsFromDate(submit_date, stopped, "tmp.xls")
-    else:
-        printJobsFromDate(submit_date, stopped, "tmp.xls", netID)
-
 def isValidDate(date: str):
     try:
         datetime.strptime(date, "%Y-%m-%d")
@@ -284,7 +278,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
-        checkUserJobs(submit_date, netID=netID)
+        printJobsFromDate(submit_date, True, "tmp.xls", netID)
         queue_pos = getQueuePosition(jobID)
         input(f"Job is in position {queue_pos} in queue [Enter]")
         input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
@@ -507,9 +501,9 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user"]:
-        checkUserJobs(submit_date, netID=netID, stopped=stopped)
+        printJobsFromDate(submit_date, stopped, "tmp.xls", netID)
     elif selection in ["a", "all"]:
-        checkUserJobs(submit_date, stopped=stopped)
+        printJobsFromDate(submit_date, stopped, "tmp.xls")
 
 if __name__ == "__main__":
     main()
