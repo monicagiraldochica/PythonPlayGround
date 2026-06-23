@@ -96,6 +96,19 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
     except Exception:
         return MaxMem
 
+def parseTime(t: str) -> int:
+    t = t.strip()
+    if "-" in t:
+        days, time = t.split("-")
+    else:
+        days = 0
+        time = t
+    print(f"{days}-->{time}")
+
+def editRunTime(walltime: str, runtime: str) -> str:
+    parseTime(walltime)
+    parseTime(runtime)
+
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str, netID: str=""):
     format_str = ",".join(SACCT_FIELDS)
@@ -187,6 +200,12 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
+
+    # Update RunTime
+    RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
+    TimeLimit = df.loc[df["Field"] == "TimeLimit", titles[0]].iloc[0]
+    if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
+        editRunTime(TimeLimit, RunTime)
 
     df = df.reset_index(drop=True)
     return df
