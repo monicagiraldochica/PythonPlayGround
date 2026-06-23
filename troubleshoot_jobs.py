@@ -13,29 +13,6 @@ from functools import reduce
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
 
-# Only works for completed jobs
-def seff(job_id: str, job_col: str, df: pd.DataFrame):
-    # Run seff command
-    [returncode, _, stdout] = installib.runBash(["seff", str(job_id)])
-    if returncode!=0:
-        return df        
-
-    output = stdout.strip() if stdout else ""
-    if not output:
-        return df
-
-    mem_line = None
-    for line in output.splitlines():
-        if line.startswith("Memory Efficiency: "):
-            mem_line = line.replace("Memory Efficiency: ", "")
-            break
-
-    if mem_line is None:
-        return df
-    
-    new_row = {"Field": "MemoryEfficiency", job_col: mem_line}
-    return pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
     # Run scontrol command
@@ -360,24 +337,6 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
 
     return df, stopped
 
-def getJobEff(jobID: str, df: pd.DataFrame, stopped: bool):
-    cols = df.columns.values.tolist()
-    job_col = cols[1]
-
-    if stopped:
-        df = seff(jobID, job_col, df)
-
-    printJobStats(jobID, df)
-    input("\n[Enter]")
-
-    if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
-        print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
-              GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
-              A CPU is always needed to run a code that uses a GPU.""")
-        input("[Enter]")
-
-    return df, job_col
-
 def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
     app_name = job_col.replace("OOD_", "")
     print(f"\nThis job ran in OOD: {app_name}")
@@ -537,10 +496,18 @@ def main():
             print("ERROR: could not get job info")
         sys.exit(1)
 
-    # Get job efficiency
-    df, job_col = getJobEff(jobID, df, stopped)
+    # Print job statistics
+    printJobStats(jobID, df)
+    input("\n[Enter]")
+
+    if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+        print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
+              GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
+              A CPU is always needed to run a code that uses a GPU.""")
+        input("[Enter]")
 
     # Check if the job ran in OOD
+    job_col = df.columns.values.tolist()[1]
     if job_col.startswith("OOD"):
         checkOODlogs(job_col, df, netID)
 
