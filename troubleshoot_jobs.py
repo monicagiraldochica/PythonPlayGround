@@ -214,9 +214,8 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
     TimeLimit = df.loc[df["Field"] == "Timelimit", titles[0]].iloc[0]
     if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
-        print(f"RunTime before: {RunTime}")
         RunTime = editRunTime(TimeLimit, RunTime)
-        print(f"RunTime after: {RunTime}")
+        df.loc[df["Field"] == "RunTime", titles[0]] = RunTime
 
     df = df.reset_index(drop=True)
     return df
