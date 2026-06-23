@@ -82,20 +82,18 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         # Parse both inputs
         ReqVal, ReqUnit = parseMem(ReqMem)
         MaxVal, MaxUnit = parseMem(MaxMem)
-        print(f"{ReqVal}-->{ReqUnit} {MaxVal}-->{MaxUnit}")
         
         # Convert both values to bytes
         ReqBytes = float(ReqVal) * units[ReqUnit]
         MaxBytes = float(MaxVal) * units[MaxUnit]
-        print(f"{ReqBytes}>>>{MaxBytes}")
 
         # Compute percentage
-        #pct = (MaxBytes / ReqBytes) * 100
-        #print(pct)
-        #pct_str = f"{pct:.2f}".strip('0').rstrip('.')
-        #print(pct_str)
+        pct = (MaxBytes / ReqBytes) * 100
+        print(pct)
+        pct_str = f"{pct:.2f}".strip('0').rstrip('.')
+        print(pct_str)
 
-        return MaxMem #f"{MaxMem} ({pct_str}% of ReqMem)"
+        return f"{MaxMem} ({pct_str}% of ReqMem)"
     
     except Exception:
         print("Exception")
