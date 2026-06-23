@@ -10,7 +10,7 @@ from datetime import datetime
 import getpass
 from functools import reduce
 
-SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "TotalCPU" "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
+SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "TotalCPU", "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
 
 # Only works for running, queued or recently finished jobs
