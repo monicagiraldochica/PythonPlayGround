@@ -105,24 +105,23 @@ def parseTime(t: str) -> int:
         time_part = t
     hours, minutes, seconds = time_part.split(":")
     print("antes de res")
-    res = int(days)*86400 + int(hours)#*3600 + int(minutes)*60 + seconds
+    res = int(days)*86400 + int(hours)*3600 #+ int(minutes)*60 + seconds
     print("despues de res")
     print(res)
     return res
 
 def editRunTime(walltime: str, runtime: str) -> str:
-    print("entro")
     try:
         walltime_sec = parseTime(walltime)
-        print(f"walltime_sec: {walltime_sec}")
-        runtime_sec = parseTime(runtime)
-        print(f"runtime_sec: {runtime_sec}")
-        pct = (runtime_sec/walltime_sec) * 100
-        print(f"pct: {pct}")
-        pct_str = f"{pct:.2f}".rstrip('0').rstrip('.')
-        print(f"pct_str: {pct_str}")
+        #print(f"walltime_sec: {walltime_sec}")
+        #runtime_sec = parseTime(runtime)
+        #print(f"runtime_sec: {runtime_sec}")
+        #pct = (runtime_sec/walltime_sec) * 100
+        #print(f"pct: {pct}")
+        #pct_str = f"{pct:.2f}".rstrip('0').rstrip('.')
+        #print(f"pct_str: {pct_str}")
 
-        return f"{runtime} ({pct_str}% of WallTime)"
+        return runtime#f"{runtime} ({pct_str}% of WallTime)"
     
     except Exception:
         return runtime
