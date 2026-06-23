@@ -82,18 +82,23 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         # Parse both inputs
         ReqVal, ReqUnit = parseMem(ReqMem)
         MaxVal, MaxUnit = parseMem(MaxMem)
+        print(f"{ReqVal} {ReqUnit} {MaxVal} {MaxUnit}")
         
         # Convert both values to bytes
         ReqBytes = ReqVal * units[ReqUnit]
         MaxBytes = MaxVal * units[MaxUnit]
+        print(f"{ReqBytes} {MaxBytes}")
 
         # Compute percentage
         pct = (MaxBytes / ReqBytes) * 100
+        print(pct)
         pct_str = f"{pct:.2f}".strip('0').rstrip('.')
+        print(pct_str)
 
         return f"{MaxMem} ({pct_str}% of ReqMem)"
     
     except Exception:
+        print("Exception")
         return MaxMem
 
 # Better to use for failed or completed jobs
@@ -182,20 +187,15 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
     MaxRSS = df.loc[df["Field"] == "MaxRSS", "batch"].iloc[0]
-    print("**"+MaxRSS+"**")
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
-        print(f"ReqMem: {ReqMem}")
+        print(f"MaxRSS antes: {MaxRSS}")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
-        print(f"MaxRSS: {MaxRSS}")
+        print(f"MaxRSS despues: {MaxRSS}")
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
-        print(df.loc[df["Field"] == "MaxRSS", "batch"].iloc[0])
-    else:
-        print("no entro")
 
     df = df.reset_index(drop=True)
-    print(df)
     return df
 
 def parse_arguments():
