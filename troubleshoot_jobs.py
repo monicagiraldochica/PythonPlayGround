@@ -273,7 +273,7 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
         else:
             df = get_jobInfo_scontrol(job)
 
-        if not df.empty():
+        if not df.empty:
             clean_df = simplify_dataFrame(df)
             clean_df = clean_df.rename(columns={"Value": str(job)})
             all_dfs.append(clean_df)
