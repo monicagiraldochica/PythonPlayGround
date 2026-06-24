@@ -509,11 +509,6 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
 
-def merge_keep_last(left, right):
-    merged = left.merge(right, on="Field", how="outer")
-    merged = merged.loc[:, ~merged.columns.duplicated(keep="last")]
-    return merged
-
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
@@ -544,17 +539,11 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
 
         current += timedelta(days=1)
 
-    print(f"Number of dfs: {len(all_dfs)}")
-    for date, df in all_dfs.items():
-        print(date)
-        print(list(df.columns))
-
-    #print("-------")
-    #if all_dfs:
-    #    big_df = reduce(merge_keep_last, all_dfs)
-    #    big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
-    #    print(big_df)
-    #    print(big_df.columns.values.tolist())
+    if all_dfs:
+        list_dfs = list(all_dfs.values())
+        big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), list_dfs)
+        print(big_df)
+        print(big_df.columns.values.tolist())
     #    file_path = f"{outdir}/{date_str}.xlsx"
     #    with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
     #        joint_df.to_excel(writer, sheet_name=file_path)
