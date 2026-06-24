@@ -541,7 +541,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         list_dfs = list(all_dfs.values())
         big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), list_dfs)
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
-            big_df.to_excel(writer, sheet_name=file_path)
+            big_df.to_excel(writer, sheet_name=f"{netID}_jobs")
         if os.path.isfile(file_path):
             print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
         else:
