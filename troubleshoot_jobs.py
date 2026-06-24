@@ -172,10 +172,12 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     print(f"AllocCPUS: {AllocCPUS}")
     CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
     print(f"CPUpct: {CPUpct}")
+    print(df)
     df.loc[df["Field"] == "CPUpct", titles[0]] = CPUpct
+    print(df)
 
     # Re-order resources lines
-    move_last = [ "AllocCPUS", "TotalCPU", "CPUpct", "AveRSS", "MaxRSS" ]
+    move_last = [ "AllocCPUS", "TotalCPU", "AveRSS", "MaxRSS" ]
     mask = df['Field'].isin(move_last)
     df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
