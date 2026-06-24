@@ -161,6 +161,8 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Create new line with the CPU usage
     # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
+    CPUtime = df.loc[df["Field"] == "TotalCPU", "HMDA_red1017_MSA2013"].iloc[0]
+    print(f"CPUtime: {CPUtime}")
 
     # Re-order resources lines
     move_last = [ "AllocCPUS", "TotalCPU", "AveRSS", "MaxRSS" ]
