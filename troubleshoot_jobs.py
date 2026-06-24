@@ -296,6 +296,7 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
         if netID:
             strg+=f" by {netID}"
         strg+=". No output generated."
+        print(strg)
 
 def isValidDate(date: str):
     try:
