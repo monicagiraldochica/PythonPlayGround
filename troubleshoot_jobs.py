@@ -326,12 +326,16 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
         strg+=" was saved on: "+os.path.abspath(output_file)
         print(strg)
 
+        return joint_df
+
     else:
         strg = f"No jobs ran on {submit_date}"
         if netID:
             strg+=f" by {netID}"
         strg+=". No output generated."
         print(strg)
+
+        return pd.DataFrame
 
 def isValidDate(date: str):
     try:
@@ -512,12 +516,10 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
 
     current = start_date
     while current <= end_date:
-        print(f"current: {current}")
         date_str = current.strftime("%Y-%m-%d")
-        print(f"date_Str: {date_str}")
         file_path = f"{outdir}/{date_str}.xlsx"
-        print(f"file path: {file_path}")
-        printJobsFromDate(date_str, True, file_path, netID)
+        joint_df = printJobsFromDate(date_str, True, file_path, netID)
+        print(joint_df)
         current += timedelta(days=1)
 
 def main():
