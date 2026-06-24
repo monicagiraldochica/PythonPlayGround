@@ -514,13 +514,22 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     if outdir.endswith("/"):
         outdir = outdir[:-1]
 
+    all_dfs = []
     current = start_date
     while current <= end_date:
         date_str = current.strftime("%Y-%m-%d")
         file_path = f"{outdir}/{date_str}.xlsx"
         joint_df = printJobsFromDate(date_str, True, file_path, netID)
-        print(joint_df)
+        if not joint_df.empty:
+            all_dfs+=[joint_df]
+            print(joint_df.to_markdown(index=False))
+            print(joint_df.columns.values.tolist())
         current += timedelta(days=1)
+
+    if all_dfs:
+        big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+        print(big_df.to_markdown(index=False))
+        print(big_df.columns.values.tolist())
 
 def main():
     # Check python version
