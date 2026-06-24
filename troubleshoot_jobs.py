@@ -6,9 +6,9 @@ import os
 import installib
 import sys
 import argparse
-from datetime import datetime
 import getpass
 from functools import reduce
+from datetime import datetime, timedelta
 
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "TotalCPU", "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
@@ -457,6 +457,22 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
             searches+=["nvidia"]
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
+
+def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: str):
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+    if outdir.endswith("/"):
+        outdir = outdir[:-1]
+
+    current = start_date
+    while current <= end_date:
+        print(f"current: {current}")
+        date_str = current.strftime("%Y-%m-%d")
+        print(f"date_Str: {date_str}")
+        file_path = f"{outdir}/{date_str}.xlsx"
+        print(f"file path: {file_path}")
+        printJobsFromDate(date_str, True, file_path, netID)
+        current += timedelta(days=1)
 
 def main():
     # Check python version
