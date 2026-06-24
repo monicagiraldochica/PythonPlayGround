@@ -295,7 +295,7 @@ def printJobStats(jobID: str, df: pd.DataFrame):
 
     return out
 
-def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: str=""):
+def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
 
     # Calculate the joint DF with information from all jobs submitted on that date
@@ -317,14 +317,15 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
         joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
 
         # Save DF
-        with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
-            joint_df.to_excel(writer, sheet_name=submit_date)
-        
-        strg = f"Information on all jobs that ran on {submit_date}"
-        if netID:
-            strg+=f" by {netID}"
-        strg+=" was saved on: "+os.path.abspath(output_file)
-        print(strg)
+        if save and output_file:
+            with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
+                joint_df.to_excel(writer, sheet_name=submit_date)
+            
+            strg = f"Information on all jobs that ran on {submit_date}"
+            if netID:
+                strg+=f" by {netID}"
+            strg+=" was saved on: "+os.path.abspath(output_file)
+            print(strg)
 
         return joint_df
 
@@ -376,7 +377,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
-        printJobsFromDate(submit_date, True, output, netID)
+        getJobsFromDate(submit_date, True, netID=netID, save=True, output_file=output)
         queue_pos = getQueuePosition(jobID)
         input(f"Job is in position {queue_pos} in queue [Enter]")
         input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
@@ -518,18 +519,22 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     current = start_date
     while current <= end_date:
         date_str = current.strftime("%Y-%m-%d")
-        file_path = f"{outdir}/{date_str}.xlsx"
-        joint_df = printJobsFromDate(date_str, True, file_path, netID)
+        joint_df = getJobsFromDate(date_str, True, netID=netID)
         if not joint_df.empty:
             all_dfs+=[joint_df]
-            print(joint_df.to_markdown(index=False))
-            print(joint_df.columns.values.tolist())
         current += timedelta(days=1)
 
     if all_dfs:
         big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
-        print(big_df.to_markdown(index=False))
+        print(big_df)
         print(big_df.columns.values.tolist())
+        file_path = f"{outdir}/{date_str}.xlsx"
+        with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
+            joint_df.to_excel(writer, sheet_name=file_path)
+        if os.path.isfile(file_path):
+            print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
+        else:
+            print(f"Could not save DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
 def main():
     # Check python version
@@ -554,7 +559,7 @@ def main():
         if len(jobs)>1:
             # If jobID is missing submitDate wont be missing, otherwise it would have failed in parse_arguments
             print(f"{len(jobs)} jobs were submitted by {netID} on {submitDate}:\n")
-            printJobsFromDate(submit_date, stopped, f"{outdir}/{submit_date}.xlsx", netID)
+            getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/{submit_date}.xlsx")
             jobID = input("Choose one job to investigate ([Enter] for the first): ").strip() or jobs[0]
 
         else:
@@ -639,9 +644,9 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user"]:
-        printJobsFromDate(submit_date, stopped, f"{outdir}/tmp.xls", netID)
+        getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xls")
     elif selection in ["a", "all"]:
-        printJobsFromDate(submit_date, stopped, f"{outdir}/tmp.xls")
+        getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xls")
 
 if __name__ == "__main__":
     main()
