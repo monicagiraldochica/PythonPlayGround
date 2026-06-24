@@ -545,7 +545,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     print(f"Number of dfs: {len(all_dfs)}")
     for date, df in all_dfs.items():
         print(date)
-        print(list(joint_df.columns))
+        print(list(df.columns))
 
     #print("-------")
     #if all_dfs:
