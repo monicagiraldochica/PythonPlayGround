@@ -161,11 +161,21 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Create new line with the CPU usage
     # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
-    CPUtime = df.loc[df["Field"] == "TotalCPU", "HMDA_red1017_MSA2013"].iloc[0]
-    print(f"CPUtime: {CPUtime}")
+    CPUtime = df.loc[df["Field"] == "TotalCPU", titles[0]].iloc[0]
+    CPUtime_sec = parseTime(CPUtime)
+    print(f"CPUtime: {CPUtime_sec}")
+    RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
+    RunTime = RunTime.split(" ")[0]
+    RunTime_sec = parseTime(RunTime)
+    print(f"CPUtime: {RunTime_sec}")
+    AllocCPUS = int(df.loc[df["Field"] == "AllocCPUS", titles[0]].iloc[0])
+    print(f"AllocCPUS: {AllocCPUS}")
+    CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
+    print(f"CPUpct: {CPUpct}")
+    df.loc[df["Field"] == "CPUpct", titles[0]] = CPUpct
 
     # Re-order resources lines
-    move_last = [ "AllocCPUS", "TotalCPU", "AveRSS", "MaxRSS" ]
+    move_last = [ "AllocCPUS", "TotalCPU", "CPUpct", "AveRSS", "MaxRSS" ]
     mask = df['Field'].isin(move_last)
     df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
