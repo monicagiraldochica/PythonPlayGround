@@ -520,22 +520,43 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     if outdir.endswith("/"):
         outdir = outdir[:-1]
 
-    all_dfs = []
+    all_dfs = {}
+    all_cols = {}
     current = start_date
+
     while current <= end_date:
         date_str = current.strftime("%Y-%m-%d")
         joint_df = getJobsFromDate(date_str, True, netID=netID)
+
         if not joint_df.empty:
-            print(joint_df.columns.values.tolist())
-            all_dfs+=[joint_df]
+            all_dfs[date_str] = joint_df
+
+            if all_cols:
+                for col in list(joint_df.columns):
+                    if not (col in all_cols):
+                        all_cols[col] = date_str
+                    else:
+                        other_date = all_cols[col]
+                        other_df = all_dfs[other_date]
+                        other_df = other_df.drop(col, axis=1)
+                        all_cols[col] = date_str
+            
+            else:
+                all_cols[col] = date_str
+
         current += timedelta(days=1)
 
-    print("-------")
-    if all_dfs:
-        big_df = reduce(merge_keep_last, all_dfs)
+    print(f"Number of dfs: {len(all_dfs)}")
+    for date, df in all_dfs.items():
+        print(date)
+        print(list(joint_df.columns))
+
+    #print("-------")
+    #if all_dfs:
+    #    big_df = reduce(merge_keep_last, all_dfs)
     #    big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
     #    print(big_df)
-        print(big_df.columns.values.tolist())
+    #    print(big_df.columns.values.tolist())
     #    file_path = f"{outdir}/{date_str}.xlsx"
     #    with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
     #        joint_df.to_excel(writer, sheet_name=file_path)
