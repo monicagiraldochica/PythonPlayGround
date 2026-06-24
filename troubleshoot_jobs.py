@@ -539,6 +539,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
                     other_df = all_dfs[other_date]
                     other_df = other_df.drop(col, axis=1)
                     all_cols[col] = date_str
+                    all_dfs[other_date] = other_df
 
         current += timedelta(days=1)
 
