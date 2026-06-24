@@ -80,7 +80,28 @@ def parseTime(t: str) -> int:
     else:
         days = 0
         time_part = t
-    hours, minutes, seconds = time_part.split(":")
+    
+    #hours, minutes, seconds = 
+    time_part = time_part.split(":")
+    if len(time_part)==3:
+        hours = time_part[0]
+        minutes = time_part[1]
+        seconds = time_part[2]
+    
+    elif len(time_part)==2:
+        hours = 0
+        minutes = time_part[0]
+        seconds = time_part[1].split(".")[0]
+
+    elif len(time_part)==1:
+        hours = 0
+        minutes = 0
+        seconds = time_part[0].split(".")[0]
+
+    else:
+        print(f"ERROR: Wrong time format: {t}")
+        return -1
+
     return int(days)*86400 + int(hours)*3600 + int(minutes)*60 + int(seconds)
 
 def editRunTime(walltime: str, runtime: str) -> str:
@@ -137,6 +158,9 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row = { "Field": "ReqTRES", titles[0]:new_vals[0], titles[1]:new_vals[1], titles[2]:new_vals[2] }
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
+
+    # Create new line with the CPU usage
+    # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
 
     # Re-order resources lines
     move_last = [ "AllocCPUS", "TotalCPU", "AveRSS", "MaxRSS" ]
