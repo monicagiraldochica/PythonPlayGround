@@ -512,8 +512,6 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
-    if outdir.endswith("/"):
-        outdir = outdir[:-1]
 
     all_dfs = {}
     all_cols = {}
