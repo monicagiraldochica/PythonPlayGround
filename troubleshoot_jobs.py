@@ -173,7 +173,10 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
     print(f"CPUpct: {CPUpct}")
     print(df)
-    df.loc[df["Field"] == "CPUpct", titles[0]] = CPUpct
+    new_row = {col: None for col in df.columns}
+    new_row["Field"] = "CPUpct"
+    new_row[titles[0]] = CPUpct
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     print(df)
 
     # Re-order resources lines
