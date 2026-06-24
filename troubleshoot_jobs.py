@@ -515,20 +515,20 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     if outdir.endswith("/"):
         outdir = outdir[:-1]
 
-    #all_dfs = []
+    all_dfs = []
     current = start_date
     while current <= end_date:
         date_str = current.strftime("%Y-%m-%d")
         joint_df = getJobsFromDate(date_str, True, netID=netID)
         if not joint_df.empty:
             print(joint_df.columns.values.tolist())
-        #    all_dfs+=[joint_df]
+            all_dfs+=[joint_df]
         current += timedelta(days=1)
 
-    #if all_dfs:
-    #    big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+    if all_dfs:
+        big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
     #    print(big_df)
-    #    print(big_df.columns.values.tolist())
+        print(big_df.columns.values.tolist())
     #    file_path = f"{outdir}/{date_str}.xlsx"
     #    with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
     #        joint_df.to_excel(writer, sheet_name=file_path)
