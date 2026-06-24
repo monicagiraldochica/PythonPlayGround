@@ -542,15 +542,13 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     if all_dfs:
         list_dfs = list(all_dfs.values())
         big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), list_dfs)
-        print(big_df)
-        print(big_df.columns.values.tolist())
-    #    file_path = f"{outdir}/{date_str}.xlsx"
-    #    with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
-    #        joint_df.to_excel(writer, sheet_name=file_path)
-    #    if os.path.isfile(file_path):
-    #        print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
-    #    else:
-    #        print(f"Could not save DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
+        file_path = f"{outdir}/{start_date_str}-{end_date_str}.xlsx"
+        with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
+            big_df.to_excel(writer, sheet_name=file_path)
+        if os.path.isfile(file_path):
+            print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
+        else:
+            print(f"Could not save DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
 def main():
     # Check python version
