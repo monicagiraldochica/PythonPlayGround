@@ -509,7 +509,7 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
 
-def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: str):
+def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
     if outdir.endswith("/"):
@@ -542,7 +542,6 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
     if all_dfs:
         list_dfs = list(all_dfs.values())
         big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), list_dfs)
-        file_path = f"{outdir}/{start_date_str}-{end_date_str}.xlsx"
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=file_path)
         if os.path.isfile(file_path):
