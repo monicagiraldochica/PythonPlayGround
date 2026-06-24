@@ -531,18 +531,14 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, outdir: s
         if not joint_df.empty:
             all_dfs[date_str] = joint_df
 
-            if all_cols:
-                for col in list(joint_df.columns):
-                    if not (col in all_cols):
-                        all_cols[col] = date_str
-                    else:
-                        other_date = all_cols[col]
-                        other_df = all_dfs[other_date]
-                        other_df = other_df.drop(col, axis=1)
-                        all_cols[col] = date_str
-            
-            else:
-                all_cols[col] = date_str
+            for col in list(joint_df.columns):
+                if not (col in all_cols):
+                    all_cols[col] = date_str
+                else:
+                    other_date = all_cols[col]
+                    other_df = all_dfs[other_date]
+                    other_df = other_df.drop(col, axis=1)
+                    all_cols[col] = date_str
 
         current += timedelta(days=1)
 
