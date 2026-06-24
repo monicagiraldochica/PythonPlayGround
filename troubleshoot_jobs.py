@@ -272,20 +272,30 @@ def printJobsFromDate(submit_date: str, stopped: bool, output_file: str, netID: 
             df = get_jobInfo_sacct(job)
         else:
             df = get_jobInfo_scontrol(job)
-        clean_df = simplify_dataFrame(df)
-        clean_df = clean_df.rename(columns={"Value": str(job)})
-        all_dfs.append(clean_df)
-    joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
 
-    # Save DF
-    with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
-        joint_df.to_excel(writer, sheet_name=submit_date)
-    
-    strg = f"Information on all jobs that ran on {submit_date}"
-    if netID:
-        strg+=f" by {netID}"
-    strg+=" was saved on: "+os.path.abspath(output_file)
-    print(strg)
+        if not df.empty():
+            clean_df = simplify_dataFrame(df)
+            clean_df = clean_df.rename(columns={"Value": str(job)})
+            all_dfs.append(clean_df)
+
+    if all_dfs:
+        joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
+
+        # Save DF
+        with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
+            joint_df.to_excel(writer, sheet_name=submit_date)
+        
+        strg = f"Information on all jobs that ran on {submit_date}"
+        if netID:
+            strg+=f" by {netID}"
+        strg+=" was saved on: "+os.path.abspath(output_file)
+        print(strg)
+
+    else:
+        strg = f"No jobs ran on {submit_date}"
+        if netID:
+            strg+=f" by {netID}"
+        strg+=". No output generated."
 
 def isValidDate(date: str):
     try:
