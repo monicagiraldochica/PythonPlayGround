@@ -509,10 +509,31 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
 
+# mem_str looks like "118.85G"
+def to_gigabytes(mem_str: str):
+    UNIT_MULTIPLIER = {"K": 1e-6, "M": 1e-3, "G": 1, "T": 1e3, "P": 1e6}
+    value, unit = parseMem(mem_str)
+    return value * UNIT_MULTIPLIER[unit]
+
 def analyzeBigDF(big_df: pd.DataFrame):
-    MaxRSS_row = big_df.loc[big_df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
+    # Filter DF to keep only completed jobs
+    completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
+    filtered_df = big_df[["Field"] + completed_cols]
+
+    MaxRSS_row = filtered_df.loc[filtered_df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
+    rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
-    rss_pct = [x.split(" (")[1].split("%")[0] for x in MaxRSS_row]
+    # Normalize units for rss_values
+    rss_gb = [float(to_gigabytes(x)) for x in rss_values]
+
+    ReqTRES_row = filtered_df.loc[filtered_df["Field"] == "ReqTRES"].iloc[0, 1:].tolist()
+    reqmem = [x.split(",")[1].replace("mem=", "") for x in ReqTRES_row]
+    # Normalize units for reqmem
+    reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
+
+    print(reqmem_gb)
+    print(rss_gb)
+    print(rss_pct)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
