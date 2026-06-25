@@ -312,9 +312,7 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             all_dfs.append(clean_df)
 
     if all_dfs:
-        #field_order = all_dfs[0]["Field"]
         joint_df = pd.concat([df.set_index("Field") for df in all_dfs], axis=1).reset_index()
-        #reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort=False), all_dfs).set_index("Field").loc[field_order].reset_index()
 
         # Save DF
         if save and output_file:
@@ -543,7 +541,6 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
     if all_dfs:
         list_dfs = list(all_dfs.values())
         big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
-        #reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort="False"), list_dfs)
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"{netID}_jobs")
