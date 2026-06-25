@@ -299,17 +299,33 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
     # Calculate the joint DF with information from all jobs submitted on that date
     all_dfs = []
     for job in jobs:
+        #######
+        if job==jobs[0]:
+            print(job)
+        #######
         if stopped and netID:
             df = get_jobInfo_sacct(job, netID)
         elif stopped:
             df = get_jobInfo_sacct(job)
         else:
             df = get_jobInfo_scontrol(job)
+        #######
+        if job==jobs[0]:
+            print(df)
+        #######
 
         if not df.empty:
             clean_df = simplify_dataFrame(df)
+            #######
+            if job==jobs[0]:
+                print(clean_df)
+            #######
             clean_df = clean_df.rename(columns={"Value": str(job)})
             all_dfs.append(clean_df)
+            #######
+            if job==jobs[0]:
+                print(clean_df)
+            #######
 
     if all_dfs:
         joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), all_dfs)
