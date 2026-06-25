@@ -10,8 +10,8 @@ import getpass
 from functools import reduce
 from datetime import datetime, timedelta
 
-SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS" ]
-SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "NodeList", "ReqTRES", "AllocTRES", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime" ]
+SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS" ]
+SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
