@@ -528,8 +528,11 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
                     if not (col in all_cols):
                         all_cols[col] = date_str
                     else:
+                        # Get the previous DF from the previous date running the same jobID
                         other_date = all_cols[col]
                         other_df = all_dfs[other_date]
+
+                        # Remove that jobID column from the previous DF to keep the jobID only in the current one
                         other_df = other_df.drop(col, axis=1)
                         all_cols[col] = date_str
                         all_dfs[other_date] = other_df
