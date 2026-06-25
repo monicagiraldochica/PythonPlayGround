@@ -10,8 +10,8 @@ import getpass
 from functools import reduce
 from datetime import datetime, timedelta
 
-SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "TotalCPU", "ReqMem", "MaxRSS", "StdOut", "StdErr" ]
-SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
+SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS" ]
+SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "NodeList", "ReqTRES", "AllocTRES", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime" ]
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
@@ -146,7 +146,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     df = df[df["Field"]!="JobName"]
 
     # Edit Fields to match scontrol df
-    df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime"})
+    df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime", "Start": "StartTime", "User": "UserId", "State": "JobState"})
     
     # Merge Req resources lines into one
     new_vals = []
@@ -172,11 +172,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row["Field"] = "CPUpct"
     new_row[titles[0]] = CPUpct
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-
-    # Re-order resources lines
-    move_last = [ "MaxRSS", "AllocCPUS", "TotalCPU", "CPUpct" ]
-    mask = df['Field'].isin(move_last)
-    df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
     # Remove the T from the dates
     job_cols = df.columns.drop('Field')
@@ -547,6 +542,10 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         else:
             print(f"Could not save DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
+        return big_df
+    
+    return pd.DataFrame
+
 def main():
     # Check python version
     if not installib.checkPythonVers(3, 12, 10, True)[0]:
@@ -658,6 +657,8 @@ def main():
         getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xls")
     elif selection in ["a", "all"]:
         getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xls")
+
+    #big_df = checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str)
 
 if __name__ == "__main__":
     main()
