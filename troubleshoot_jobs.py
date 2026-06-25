@@ -309,22 +309,14 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             df = get_jobInfo_sacct(job)
         else:
             df = get_jobInfo_scontrol(job)
-        #######
-        if job==jobs[0]:
-            print(df)
-        #######
 
         if not df.empty:
             clean_df = simplify_dataFrame(df)
-            #######
-            if job==jobs[0]:
-                print(clean_df)
-            #######
             clean_df = clean_df.rename(columns={"Value": str(job)})
             all_dfs.append(clean_df)
             #######
-            if job==jobs[0]:
-                print(clean_df)
+            print(clean_df)
+            print("------------")
             #######
 
     if all_dfs:
