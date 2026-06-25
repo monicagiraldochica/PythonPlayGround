@@ -11,7 +11,7 @@ from functools import reduce
 from datetime import datetime, timedelta
 
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS" ]
-SCONTROL_FIELDS = [ "UserId", "JobState", "Reason", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
+SCONTROL_FIELDS = [ "UserId", "JobState", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
@@ -167,7 +167,10 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     RunTime = RunTime.split(" ")[0]
     RunTime_sec = parseTime(RunTime)
     AllocCPUS = int(df.loc[df["Field"] == "AllocCPUS", titles[0]].iloc[0])
-    CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
+    if RunTime_sec!=0:
+        CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
+    else:
+        CPUpct = 0
     new_row = {col: "" for col in df.columns}
     new_row["Field"] = "CPUpct"
     new_row[titles[0]] = CPUpct
