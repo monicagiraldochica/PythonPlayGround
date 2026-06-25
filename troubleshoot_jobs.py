@@ -312,12 +312,12 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             all_dfs.append(clean_df)
 
     if all_dfs:
-        print("First DF:")
-        print(all_dfs[0])
+        #print("First DF:")
+        #print(all_dfs[0])
         field_order = all_dfs[0]["Field"]
-        print(f"field order: {field_order}")
+        #print(f"field order: {field_order}")
         joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort=False), all_dfs).set_index("Field").loc[field_order].reset_index()
-        print("Joint DF:")
+        #print("Joint DF:")
         print(joint_df)
 
         # Save DF
