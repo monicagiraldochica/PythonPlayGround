@@ -541,8 +541,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         current += timedelta(days=1)
 
     if all_dfs:
-        #list_dfs = list(all_dfs.values())
-        big_df = pd.concat([df.set_index("Field") for df in all_dfs], axis=1).reset_index()
+        list_dfs = list(all_dfs.values())
+        big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
         #reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort="False"), list_dfs)
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
