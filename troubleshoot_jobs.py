@@ -538,9 +538,12 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
     if all_dfs:
         list_dfs = list(all_dfs.values())
-        big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer"), list_dfs)
+        field_order = all_dfs[0]["Field"]
+        big_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort="False"), list_dfs).set_index("Field").loc[field_order].reset_index()
+
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"{netID}_jobs")
+
         if os.path.isfile(file_path):
             print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
         else:
@@ -590,22 +593,24 @@ def main():
     simple_df = printJobStats(jobID, df)
     if stopped:
         try:
+            print("\n")
+
             MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
             pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
             if pct>=100:
-                print(f"\nMemory efficiency is {pct}%. The job hit the memory limit.")
+                print(f"Memory efficiency is {pct}%. The job hit the memory limit.")
                 #python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory
             elif pct>70:
-                print(f"\nMemory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
+                print(f"Memory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
             elif pct<30:
-                print(f"\nMemory efficiency is {pct}%. The user is over-requesting memory.")
+                print(f"Memory efficiency is {pct}%. The user is over-requesting memory.")
 
             RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
             pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
             if pct>80:
-                print(f"\nThe job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
+                print(f"The job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
             elif pct<20:
-                print(f"\nThe job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
+                print(f"The job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
 
             CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
             AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
@@ -619,7 +624,7 @@ def main():
             #If this is far below 100%, the job is not using all allocated cores.
         except:
             pass
-    input("\n[Enter]")
+    input("[Enter]")
 
     if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
         print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
