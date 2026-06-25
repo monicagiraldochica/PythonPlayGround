@@ -312,6 +312,7 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             all_dfs.append(clean_df)
 
     if all_dfs:
+        print(all_dfs[0])
         joint_df = reduce(lambda left, right: left.merge(right, on="Field", how="outer", sort=False), all_dfs)
         print(joint_df)
 
