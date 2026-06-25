@@ -67,6 +67,8 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
         # Compute percentage
         pct = (MaxBytes / ReqBytes) * 100
         pct_str = f"{pct:.2f}".strip('0').rstrip('.')
+        if not pct_str:
+            pct_str = "0"
 
         return f"{MaxMem} ({pct_str}% of ReqMem)"
     
@@ -506,6 +508,11 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
             searches+=["nvidia"]
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
+
+def analyzeBigDF(big_df: pd.DataFrame):
+    MaxRSS_row = big_df.loc[big_df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
+    rss_values = [x.split(" (")[0] for x in MaxRSS_row]
+    rss_pct = [x.split(" (")[1].split("%")[0] for x in MaxRSS_row]
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
