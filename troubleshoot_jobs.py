@@ -659,53 +659,22 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
             workbook = writer.book
-
-            #plot_path = plots_paths[0]
-            #print(plot_path)
-            #plt_sheet_name = "CompletedJobs_plot1"
-            #plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            #writer.sheets[plt_sheet_name] = plt_sheet
-            #plt_sheet.insert_image("A1", plot_path)
-
-            #plot_path = plots_paths[1]
-            #print(plot_path)
-            #plt_sheet_name = "CompletedJobs_plot2"
-            #plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            #writer.sheets[plt_sheet_name] = plt_sheet
-            #plt_sheet.insert_image("A1", plot_path)
-
-            #i = 2
             for i, plot_path in enumerate(plots_paths):
-                sheet_name = f"CompletedJobs_plot{i+1}"
-                worksheet = workbook.add_worksheet(sheet_name)
-                #writer.sheets[sheet_name] = plt_sheet
-                worksheet.insert_image("A1", plot_path)
+                if os.path.isfile(plot_path):
+                    sheet_name = f"CompletedJobs_plot{i+1}"
+                    worksheet = workbook.add_worksheet(sheet_name)
+                    worksheet.insert_image("A1", plot_path)
 
-            #for i in range(len(plots_paths)):
-                #if i==2:
-                #    continue
-            #    plot_path = plots_paths[i]
-            #    workbook = writer.book
-
-            #    if os.path.isfile(plot_path):
-            #        try:
-            #            plt_sheet_name = f"CompletedJobs_plot{i+1}"
-            #            plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            #            writer.sheets[plt_sheet_name] = plt_sheet
-            #            plt_sheet.insert_image("A1", plot_path)
-            #        except:
-            #            print("exception")
-
-            #    else:
-            #        print(f"could not generate plot with {plots_titles[i]}")
+                else:
+                    print(f"could not generate plot with {plots_titles[i]}")
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
         else:
             print(f"Could not save summary all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
-        #for plot in plots_paths:
-        #    os.remove(plot)
+        for plot in plots_paths:
+            os.remove(plot)
 
         return big_df
     
