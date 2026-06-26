@@ -640,7 +640,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             "Requested vs Used Memory per Completed Jobs",
             "Memory Usage Efficiency Across Completed Jobs"
             ]
-        plots_save = [ False, False ]
+        #plots_save = [ False, False ]
 
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
