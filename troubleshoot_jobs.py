@@ -594,11 +594,16 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
         # Filter DF to keep only completed jobs
         completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
-        filtered_df = big_df[["Field"] + completed_cols]
+        filtComp_df = big_df[["Field"] + completed_cols]
+
+        # Filter DF to keep only failed jobs
+        failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
+        filtFail_df = big_df[["Field"] + failed_cols]
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
-            filtered_df.to_excel(writer, sheet_name=f"{netID}_CompletedJobs")
+            filtComp_df.to_excel(writer, sheet_name=f"{netID}_CompletedJobs")
+            filtFail_df.to_excel(writer, sheet_name=f"{netID}_FailedJobs")
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
