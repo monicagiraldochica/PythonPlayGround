@@ -539,6 +539,7 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.savefig(file_path, dpi=200)
     plt.close()
 
+# Each array in ref_lines should be: []
 def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str):
     #N = len(percentages)
     x = np.arange(1, len(percentages)+1)
@@ -547,21 +548,21 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     # Main line: actual resource usage %
     plt.plot(x, percentages, label="Used Memory (% of Requested)", color="black", linewidth=2)
 
-    # Horizontal reference lines
-    plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Limit)")
-    plt.axhline(70, color="blue", linestyle="--", linewidth=1.5, label="70%")
-    plt.axhline(30, color="red", linestyle="--", linewidth=1.5, label="30%")
+    # >100% → red (hit memory limit)
+    plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
+    plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Hits Memory limit)")
+
+    plt.axhline(70, color="blue", linestyle="--", linewidth=1.5, label="70% (close to Memory Limit)")
+
+    plt.axhline(30, color="red", linestyle="--", linewidth=1.5, label="30% (Wasting resources)")
 
     # Shaded regions
     # 0–30% → light red (over-requesting)
     plt.fill_between(x, 0, 30, color="lightcoral", alpha=0.3)
 
     # 70–100% → blue (close to limit)
-    plt.fill_between(x, 70, 100, color="lightblue", alpha=0.3)
-
-    # >100% → red (hit memory limit)
-    plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
-
+    plt.fill_between(x, 70, 100, color="lightblue", alpha=0.3)  
+    
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
     plt.title(title)
@@ -574,6 +575,9 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     plt.close()
 
 def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
+    #################################
+    ### Plot memory usage metrics ###
+    #################################
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
     # Normalize units for rss_values
@@ -586,6 +590,11 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
 
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1])
+
+    ###########################
+    ### Plot WallTime usage ###
+    ###########################
+    RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
