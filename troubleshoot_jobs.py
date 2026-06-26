@@ -639,14 +639,6 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             ]
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
-        #for i in range(len(plots_paths)):
-        #    plot_title = plots_titles[i]
-        #        print(f"Plot with {plot_title} successfully saved in {plot_path}")
-        #        plots_save[i] = True
-
-        #    else:
-        #        print(f"could not generate plot with {plot_title}")
-
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
         fail_df = big_df[["Field"] + failed_cols]
@@ -667,7 +659,10 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
                     plt_sheet = workbook.add_worksheet(plt_sheet_name)
                     writer.sheets[plt_sheet_name] = plt_sheet
                     plt_sheet.insert_image("A1", plot_path)
-            #        os.remove(plot_path)
+                    os.remove(plot_path)
+
+                else:
+                    print(f"could not generate plot with {plots_titles[i]}")
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
