@@ -660,27 +660,26 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
             workbook = writer.book
 
-            plot_path = plots_paths[0]
-            print(plot_path)
-            plt_sheet_name = "CompletedJobs_plot1"
-            plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            writer.sheets[plt_sheet_name] = plt_sheet
-            plt_sheet.insert_image("A1", plot_path)
+            #plot_path = plots_paths[0]
+            #print(plot_path)
+            #plt_sheet_name = "CompletedJobs_plot1"
+            #plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            #writer.sheets[plt_sheet_name] = plt_sheet
+            #plt_sheet.insert_image("A1", plot_path)
 
-            plot_path = plots_paths[1]
-            print(plot_path)
-            plt_sheet_name = "CompletedJobs_plot2"
-            plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            writer.sheets[plt_sheet_name] = plt_sheet
-            plt_sheet.insert_image("A1", plot_path)
+            #plot_path = plots_paths[1]
+            #print(plot_path)
+            #plt_sheet_name = "CompletedJobs_plot2"
+            #plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            #writer.sheets[plt_sheet_name] = plt_sheet
+            #plt_sheet.insert_image("A1", plot_path)
 
-            i = 2
-            plot_path = plots_paths[i]
-            print(plot_path)
-            plt_sheet_name = f"CompletedJobs_plot{i+1}"
-            plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            writer.sheets[plt_sheet_name] = plt_sheet
-            plt_sheet.insert_image("A1", plot_path)
+            #i = 2
+            for i, plot_path in enumerate(plots_paths):
+                sheet_name = f"CompletedJobs_plot{i+1}"
+                worksheet = workbook.add_worksheet(sheet_name)
+                #writer.sheets[sheet_name] = plt_sheet
+                worksheet.insert_image("A1", plot_path)
 
             #for i in range(len(plots_paths)):
                 #if i==2:
