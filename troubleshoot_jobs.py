@@ -545,7 +545,7 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     plt.figure(figsize=(12, 6))
 
     # Main line: actual resource usage %
-    plt.plot(x, percentages, label="Used Memory (% of Requested)", color="black", linewidth=2)
+    plt.plot(x, percentages, label="Used (% of Requested)", color="black", linewidth=2)
 
     # >100% → red (hit memory limit)
     plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
@@ -591,11 +591,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ### Plot WallTime usage ###
     ###########################
     RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
-    print(RunTime)
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
-    print(runtime_pct)
-    print(titles[2])
-    print(outputs[2])
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
@@ -663,13 +659,13 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
             for i in range(len(plots_paths)):
-                if i==2:
-                    continue
+                #if i==2:
+                #    continue
                 plot_path = plots_paths[i]
                 workbook = writer.book
 
                 if os.path.isfile(plot_path):
-                    plt_sheet_name = f"CompletedJobs_plot{i}"
+                    plt_sheet_name = f"CompletedJobs_plot{i+1}"
                     plt_sheet = workbook.add_worksheet(plt_sheet_name)
                     writer.sheets[plt_sheet_name] = plt_sheet
                     plt_sheet.insert_image("A1", plot_path)
