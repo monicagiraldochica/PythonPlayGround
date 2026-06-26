@@ -541,7 +541,6 @@ def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title:
 
 def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
-    rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
     # Normalize units for rss_values
     rss_gb = [float(to_gigabytes(x)) for x in rss_values]
@@ -552,6 +551,8 @@ def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", file_path)
+
+    #rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -600,17 +601,26 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         analyzeBigDF(comp_df, plot_path, [plot_title])
         if os.path.isfile(plot_path):
             print(f"Plot with {plot_title} successfully saved in {plot_path}")
+            save_plot = True
         else:
             print(f"could not generate plot with {plot_title}")
+            save_plot = False
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
         fail_df = big_df[["Field"] + failed_cols]
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
-            big_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
-            comp_df.to_excel(writer, sheet_name=f"{netID}_CompletedJobs")
-            fail_df.to_excel(writer, sheet_name=f"{netID}_FailedJobs")
+            big_df.to_excel(writer, sheet_name=f"AllJobs")
+            comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
+            fail_df.to_excel(writer, sheet_name=f"FailedJobs")
+
+            if save_plot:
+                workbook = writer.book
+                plt_sheet_name = f"CompletedJobs_plots"
+                plt_sheet = workbook.add_worksheet(plt_sheet_name)
+                writer.sheets[plt_sheet_name] = plt_sheet
+                plt_sheet.insert_image("A1", plot_path)
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
