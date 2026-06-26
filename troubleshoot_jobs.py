@@ -646,7 +646,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             "Memory Usage Efficiency Across Completed Jobs",
             "Wall Time use Across Completed Jobs"
             ]
-        analyzeBigDF(comp_df, plots_paths, plots_titles)
+        #analyzeBigDF(comp_df, plots_paths, plots_titles)
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
@@ -658,23 +658,39 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
-            for i in range(len(plots_paths)):
+            workbook = writer.book
+
+            plot_path = plots_paths[0]
+            print(plot_path)
+            plt_sheet_name = "CompletedJobs_plot1"
+            plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            writer.sheets[plt_sheet_name] = plt_sheet
+            plt_sheet.insert_image("A1", plot_path)
+
+            plot_path = plots_paths[1]
+            print(plot_path)
+            plt_sheet_name = "CompletedJobs_plot2"
+            plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            writer.sheets[plt_sheet_name] = plt_sheet
+            plt_sheet.insert_image("A1", plot_path)
+
+            #for i in range(len(plots_paths)):
                 #if i==2:
                 #    continue
-                plot_path = plots_paths[i]
-                workbook = writer.book
+            #    plot_path = plots_paths[i]
+            #    workbook = writer.book
 
-                if os.path.isfile(plot_path):
-                    try:
-                        plt_sheet_name = f"CompletedJobs_plot{i+1}"
-                        plt_sheet = workbook.add_worksheet(plt_sheet_name)
-                        writer.sheets[plt_sheet_name] = plt_sheet
-                        plt_sheet.insert_image("A1", plot_path)
-                    except:
-                        print("exception")
+            #    if os.path.isfile(plot_path):
+            #        try:
+            #            plt_sheet_name = f"CompletedJobs_plot{i+1}"
+            #            plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            #            writer.sheets[plt_sheet_name] = plt_sheet
+            #            plt_sheet.insert_image("A1", plot_path)
+            #        except:
+            #            print("exception")
 
-                else:
-                    print(f"could not generate plot with {plots_titles[i]}")
+            #    else:
+            #        print(f"could not generate plot with {plots_titles[i]}")
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
