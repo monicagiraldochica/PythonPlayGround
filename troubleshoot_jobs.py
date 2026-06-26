@@ -674,6 +674,13 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             writer.sheets[plt_sheet_name] = plt_sheet
             plt_sheet.insert_image("A1", plot_path)
 
+            plot_path = plots_paths[2]
+            print(plot_path)
+            plt_sheet_name = "CompletedJobs_plot3"
+            plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            writer.sheets[plt_sheet_name] = plt_sheet
+            plt_sheet.insert_image("A1", plot_path)
+
             #for i in range(len(plots_paths)):
                 #if i==2:
                 #    continue
