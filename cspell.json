@@ -3,7 +3,14 @@
     "ignorePaths": [],
     "dictionaryDefinitions": [],
     "dictionaries": [],
-    "words": [],
+    "words": [
+        "Cloack",
+        "filt",
+        "ondemand",
+        "sinfo",
+        "sprio",
+        "squeue"
+    ],
     "ignoreWords": [],
     "import": []
 }

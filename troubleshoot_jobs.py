@@ -539,8 +539,6 @@ def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title:
     plt.savefig(file_path, dpi=200)
     plt.close()
 
-    return plt
-
 def analyzeBigDF(df: pd.DataFrame, file_path: str, jobs_type: str=""):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
@@ -553,8 +551,7 @@ def analyzeBigDF(df: pd.DataFrame, file_path: str, jobs_type: str=""):
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
-    plt = plot_reqVSused_resources(reqmem_gb, rss_gb, f"Requested vs Used Memory per {jobs_type} Job".replace("  "," "), "Memory (GB)", file_path)
-    return plt
+    plot_reqVSused_resources(reqmem_gb, rss_gb, f"Requested vs Used Memory per {jobs_type} Job".replace("  "," "), "Memory (GB)", file_path)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -590,19 +587,22 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
     if all_dfs:
         list_dfs = list(all_dfs.values())
         big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
+        print(f"jobs in big_df: {len(list(big_df.columns))-1}")
 
         # Filter DF to keep only completed jobs
         completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
-        filtComp_df = big_df[["Field"] + completed_cols]
+        comp_df = big_df[["Field"] + completed_cols]
+        print(f"jobs in comp_df: {len(list(comp_df.columns))-1}")
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
-        filtFail_df = big_df[["Field"] + failed_cols]
+        fail_df = big_df[["Field"] + failed_cols]
+        print(f"jobs in fail_df: {len(list(fail_df.columns))-1}")
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
-            filtComp_df.to_excel(writer, sheet_name=f"{netID}_CompletedJobs")
-            filtFail_df.to_excel(writer, sheet_name=f"{netID}_FailedJobs")
+            comp_df.to_excel(writer, sheet_name=f"{netID}_CompletedJobs")
+            fail_df.to_excel(writer, sheet_name=f"{netID}_FailedJobs")
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
