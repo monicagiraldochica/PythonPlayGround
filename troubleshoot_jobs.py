@@ -592,7 +592,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ###########################
     RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
     runtime_pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
-    plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 70, 30)
+    plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
