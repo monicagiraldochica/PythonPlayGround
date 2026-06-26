@@ -539,22 +539,56 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.savefig(file_path, dpi=200)
     plt.close()
 
-#def plot_pctUsed_resources()
+def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str):
+    #N = len(percentages)
+    x = np.arange(1, len(percentages)+1)
+    plt.figure(figsize=(12, 6))
 
-def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
+    # Main line: actual resource usage %
+    plt.plot(x, percentages, label="Used Memory (% of Requested)", color="black", linewidth=2)
+
+    # Horizontal reference lines
+    plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Limit)")
+    plt.axhline(70, color="blue", linestyle="--", linewidth=1.5, label="70%")
+    plt.axhline(30, color="red", linestyle="--", linewidth=1.5, label="30%")
+
+    # Shaded regions
+    # 0–30% → light red (over-requesting)
+    plt.fill_between(x, 0, 30, color="lightcoral", alpha=0.3)
+
+    # 70–100% → blue (close to limit)
+    plt.fill_between(x, 70, 100, color="lightblue", alpha=0.3)
+
+    # >100% → red (hit memory limit)
+    plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
+
+    #plt.ylim(0, max(max(percentages), 120))  # give some headroom
+    #plt.xlim(1, N)
+
+    plt.xlabel("Job Index")
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig(file_path, dpi=200)
+    plt.close()
+
+def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
     # Normalize units for rss_values
     rss_gb = [float(to_gigabytes(x)) for x in rss_values]
-
     ReqTRES_row = df.loc[df["Field"] == "ReqTRES"].iloc[0, 1:].tolist()
     reqmem = [x.split(",")[1].replace("mem=", "") for x in ReqTRES_row]
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
-
-    plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", file_path)
+    plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
 
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
+    plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1])
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -598,32 +632,50 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         # Generate plots for completed jobs
         if file_path.endswith("/"):
             file_path = file_path[:-1]
-        plot_path = os.path.dirname(file_path)+f"/memoryUsage1_{netID}.png"
-        plot_title = "Requested vs Used Memory per Completed Jobs"
-        analyzeBigDF(comp_df, plot_path, [plot_title])
-        if os.path.isfile(plot_path):
-            print(f"Plot with {plot_title} successfully saved in {plot_path}")
-            save_plot = True
-        else:
-            print(f"could not generate plot with {plot_title}")
-            save_plot = False
+        plots_paths = [
+            os.path.dirname(file_path)+f"/memoryUsage1_{netID}.png",
+            os.path.dirname(file_path)+f"/memoryUsage2_{netID}.png"
+            ]
+        plots_titles = [
+            "Requested vs Used Memory per Completed Jobs",
+            "Memory Usage Efficiency Across Completed Jobs"
+            ]
+        plots_save = [ False, False ]
+
+        analyzeBigDF(comp_df, plots_paths, plots_titles)
+
+        # check if the plots for completed jobs were successfully generated
+        for i in range(len(plots_paths)):
+            plot_path = plots_paths[i]
+            plot_title = plots_titles[i]
+
+            if os.path.isfile(plot_path):
+                print(f"Plot with {plot_title} successfully saved in {plot_path}")
+                plots_save[i] = True
+
+            else:
+                print(f"could not generate plot with {plot_title}")
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
         fail_df = big_df[["Field"] + failed_cols]
 
+        # Save everything in excel
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"AllJobs")
             comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
-            if save_plot:
-                workbook = writer.book
-                plt_sheet_name = f"CompletedJobs_plots"
-                plt_sheet = workbook.add_worksheet(plt_sheet_name)
-                writer.sheets[plt_sheet_name] = plt_sheet
-                plt_sheet.insert_image("A1", plot_path)
-                os.remove(plot_path)
+            for i in range(len(plots_paths)):
+                plot_path = plots_paths[i]
+
+                if plots_save[i]:
+                    workbook = writer.book
+                    plt_sheet_name = f"CompletedJobs_plot{i}"
+                    plt_sheet = workbook.add_worksheet(plt_sheet_name)
+                    writer.sheets[plt_sheet_name] = plt_sheet
+                    plt_sheet.insert_image("A1", plot_path)
+                    os.remove(plot_path)
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
