@@ -645,16 +645,16 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
         # check if the plots for completed jobs were successfully generated
-        for i in range(len(plots_paths)):
-            plot_path = plots_paths[i]
-            plot_title = plots_titles[i]
+        #for i in range(len(plots_paths)):
+        #    plot_path = plots_paths[i]
+        #    plot_title = plots_titles[i]
 
-            if os.path.isfile(plot_path):
-                print(f"Plot with {plot_title} successfully saved in {plot_path}")
-                plots_save[i] = True
+        #    if os.path.isfile(plot_path):
+        #        print(f"Plot with {plot_title} successfully saved in {plot_path}")
+        #        plots_save[i] = True
 
-            else:
-                print(f"could not generate plot with {plot_title}")
+        #    else:
+        #        print(f"could not generate plot with {plot_title}")
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
