@@ -552,17 +552,14 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
     plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Hits Memory limit)")
 
+    # 70–100% → blue (close to limit)
     plt.axhline(70, color="blue", linestyle="--", linewidth=1.5, label="70% (close to Memory Limit)")
+    plt.fill_between(x, 70, 100, color="lightblue", alpha=0.3)  
 
-    plt.axhline(30, color="red", linestyle="--", linewidth=1.5, label="30% (Wasting resources)")
-
-    # Shaded regions
     # 0–30% → light red (over-requesting)
+    plt.axhline(30, color="red", linestyle="--", linewidth=1.5, label="30% (Wasting resources)")
     plt.fill_between(x, 0, 30, color="lightcoral", alpha=0.3)
 
-    # 70–100% → blue (close to limit)
-    plt.fill_between(x, 70, 100, color="lightblue", alpha=0.3)  
-    
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
     plt.title(title)
