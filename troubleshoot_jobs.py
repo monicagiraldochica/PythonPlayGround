@@ -516,7 +516,7 @@ def to_gigabytes(mem_str: str):
     value, unit = parseMem(mem_str)
     return value * UNIT_MULTIPLIER[unit]
 
-def plot_reqVSused_resources(requested, used, title, ylabel):
+def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title: str, ylabel: str, file_path: str):
     x = np.arange(1, len(requested)+1)
     plt.figure(figsize=(12, 6))
 
@@ -536,12 +536,12 @@ def plot_reqVSused_resources(requested, used, title, ylabel):
     plt.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    #plt.savefig(file_name, dpi=200)
+    plt.savefig(file_path, dpi=200)
     plt.close()
 
     return plt
 
-def analyzeBigDF(df: pd.DataFrame):
+def analyzeBigDF(df: pd.DataFrame, file_path: str, jobs_type: str=""):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
@@ -553,8 +553,7 @@ def analyzeBigDF(df: pd.DataFrame):
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
-    plt = plot_reqVSused_resources(reqmem_gb, rss_gb, "Requested vs Used Memory per Completed Job", "Memory (GB)")
-    #f"{out_dir}/memoryUsage_{netID}.png"
+    plt = plot_reqVSused_resources(reqmem_gb, rss_gb, f"Requested vs Used Memory per {jobs_type} Job".replace("  "," "), "Memory (GB)", file_path)
     return plt
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
