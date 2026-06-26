@@ -7,8 +7,9 @@ import installib
 import sys
 import argparse
 import getpass
-from functools import reduce
 from datetime import datetime, timedelta
+import numpy as np
+import matplotlib.pyplot as plt
 
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
@@ -515,7 +516,30 @@ def to_gigabytes(mem_str: str):
     value, unit = parseMem(mem_str)
     return value * UNIT_MULTIPLIER[unit]
 
-def analyzeBigDF(big_df: pd.DataFrame):
+def plot_reqVSused_resources(requested, used, title, ylabel, file_name):
+    x = np.arange(1, len(requested)+1)
+    plt.figure(figsize=(12, 6))
+
+    # Plot requested resource
+    plt.plot(x, requested, label="Requested Memory (GB)", color="blue", linewidth=2)
+
+    # Plot used resource
+    plt.plot(x, used, label="Used Memory (GB)", color="red", linewidth=2)
+
+    # Shade between the two lines
+    plt.fill_between(x, used, requested, where=(np.array(requested) >= np.array(used)), color="lightgray", alpha=0.5)
+
+    plt.xlabel("Job Index")
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+    plt.savefig(file_name, dpi=200)
+    plt.close()
+
+def analyzeBigDF(big_df: pd.DataFrame, out_dir: str, netID:str):
     # Filter DF to keep only completed jobs
     completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
     filtered_df = big_df[["Field"] + completed_cols]
@@ -531,8 +555,8 @@ def analyzeBigDF(big_df: pd.DataFrame):
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
-    print(reqmem_gb)
-    print(rss_gb)
+    plot_reqVSused_resources(reqmem_gb, rss_gb, "Requested vs Used Memory per Completed Job", "Memory (GB)", f"{out_dir}/memoryUsage_{netID}.png")
+
     print(rss_pct)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
