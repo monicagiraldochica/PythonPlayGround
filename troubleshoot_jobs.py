@@ -516,14 +516,14 @@ def to_gigabytes(mem_str: str):
     value, unit = parseMem(mem_str)
     return value * UNIT_MULTIPLIER[unit]
 
-def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title: str, ylabel: str, file_path: str):
+def plot_reqVSused_resources(requested: list[float], used: list[float], title: str, ylabel: str, file_path: str):
     x = np.arange(1, len(requested)+1)
     plt.figure(figsize=(12, 6))
 
-    # Plot requested resource
+    # Plot requested resources
     plt.plot(x, requested, label="Requested Memory (GB)", color="blue", linewidth=2)
 
-    # Plot used resource
+    # Plot used resources
     plt.plot(x, used, label="Used Memory (GB)", color="red", linewidth=2)
 
     # Shade between the two lines
@@ -539,6 +539,8 @@ def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title:
     plt.savefig(file_path, dpi=200)
     plt.close()
 
+#def plot_pctUsed_resources()
+
 def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
@@ -552,7 +554,7 @@ def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", file_path)
 
-    #rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
+    rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -621,6 +623,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
                 plt_sheet = workbook.add_worksheet(plt_sheet_name)
                 writer.sheets[plt_sheet_name] = plt_sheet
                 plt_sheet.insert_image("A1", plot_path)
+                os.remove(plot_path)
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
