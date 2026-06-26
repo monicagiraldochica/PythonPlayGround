@@ -682,8 +682,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         else:
             print(f"Could not save summary all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
-        for plot in plots_paths:
-            os.remove(plot)
+        #for plot in plots_paths:
+        #    os.remove(plot)
 
         return big_df
     
