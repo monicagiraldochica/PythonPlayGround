@@ -591,7 +591,9 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ### Plot WallTime usage ###
     ###########################
     RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
+    print(RunTime)
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
+    print(runtime_pct)
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
@@ -659,6 +661,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
             for i in range(len(plots_paths)):
+                if i==2:
+                    continue
                 plot_path = plots_paths[i]
                 workbook = writer.book
 
