@@ -539,7 +539,7 @@ def plot_reqVSused_resources(requested: pd.DataFrame, used: pd.DataFrame, title:
     plt.savefig(file_path, dpi=200)
     plt.close()
 
-def analyzeBigDF(df: pd.DataFrame, file_path: str, jobs_type: str=""):
+def analyzeBigDF(df: pd.DataFrame, file_path: str, titles: list[str]):
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
@@ -551,7 +551,7 @@ def analyzeBigDF(df: pd.DataFrame, file_path: str, jobs_type: str=""):
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
-    plot_reqVSused_resources(reqmem_gb, rss_gb, f"Requested vs Used Memory per {jobs_type} Job".replace("  "," "), "Memory (GB)", file_path)
+    plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", file_path)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -587,17 +587,25 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
     if all_dfs:
         list_dfs = list(all_dfs.values())
         big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
-        print(f"jobs in big_df: {len(list(big_df.columns))-1}")
 
         # Filter DF to keep only completed jobs
         completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
         comp_df = big_df[["Field"] + completed_cols]
-        print(f"jobs in comp_df: {len(list(comp_df.columns))-1}")
+
+        # Generate plots for completed jobs
+        if file_path.endswith("/"):
+            file_path = file_path[:-1]
+        plot_path = os.path.dirname(file_path)+f"/memoryUsage1_{netID}.png"
+        plot_title = "Requested vs Used Memory per Completed Jobs"
+        analyzeBigDF(comp_df, plot_path, [plot_title])
+        if os.path.isfile(plot_path):
+            print(f"Plot with {plot_title} successfully saved in {plot_path}")
+        else:
+            print(f"could not generate plot with {plot_title}")
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
         fail_df = big_df[["Field"] + failed_cols]
-        print(f"jobs in fail_df: {len(list(fail_df.columns))-1}")
 
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
