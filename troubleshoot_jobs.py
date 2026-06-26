@@ -516,7 +516,7 @@ def to_gigabytes(mem_str: str):
     value, unit = parseMem(mem_str)
     return value * UNIT_MULTIPLIER[unit]
 
-def plot_reqVSused_resources(requested, used, title, ylabel, file_name):
+def plot_reqVSused_resources(requested, used, title, ylabel):
     x = np.arange(1, len(requested)+1)
     plt.figure(figsize=(12, 6))
 
@@ -536,28 +536,26 @@ def plot_reqVSused_resources(requested, used, title, ylabel, file_name):
     plt.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig(file_name, dpi=200)
+    #plt.savefig(file_name, dpi=200)
     plt.close()
 
-def analyzeBigDF(big_df: pd.DataFrame, out_dir: str, netID:str):
-    # Filter DF to keep only completed jobs
-    completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
-    filtered_df = big_df[["Field"] + completed_cols]
+    return plt
 
-    MaxRSS_row = filtered_df.loc[filtered_df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
+def analyzeBigDF(df: pd.DataFrame):
+    MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
     # Normalize units for rss_values
     rss_gb = [float(to_gigabytes(x)) for x in rss_values]
 
-    ReqTRES_row = filtered_df.loc[filtered_df["Field"] == "ReqTRES"].iloc[0, 1:].tolist()
+    ReqTRES_row = df.loc[df["Field"] == "ReqTRES"].iloc[0, 1:].tolist()
     reqmem = [x.split(",")[1].replace("mem=", "") for x in ReqTRES_row]
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
 
-    plot_reqVSused_resources(reqmem_gb, rss_gb, "Requested vs Used Memory per Completed Job", "Memory (GB)", f"{out_dir}/memoryUsage_{netID}.png")
-
-    print(rss_pct)
+    plt = plot_reqVSused_resources(reqmem_gb, rss_gb, "Requested vs Used Memory per Completed Job", "Memory (GB)")
+    #f"{out_dir}/memoryUsage_{netID}.png"
+    return plt
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -594,13 +592,18 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         list_dfs = list(all_dfs.values())
         big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
 
+        # Filter DF to keep only completed jobs
+        completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
+        filtered_df = big_df[["Field"] + completed_cols]
+
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
-            big_df.to_excel(writer, sheet_name=f"{netID}_jobs")
+            big_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
+            filtered_df.to_excel(writer, sheet_name=f"{netID}_AllJobs")
 
         if os.path.isfile(file_path):
-            print(f"DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
+            print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
         else:
-            print(f"Could not save DF with info of all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
+            print(f"Could not save summary all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
         return big_df
     
