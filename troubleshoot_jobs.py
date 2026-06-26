@@ -646,7 +646,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             "Memory Usage Efficiency Across Completed Jobs",
             "Wall Time use Across Completed Jobs"
             ]
-        #analyzeBigDF(comp_df, plots_paths, plots_titles)
+        analyzeBigDF(comp_df, plots_paths, plots_titles)
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
@@ -673,8 +673,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         else:
             print(f"Could not save summary all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
-        for plot in plots_paths:
-            os.remove(plot)
+        #for plot in plots_paths:
+        #    os.remove(plot)
 
         return big_df
     
