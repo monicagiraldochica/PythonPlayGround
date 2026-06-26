@@ -594,6 +594,8 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     print(RunTime)
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
     print(runtime_pct)
+    print(titles[2])
+    print(outputs[2])
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
