@@ -639,12 +639,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             ]
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
-        # check if the plots for completed jobs were successfully generated
         #for i in range(len(plots_paths)):
-        #    plot_path = plots_paths[i]
         #    plot_title = plots_titles[i]
-
-        #    if os.path.isfile(plot_path):
         #        print(f"Plot with {plot_title} successfully saved in {plot_path}")
         #        plots_save[i] = True
 
@@ -663,14 +659,14 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
             for i in range(len(plots_paths)):
                 plot_path = plots_paths[i]
-                print(plot_path)
+                workbook = writer.book
 
-            #    if plots_save[i]:
-            #        workbook = writer.book
-            #        plt_sheet_name = f"CompletedJobs_plot{i}"
-            #        plt_sheet = workbook.add_worksheet(plt_sheet_name)
-            #        writer.sheets[plt_sheet_name] = plt_sheet
-            #        plt_sheet.insert_image("A1", plot_path)
+                print(plot_path+f"*{i}")
+                if os.path.isfile(plot_path):
+                    plt_sheet_name = f"CompletedJobs_plot{i}"
+                    plt_sheet = workbook.add_worksheet(plt_sheet_name)
+                    writer.sheets[plt_sheet_name] = plt_sheet
+                    plt_sheet.insert_image("A1", plot_path)
             #        os.remove(plot_path)
 
         if os.path.isfile(file_path):
