@@ -532,7 +532,7 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.legend()
+    plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
     plt.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
@@ -562,15 +562,12 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     # >100% → red (hit memory limit)
     plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
 
-    #plt.ylim(0, max(max(percentages), 120))  # give some headroom
-    #plt.xlim(1, N)
-
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
     plt.title(title)
 
     plt.grid(True, linestyle="--", alpha=0.5)
-    plt.legend()
+    plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
     plt.tight_layout()
 
     plt.savefig(file_path, dpi=200)
@@ -640,7 +637,6 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             "Requested vs Used Memory per Completed Jobs",
             "Memory Usage Efficiency Across Completed Jobs"
             ]
-        #plots_save = [ False, False ]
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
         # check if the plots for completed jobs were successfully generated
@@ -665,8 +661,9 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
-            #for i in range(len(plots_paths)):
-            #    plot_path = plots_paths[i]
+            for i in range(len(plots_paths)):
+                plot_path = plots_paths[i]
+                print(plot_path)
 
             #    if plots_save[i]:
             #        workbook = writer.book
