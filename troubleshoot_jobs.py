@@ -666,16 +666,16 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
 
-            for i in range(len(plots_paths)):
-                plot_path = plots_paths[i]
+            #for i in range(len(plots_paths)):
+            #    plot_path = plots_paths[i]
 
-                if plots_save[i]:
-                    workbook = writer.book
-                    plt_sheet_name = f"CompletedJobs_plot{i}"
-                    plt_sheet = workbook.add_worksheet(plt_sheet_name)
-                    writer.sheets[plt_sheet_name] = plt_sheet
-                    plt_sheet.insert_image("A1", plot_path)
-                    os.remove(plot_path)
+            #    if plots_save[i]:
+            #        workbook = writer.book
+            #        plt_sheet_name = f"CompletedJobs_plot{i}"
+            #        plt_sheet = workbook.add_worksheet(plt_sheet_name)
+            #        writer.sheets[plt_sheet_name] = plt_sheet
+            #        plt_sheet.insert_image("A1", plot_path)
+            #        os.remove(plot_path)
 
         if os.path.isfile(file_path):
             print(f"Summary of all jobs submitted by {netID} between {start_date_str} and {end_date_str} was successfully saved in {file_path}.")
