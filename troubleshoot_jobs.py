@@ -665,10 +665,13 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
                 workbook = writer.book
 
                 if os.path.isfile(plot_path):
-                    plt_sheet_name = f"CompletedJobs_plot{i+1}"
-                    plt_sheet = workbook.add_worksheet(plt_sheet_name)
-                    writer.sheets[plt_sheet_name] = plt_sheet
-                    plt_sheet.insert_image("A1", plot_path)
+                    try:
+                        plt_sheet_name = f"CompletedJobs_plot{i+1}"
+                        plt_sheet = workbook.add_worksheet(plt_sheet_name)
+                        writer.sheets[plt_sheet_name] = plt_sheet
+                        plt_sheet.insert_image("A1", plot_path)
+                    except:
+                        print("exception")
 
                 else:
                     print(f"could not generate plot with {plots_titles[i]}")
