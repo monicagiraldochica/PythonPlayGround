@@ -539,13 +539,6 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.savefig(file_path, dpi=200)
     plt.close()
 
-def find_first_crossing(values, threshold):
-    for i in range(1, len(values)):
-        y1, y2 = values[i-1], values[i]
-        if (y1 < threshold and y2 >= threshold) or (y1 > threshold and y2 <= threshold):
-            return i+1
-    return None
-
 def find_first_crossing_interp(values, threshold):
     for i in range(1, len(values)):
         y1, y2 = values[i-1], values[i]
