@@ -596,6 +596,7 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     xticks = sorted(set(xticks))
     labels = [f"{int(x)}" if x == int(x) else f"{x:.1f}" for x in xticks]
     plt.xticks(xticks, labels)
+    plt.xlim(1, len(percentages))
 
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
