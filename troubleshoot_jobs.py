@@ -539,6 +539,14 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.savefig(file_path, dpi=200)
     plt.close()
 
+def find_first_crossing(values, threshold):
+    for i in range(1, len(values)):
+        y1, y2 = values[i-1], values[i]
+        if (y1 < threshold and y2 >= threshold) or \
+           (y1 > threshold and y2 <= threshold):
+            return i + 1  # x index (since x starts at 1)
+    return None
+
 def find_first_crossing_interp(values, threshold):
     for i in range(1, len(values)):
         y1, y2 = values[i-1], values[i]
@@ -569,12 +577,12 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
 
         if vert_lines:
             # Vertical line where resources are close to the limit
-            xc_blue = find_first_crossing_interp(percentages, pct_closeToLimit)
+            xc_blue = find_first_crossing(percentages, pct_closeToLimit)
             if xc_blue is not None:
                 plt.axvline(x=xc_blue, color="blue", linestyle=":", linewidth=2)
 
             # Vertical line where resources are wasted
-            xc_red = find_first_crossing_interp(percentages, pct_waste)
+            xc_red = find_first_crossing(percentages, pct_waste)
             if xc_red is not None:
                 plt.axvline(x=xc_red, color="red", linestyle=":", linewidth=2)
 
