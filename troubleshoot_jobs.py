@@ -576,6 +576,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ### Plot memory usage metrics ###
     #################################
     MaxRSS_row = df.loc[df["Field"] == "MaxRSS"].iloc[0, 1:].tolist()
+    # Get MaxRSS without the percentage values
     rss_values = [x.split(" (")[0] for x in MaxRSS_row]
     # Normalize units for rss_values
     rss_gb = [float(to_gigabytes(x)) for x in rss_values]
@@ -583,9 +584,20 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     reqmem = [x.split(",")[1].replace("mem=", "") for x in ReqTRES_row]
     # Normalize units for reqmem
     reqmem_gb = [float(to_gigabytes(x)) for x in reqmem]
-    plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
-
+    # Get only the percentages
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
+
+    # Sort the jobs according to rss_pct
+    job_cols = df.columns[1:]
+    sorted_cols = [
+        col for _, col in sorted(
+            zip(rss_pct, job_cols),
+            reverse=True  # highest first
+        )
+    ]
+    print(sorted_cols)
+
+    plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
 
     df = df.copy()
@@ -596,7 +608,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ### Plot WallTime usage ###
     ###########################
     RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
-    runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
+    runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]    
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
     new_row = ["RunTime_pctg"]+runtime_pct
