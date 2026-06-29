@@ -592,7 +592,6 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
     if sort=="mem":
         # Get order indices (sorted by rss_pct descending)
         sorted_idx = sorted(range(len(rss_pct)), key=lambda i: rss_pct[i], reverse=True)
-        print(sorted_idx)
 
         # Sort the jobs according to rss_pct
         job_cols = df.columns[1:]
