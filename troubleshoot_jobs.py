@@ -599,11 +599,17 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
+    new_row = ["RunTime_pctg"]+runtime_pct
+    df.loc[len(df)] = new_row
+
     ######################
     ### Plot CPU usage ###
     ######################
     CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
     plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
+
+    new_row = ["CPU_pctg"]+CPUpct
+    df.loc[len(df)] = new_row
 
     return df
 
