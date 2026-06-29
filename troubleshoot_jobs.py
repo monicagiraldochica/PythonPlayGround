@@ -571,7 +571,7 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     plt.savefig(file_path, dpi=200)
     plt.close()
 
-def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
+def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: str=""):
     #################################
     ### Plot memory usage metrics ###
     #################################
@@ -587,22 +587,27 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     # Get only the percentages
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
 
-    # Sort the jobs according to rss_pct
-    job_cols = df.columns[1:]
-    sorted_cols = [
-        col for _, col in sorted(
-            zip(rss_pct, job_cols),
-            reverse=True  # highest first
-        )
-    ]
-    print(sorted_cols)
+    df = df.copy()
+
+    if sort=="mem":
+        # Get order indices (sorted by rss_pct descending)
+        sorted_idx = sorted(range(len(rss_pct)), key=lambda i: rss_pct[i], reverse=True)
+
+        # Sort the jobs according to rss_pct
+        job_cols = df.columns[1:]
+        sorted_cols = [job_cols[i] for i in sorted_idx]
+        df = df[["Field"] + sorted_cols]
+        
+        # Sort the arrays for plotting
+        reqmem_gb = [reqmem_gb[i] for i in sorted_idx]
+        rss_gb    = [rss_gb[i] for i in sorted_idx]
+        rss_pct = [rss_pct[i] for i in sorted_idx]
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
-
-    df = df.copy()
-    new_row = ["RSS_pctg"]+rss_pct
-    df.loc[len(df)] = new_row
+    
+    # Add the new row with rss percentages
+    df.loc[len(df)] = ["RSS_pctg"]+rss_pct
 
     ###########################
     ### Plot WallTime usage ###
@@ -611,8 +616,8 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]    
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
 
-    new_row = ["RunTime_pctg"]+runtime_pct
-    df.loc[len(df)] = new_row
+    # Add the new row with runtime percentages
+    df.loc[len(df)] = ["RunTime_pctg"]+runtime_pct
 
     ######################
     ### Plot CPU usage ###
@@ -620,8 +625,8 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
     plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
 
-    new_row = ["CPU_pctg"]+CPUpct
-    df.loc[len(df)] = new_row
+    # Add the new row with CPU percentages
+    df.loc[len(df)] = ["CPU_pctg"]+CPUpct
 
     return df
 
@@ -690,7 +695,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         comp_df = big_df[["Field"] + completed_cols]
         
         # Generate plots for completed jobs
-        comp_df = analyzeBigDF(comp_df, plots_paths[0:4], plots_titles[0:4])
+        comp_df = analyzeBigDF(comp_df, plots_paths[0:4], plots_titles[0:4], "mem")
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
