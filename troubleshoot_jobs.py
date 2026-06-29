@@ -589,19 +589,19 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
 
     df = df.copy()
 
-    if sort=="mem":
+    #if sort=="mem":
         # Get order indices (sorted by rss_pct descending)
-        sorted_idx = sorted(range(len(rss_pct)), key=lambda i: rss_pct[i], reverse=True)
+        #sorted_idx = sorted(range(len(rss_pct)), key=lambda i: rss_pct[i], reverse=True)
 
         # Sort the jobs according to rss_pct
-        job_cols = df.columns[1:]
-        sorted_cols = [job_cols[i] for i in sorted_idx]
-        df = df[["Field"] + sorted_cols]
+        #job_cols = df.columns[1:]
+        #sorted_cols = [job_cols[i] for i in sorted_idx]
+        #df = df[["Field"] + sorted_cols]
         
         # Sort the arrays for plotting
-        reqmem_gb = [reqmem_gb[i] for i in sorted_idx]
-        rss_gb    = [rss_gb[i] for i in sorted_idx]
-        rss_pct = [rss_pct[i] for i in sorted_idx]
+        #reqmem_gb = [reqmem_gb[i] for i in sorted_idx]
+        #rss_gb    = [rss_gb[i] for i in sorted_idx]
+        #rss_pct = [rss_pct[i] for i in sorted_idx]
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
