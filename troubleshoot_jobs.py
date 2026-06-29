@@ -540,7 +540,6 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.close()
 
 def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str, pct_closeToLimit: int, pct_waste: int):
-    #N = len(percentages)
     x = np.arange(1, len(percentages)+1)
     plt.figure(figsize=(12, 6))
 
@@ -699,7 +698,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         fail_df = big_df[["Field"] + failed_cols]
 
         # Generate plots for failed jobs
-        fail_df = analyzeBigDF(fail_df, plots_paths[4:8], plots_titles[4:8])
+        fail_df = analyzeBigDF(fail_df, plots_paths[4:8], plots_titles[4:8], "mem")
 
         # Save everything in excel
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
