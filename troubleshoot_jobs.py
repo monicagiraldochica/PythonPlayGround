@@ -589,6 +589,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
 
     print(df)
+    df = df.copy()
     new_row = ["RSS_pctg"]+rss_pct
     df.loc[len(df)] = new_row
     print(df)
