@@ -539,12 +539,23 @@ def plot_reqVSused_resources(requested: list[float], used: list[float], title: s
     plt.savefig(file_path, dpi=200)
     plt.close()
 
+def find_first_crossing(values, threshold):
+    for i in range(1, len(values)):
+        y1, y2 = values[i-1], values[i]
+        if (y1 < threshold and y2 >= threshold) or (y1 > threshold and y2 <= threshold):
+            return i+1
+    return None
+
 def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str, pct_closeToLimit: int, pct_waste: int):
     x = np.arange(1, len(percentages)+1)
     plt.figure(figsize=(12, 6))
 
     # Main line: actual resource usage %
     plt.plot(x, percentages, label="Used (% of Requested)", color="black", linewidth=2)
+
+    # 0–pct_waste% → light red (over-requesting)
+    plt.axhline(pct_waste, color="red", linestyle="--", linewidth=1.5, label=f"{pct_waste}% (Wasting resources)")
+    plt.fill_between(x, 0, pct_waste, color="lightcoral", alpha=0.3)
 
     if pct_closeToLimit>0:
         # >100% → red (hit memory limit)
@@ -553,11 +564,17 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
 
         # pct_closeToLimit–100% → blue (close to limit)
         plt.axhline(pct_closeToLimit, color="blue", linestyle="--", linewidth=1.5, label=f"{pct_closeToLimit}% (close to Limit)")
-        plt.fill_between(x, pct_closeToLimit, 100, color="lightblue", alpha=0.3)  
+        plt.fill_between(x, pct_closeToLimit, 100, color="lightblue", alpha=0.3)
 
-    # 0–pct_waste% → light red (over-requesting)
-    plt.axhline(pct_waste, color="red", linestyle="--", linewidth=1.5, label=f"{pct_waste}% (Wasting resources)")
-    plt.fill_between(x, 0, pct_waste, color="lightcoral", alpha=0.3)
+        # Vertical line where resources are close to the limit
+        xc = find_first_crossing(percentages, pct_closeToLimit)
+        if xc is not None:
+            plt.axvline(x=xc, color="blue", linestyle=":", linewidth=2)
+
+        # Vertical line where resources are wasted
+        xc = find_first_crossing(percentages, pct_waste)
+        if xc is not None:
+            plt.axvline(x=xc, color="red", linestyle=":", linewidth=2)
 
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
