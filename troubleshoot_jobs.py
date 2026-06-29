@@ -546,7 +546,14 @@ def find_first_crossing(values, threshold):
             return i+1
     return None
 
-def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str, pct_closeToLimit: int, pct_waste: int):
+def find_first_crossing_interp(values, threshold):
+    for i in range(1, len(values)):
+        y1, y2 = values[i-1], values[i]
+        if (y1 - threshold) * (y2 - threshold) <= 0 and y1 != y2:
+            return i + (threshold - y1) / (y2 - y1)
+    return None
+
+def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, file_path: str, pct_closeToLimit: int, pct_waste: int, vert_lines: bool=False):
     x = np.arange(1, len(percentages)+1)
     plt.figure(figsize=(12, 6))
 
@@ -566,15 +573,16 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
         plt.axhline(pct_closeToLimit, color="blue", linestyle="--", linewidth=1.5, label=f"{pct_closeToLimit}% (close to Limit)")
         plt.fill_between(x, pct_closeToLimit, 100, color="lightblue", alpha=0.3)
 
-        # Vertical line where resources are close to the limit
-        xc = find_first_crossing(percentages, pct_closeToLimit)
-        if xc is not None:
-            plt.axvline(x=xc, color="blue", linestyle=":", linewidth=2)
+        if vert_lines:
+            # Vertical line where resources are close to the limit
+            xc = find_first_crossing_interp(percentages, pct_closeToLimit)
+            if xc is not None:
+                plt.axvline(x=xc, color="blue", linestyle=":", linewidth=2)
 
-        # Vertical line where resources are wasted
-        xc = find_first_crossing(percentages, pct_waste)
-        if xc is not None:
-            plt.axvline(x=xc, color="red", linestyle=":", linewidth=2)
+            # Vertical line where resources are wasted
+            xc = find_first_crossing_interp(percentages, pct_waste)
+            if xc is not None:
+                plt.axvline(x=xc, color="red", linestyle=":", linewidth=2)
 
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
@@ -620,7 +628,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
         rss_pct = [rss_pct[i] for i in sorted_idx]
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
-    plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
+    plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30, True)
     
     # Add the new row with rss percentages
     df.loc[len(df)] = ["RSS_pctg"]+rss_pct
