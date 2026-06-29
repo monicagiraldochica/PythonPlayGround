@@ -690,7 +690,10 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             workbook = writer.book
             for i, plot_path in enumerate(plots_paths):
                 if os.path.isfile(plot_path):
-                    sheet_name = f"CompletedJobs_plot{i+1}"
+                    if i<4:
+                        sheet_name = f"CompletedJobs_plot{i+1}"
+                    else:
+                        sheet_name = f"FailedJobs_plot{i-3}"
                     worksheet = workbook.add_worksheet(sheet_name)
                     worksheet.insert_image("A1", plot_path)
 
