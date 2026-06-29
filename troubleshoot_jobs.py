@@ -642,30 +642,44 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         list_dfs = list(all_dfs.values())
         big_df = pd.concat([df.set_index("Field") for df in list_dfs], axis=1).reset_index()
 
-        # Filter DF to keep only completed jobs
-        completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
-        comp_df = big_df[["Field"] + completed_cols]
-
-        # Generate plots for completed jobs
         if file_path.endswith("/"):
             file_path = file_path[:-1]
         plots_paths = [
-            os.path.dirname(file_path)+f"/memoryUsage1_{netID}.png",
-            os.path.dirname(file_path)+f"/memoryUsage2_{netID}.png",
-            os.path.dirname(file_path)+f"/wallTimeUsage_{netID}.png",
-            os.path.dirname(file_path)+f"/CPUUsage_{netID}.png"
+            os.path.dirname(file_path)+f"/CMP_memoryUsage1_{netID}.png",
+            os.path.dirname(file_path)+f"/CMP_memoryUsage2_{netID}.png",
+            os.path.dirname(file_path)+f"/CMP_wallTimeUsage_{netID}.png",
+            os.path.dirname(file_path)+f"/CMP_CPUUsage_{netID}.png",
+
+            os.path.dirname(file_path)+f"/FL_memoryUsage1_{netID}.png",
+            os.path.dirname(file_path)+f"/FL_memoryUsage2_{netID}.png",
+            os.path.dirname(file_path)+f"/FL_wallTimeUsage_{netID}.png",
+            os.path.dirname(file_path)+f"/FL_CPUUsage_{netID}.png"
             ]
         plots_titles = [
             "Requested vs Used Memory per Completed Jobs",
             "Memory Usage Efficiency Across Completed Jobs",
             "Wall Time use Across Completed Jobs",
-            "CPU used Across Completed Jobs"
+            "CPU used Across Completed Jobs",
+
+            "Requested vs Used Memory per Failed Jobs",
+            "Memory Usage Efficiency Across Failed Jobs",
+            "Wall Time use Across Failed Jobs",
+            "CPU used Across Failed Jobs"
             ]
-        comp_df = analyzeBigDF(comp_df, plots_paths, plots_titles)
+
+        # Filter DF to keep only completed jobs
+        completed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "COMPLETED"]
+        comp_df = big_df[["Field"] + completed_cols]
+        
+        # Generate plots for completed jobs
+        comp_df = analyzeBigDF(comp_df, plots_paths[0:4], plots_titles[0:4])
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
         fail_df = big_df[["Field"] + failed_cols]
+
+        # Generate plots for failed jobs
+        fail_df = analyzeBigDF(fail_df, plots_paths[4:8], plots_titles[4:8])
 
         # Save everything in excel
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
@@ -689,7 +703,8 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             print(f"Could not save summary all jobs submitted by {netID} between {start_date_str} and {end_date_str}.")
 
         for plot in plots_paths:
-            os.remove(plot)
+            if os.path.isfile(plot):
+                os.remove(plot)
 
         return big_df
     
