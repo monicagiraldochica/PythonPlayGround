@@ -595,8 +595,9 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
         print(sorted_idx)
 
         # Sort the jobs according to rss_pct
-        #job_cols = df.columns[1:]
-        #sorted_cols = [job_cols[i] for i in sorted_idx]
+        job_cols = df.columns[1:]
+        sorted_cols = [job_cols[i] for i in sorted_idx]
+        print(sorted_cols)
         #df = df[["Field"] + sorted_cols]
         
         # Sort the arrays for plotting
