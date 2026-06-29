@@ -557,6 +557,7 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     plt.axhline(pct_waste, color="red", linestyle="--", linewidth=1.5, label=f"{pct_waste}% (Wasting resources)")
     plt.fill_between(x, 0, pct_waste, color="lightcoral", alpha=0.3)
 
+    xc_blue = xc_red = None
     if pct_closeToLimit>0:
         # >100% → red (hit memory limit)
         plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
@@ -568,18 +569,25 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
 
         if vert_lines:
             # Vertical line where resources are close to the limit
-            xc = find_first_crossing_interp(percentages, pct_closeToLimit)
-            if xc is not None:
-                plt.axvline(x=xc, color="blue", linestyle=":", linewidth=2)
+            xc_blue = find_first_crossing_interp(percentages, pct_closeToLimit)
+            if xc_blue is not None:
+                plt.axvline(x=xc_blue, color="blue", linestyle=":", linewidth=2)
 
             # Vertical line where resources are wasted
-            xc = find_first_crossing_interp(percentages, pct_waste)
-            if xc is not None:
-                plt.axvline(x=xc, color="red", linestyle=":", linewidth=2)
+            xc_red = find_first_crossing_interp(percentages, pct_waste)
+            if xc_red is not None:
+                plt.axvline(x=xc_red, color="red", linestyle=":", linewidth=2)
 
     plt.xlabel("Job Index")
     plt.ylabel(ylabel)
     plt.title(title)
+
+    xticks = list(plt.xticks()[0])
+    extra_ticks = [x for x in [xc_blue, xc_red] if x is not None]
+    xticks.extend(extra_ticks)
+    xticks = sorted(set(xticks))
+    labels = [f"{int(x)}" if x == int(x) else f"{x:.1f}" for x in xticks]
+    plt.xticks(xticks, labels)
 
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
