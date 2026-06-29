@@ -588,11 +588,9 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
 
-    print(df)
     df = df.copy()
     new_row = ["RSS_pctg"]+rss_pct
     df.loc[len(df)] = new_row
-    print(df)
 
     ###########################
     ### Plot WallTime usage ###
@@ -606,6 +604,8 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     ######################
     CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
     plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
+
+    return df
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -661,7 +661,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
             "Wall Time use Across Completed Jobs",
             "CPU used Across Completed Jobs"
             ]
-        analyzeBigDF(comp_df, plots_paths, plots_titles)
+        comp_df = analyzeBigDF(comp_df, plots_paths, plots_titles)
 
         # Filter DF to keep only failed jobs
         failed_cols = [col for col in big_df.columns[1:] if big_df.loc[big_df["Field"] == "JobState", col].item() == "FAILED"]
