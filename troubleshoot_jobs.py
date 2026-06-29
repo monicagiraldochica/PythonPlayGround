@@ -588,6 +588,11 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     rss_pct = [float(x.split(" (")[1].split("%")[0]) for x in MaxRSS_row]
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
 
+    print(df)
+    new_row = ["RSS_pctg"]+rss_pct
+    df.loc[len(df)] = new_row
+    print(df)
+
     ###########################
     ### Plot WallTime usage ###
     ###########################
