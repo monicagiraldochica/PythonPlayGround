@@ -547,15 +547,16 @@ def plot_pctUsed_resources(percentages: list[float], title:str, ylabel: str, fil
     # Main line: actual resource usage %
     plt.plot(x, percentages, label="Used (% of Requested)", color="black", linewidth=2)
 
-    # >100% → red (hit memory limit)
-    plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
-    plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Hits limit)")
+    if pct_closeToLimit>0:
+        # >100% → red (hit memory limit)
+        plt.fill_between(x, 100, np.maximum(percentages, 100), where=(np.array(percentages) > 100), color="red", alpha=0.3)
+        plt.axhline(100, color="red", linestyle="--", linewidth=1.5, label="100% (Hits limit)")
 
-    # 70–100% → blue (close to limit)
-    plt.axhline(pct_closeToLimit, color="blue", linestyle="--", linewidth=1.5, label=f"{pct_closeToLimit}% (close to Limit)")
-    plt.fill_between(x, pct_closeToLimit, 100, color="lightblue", alpha=0.3)  
+        # pct_closeToLimit–100% → blue (close to limit)
+        plt.axhline(pct_closeToLimit, color="blue", linestyle="--", linewidth=1.5, label=f"{pct_closeToLimit}% (close to Limit)")
+        plt.fill_between(x, pct_closeToLimit, 100, color="lightblue", alpha=0.3)  
 
-    # 0–30% → light red (over-requesting)
+    # 0–pct_waste% → light red (over-requesting)
     plt.axhline(pct_waste, color="red", linestyle="--", linewidth=1.5, label=f"{pct_waste}% (Wasting resources)")
     plt.fill_between(x, 0, pct_waste, color="lightcoral", alpha=0.3)
 
@@ -593,6 +594,12 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str]):
     RunTime = df.loc[df["Field"] == "RunTime"].iloc[0, 1:].tolist()
     runtime_pct = [float(x.split(" ")[1].replace("(", "").replace("%", "")) for x in RunTime]
     plot_pctUsed_resources(runtime_pct, titles[2], "Time Used (% of WallTime Requested)", outputs[2], 80, 20)
+
+    ######################
+    ### Plot CPU usage ###
+    ######################
+    CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
+    plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -639,12 +646,14 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         plots_paths = [
             os.path.dirname(file_path)+f"/memoryUsage1_{netID}.png",
             os.path.dirname(file_path)+f"/memoryUsage2_{netID}.png",
-            os.path.dirname(file_path)+f"/wallTimeUsage_{netID}.png"
+            os.path.dirname(file_path)+f"/wallTimeUsage_{netID}.png",
+            os.path.dirname(file_path)+f"/CPUUsage_{netID}.png"
             ]
         plots_titles = [
             "Requested vs Used Memory per Completed Jobs",
             "Memory Usage Efficiency Across Completed Jobs",
-            "Wall Time use Across Completed Jobs"
+            "Wall Time use Across Completed Jobs",
+            "CPU used Across Completed Jobs"
             ]
         analyzeBigDF(comp_df, plots_paths, plots_titles)
 
