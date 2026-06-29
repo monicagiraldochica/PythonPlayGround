@@ -625,9 +625,6 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
     CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
     plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
 
-    # Add the new row with CPU percentages
-    df.loc[len(df)] = ["CPU_pctg"]+CPUpct
-
     return df
 
 def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str):
