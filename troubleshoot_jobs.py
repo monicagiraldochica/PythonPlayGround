@@ -601,7 +601,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
         # Sort the arrays for plotting
         #reqmem_gb = [reqmem_gb[i] for i in sorted_idx]
         #rss_gb    = [rss_gb[i] for i in sorted_idx]
-        #rss_pct = [rss_pct[i] for i in sorted_idx]
+        rss_pct = [rss_pct[i] for i in sorted_idx]
 
     plot_reqVSused_resources(reqmem_gb, rss_gb, titles[0], "Memory (GB)", outputs[0])
     plot_pctUsed_resources(rss_pct, titles[1], "Memory Used (% of Requested)", outputs[1], 70, 30)
