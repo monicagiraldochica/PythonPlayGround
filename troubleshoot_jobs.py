@@ -738,13 +738,15 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
         # Save everything in excel
         with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
             big_df.to_excel(writer, sheet_name=f"AllJobs")
-            worksheet = writer.sheets["AllJobs"]
-            for col_idx, col in enumerate(big_df.columns):
-                max_len = max(big_df[col].astype(str).map(len).max(), len(col))
-                worksheet.set_column(col_idx, col_idx, max_len)
-
             comp_df.to_excel(writer, sheet_name=f"CompletedJobs")
             fail_df.to_excel(writer, sheet_name=f"FailedJobs")
+
+            # Adjust column size in sheets
+            for sht in "AllJobs", "CompletedJobs", "FailedJobs":
+                worksheet = writer.sheets[sht]
+                for col_idx, col in enumerate(big_df.columns):
+                    max_len = max(big_df[col].astype(str).map(len).max(), len(col))
+                    worksheet.set_column(col_idx, col_idx, max_len)
 
             workbook = writer.book
             for i, plot_path in enumerate(plots_paths):
