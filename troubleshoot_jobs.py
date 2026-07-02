@@ -456,7 +456,7 @@ def checkHomeDir(netID: str):
         input("Login as your user (include mcwcorp) [Enter]")
         input("Analytics > Capacity Explorer > homefs > check which subfolders are filling the home directory [Enter]")
 
-        if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+        if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
             input("Log off the user [Enter]")
             sys.exit(0)
     input("Log off the user [Enter]")
@@ -499,7 +499,7 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
     input(f"grep {jobID} /var/log/slurm/slurmctld.log [Enter]")
 
     node_list = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
-    print(f"Check logs in the specific nodes ({','.join(node_list)}):")
+    print(f"\nCheck logs in the specific nodes ({node_list}):")
     for node in node_list:
         print(f"Option 1: from a login node: ssh {node} > sudo su -")
         print(f"Option 2: go back to hn01, sudo, then: scyld-nodectl -i {node} ssh")
@@ -877,12 +877,12 @@ def main():
     uid = input("uid: ")
     checkSystemLogs(jobID, df, job_col, uid)
 
-    if input("Do you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
+    if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
         sys.exit(0)
 
     # Check other submitted jobs on the same date
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
-    selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
+    selection = input(f"\nShow jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user"]:
         getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xls")
     elif selection in ["a", "all"]:
