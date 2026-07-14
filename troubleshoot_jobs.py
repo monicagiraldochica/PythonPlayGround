@@ -1,4 +1,10 @@
-#!/usr/bin/env python3.10
+#!/usr/bin/env python3
+
+# Check python version
+if not installib.checkPythonVers(3, 12, 10, True)[0]:
+    print("ERROR: This script requires Python 3.12.10\n")
+    sys.exit(1)
+
 import subprocess
 import pandas as pd
 import re
@@ -776,9 +782,9 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
 def main():
     # Check python version
-    if not installib.checkPythonVers(3, 12, 10, True)[0]:
-        print("ERROR: This script requires Python 3.12.10\n")
-        sys.exit(1)
+    #if not installib.checkPythonVers(3, 12, 10, True)[0]:
+    #    print("ERROR: This script requires Python 3.12.10\n")
+    #    sys.exit(1)
 
     # Make sure I'm NOT root (sacct and scontrol wont work as root)
     if getpass.getuser()=="root":
