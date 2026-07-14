@@ -888,7 +888,10 @@ def main():
     elif selection in ["a", "all"]:
         getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xls")
 
-    #big_df = checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path: str)
+    if input("\nWould you like to investigate the user usage of the cluster the past week? [y/N]: ").lower().strip() in ["y", "yes"]:
+        end_date_str = datetime.now().strftime("%Y-%m-%d")
+        start_date_str = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
+        checkUserUsage(start_date_str, end_date_str, netID, f"/home/{netID}/cluster_usage.xlsx")
 
 if __name__ == "__main__":
     main()
