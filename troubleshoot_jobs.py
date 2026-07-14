@@ -891,7 +891,7 @@ def main():
     if input("\nWould you like to investigate the user usage of the cluster the past week? [y/N]: ").lower().strip() in ["y", "yes"]:
         end_date_str = datetime.now().strftime("%Y-%m-%d")
         start_date_str = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
-        checkUserUsage(start_date_str, end_date_str, netID, f"/home/{netID}/cluster_usage.xlsx")
+        checkUserUsage(start_date_str, end_date_str, netID, f"{outdir}/{netID}_cluster_usage.xlsx")
 
 if __name__ == "__main__":
     main()
