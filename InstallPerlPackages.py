@@ -1,13 +1,18 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3
 __author__ = "Monica Keith"
 __status__ = "Production"
-__purpose__ = "Install Perl packages"
+__purpose__ = "Install a Perl package"
 
+# Check python version
+import installib
 import sys
+if not installib.checkPythonVers(3, 7, True)[0]:
+    print("ERROR: This script requires Python 3.7\n")
+    sys.exit(1)
+
 import os
 import argparse
 import re
-import installib
 
 def check_module(mdl: str) -> int:
     """
@@ -150,11 +155,6 @@ def get_perl_version():
     return installib.runBash(["perl", "-e", "print $^V"]).strip().lstrip("v")
 
 def main():
-    # Check python version
-    if not installib.checkPythonVers(3, 7)[0]:
-        print("ERROR: This script requires Python 3.7 or higher\n")
-        sys.exit(1)
-
     [v_new, v_old, migrate, install, working_dir] = parse_arguments()
 
     # Check perl version

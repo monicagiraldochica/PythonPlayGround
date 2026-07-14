@@ -1,11 +1,15 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3
 __author__ = "Monica Keith"
 __status__ = "Production"
 __purpose__ = "Install modules with make"
 
 import sys
-import argparse
 import installib
+if not installib.checkPythonVers(3, 7, True)[0]:
+    print("ERROR: This script requires Python 3.7\n")
+    sys.exit(1)
+
+import argparse
 import os
 from pathlib import Path
 import shutil
@@ -27,11 +31,6 @@ def parse_arguments():
     return mdl_name, args.mdl_vers, download_in_apps, args.pkg_url, args.compile
 
 def main():
-    # Check python version
-    if not installib.checkPythonVers(3, 7)[0]:
-        print("ERROR: This script requires Python 3.7 or higher\n")
-        sys.exit(1)
-
     # Make sure I'm root in a login node
     input("\nssh into login node [Enter]")
     input("sudo su - [Enter]")

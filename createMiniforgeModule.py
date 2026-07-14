@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
+__status__ = "Production"
+__purpose__ = "Create a module using miniforge"
 
+# Check python version
+import installib
 import sys
+if not installib.checkPythonVers(3, 7, True)[0]:
+    print("ERROR: This script requires Python 3.7\n")
+    sys.exit(1)
+
 import argparse
 import re
 import os
-import installib
 from pathlib import Path
 
 def parse_arguments():
@@ -36,12 +43,6 @@ def downloadedMiniforgeVersions(pkg: str, path:str) -> list[str]:
     return [f"{path}/{name}" for name in names]
 
 def main():
-    # Check python version
-    correct_python, major, minor, micro = installib.checkPythonVers(3, 7)
-    if not correct_python:
-        print("ERROR: This script requires Python 3.7 or higher\n")
-        sys.exit(1)
-
     # Make sure I'm root in a login node, and miniforge is loaded
     input("\nssh into login node [Enter]")
     input("sudo su - [Enter]")

@@ -2,15 +2,19 @@
 __author__ = "Monica Keith"
 __purpose__ = "Install R packages"
 
+import installib
+import sys
+if not installib.checkPythonVers(3, 7, True)[0]:
+    print("ERROR: This script requires Python 3.7\n")
+    sys.exit(1)
+
 import os
 import argparse
 from pathlib import Path
-import sys
 import re
 import pandas as pd
 import csv
 from datetime import datetime
-import installib
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description="Install R packages on the cluster")
@@ -363,11 +367,6 @@ def getRversion():
 		return None
 
 def main():
-	# Check python version
-	if not installib.checkPythonVers(3, 7)[0]:
-		print("ERROR: This script requires Python 3.7 or higher\n")
-		sys.exit(1)
-
 	[v_new, v_old, migrate, pkg_install, git_repo, working_dir, pkg_update, quiet] = parse_arguments()
 
 	# Check R version

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Production"
 
 import requests
 
 def is_downloadable(url):
     """
-        Does the url contain a downloadable resource
-        """
+    Does the url contain a downloadable resource
+    """
     h = requests.head(url, allow_redirects=True)
     header = h.headers
     content_type = header.get('content-type')

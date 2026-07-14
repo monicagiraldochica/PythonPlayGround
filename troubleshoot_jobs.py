@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Production"
+__purpose__ = "Troubleshoot cluster jobs"
 
 # Check python version
 import installib
@@ -781,11 +784,6 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
     return pd.DataFrame
 
 def main():
-    # Check python version
-    #if not installib.checkPythonVers(3, 12, 10, True)[0]:
-    #    print("ERROR: This script requires Python 3.12.10\n")
-    #    sys.exit(1)
-
     # Make sure I'm NOT root (sacct and scontrol wont work as root)
     if getpass.getuser()=="root":
         print("Can't run this script as root")

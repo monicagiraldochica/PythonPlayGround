@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__purpose__ = "Common functions to install modules in the cluster"
+__status__ = "Production"
+__purpose__ = "Common functions for my cluster tools"
 
 import subprocess
 import sys
