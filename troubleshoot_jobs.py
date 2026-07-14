@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Check python version
+import installib
 if not installib.checkPythonVers(3, 12, 10, True)[0]:
     print("ERROR: This script requires Python 3.12.10\n")
     sys.exit(1)
@@ -9,7 +10,6 @@ import subprocess
 import pandas as pd
 import re
 import os
-import installib
 import sys
 import argparse
 import getpass
