@@ -509,15 +509,17 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
 
     node_list = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
     print(f"\nCheck logs in the specific nodes ({node_list}):")
-    for node in node_list:
-        print(f"Option 1: from a login node: ssh {node} > sudo su -")
-        print(f"Option 2: go back to hn01, sudo, then: scyld-nodectl -i {node} ssh")
+    for node in node_list.split(","):
+        print(f"Log into {node}:")
+        print(f"- Option 1: from a login node: ssh {node} > sudo su -")
+        print(f"- Option 2: go back to hn01, sudo, then: scyld-nodectl -i {node} ssh")
         input(f"grep {jobID} /var/log/messages [Enter]")
         searches = ["kill", "oom", "error"]
         if node.startswith("gn"):
             searches+=["nvidia"]
         for search in searches:            
             input(f"grep -Ei '{search}.*(job_'{jobID}'|UID='{uid}'|uid='{uid}')' /var/log/messages [Enter]")
+        print("\n")
 
 # mem_str looks like "118.85G"
 def to_gigabytes(mem_str: str):
@@ -880,8 +882,8 @@ def main():
         interactiveTests(stopped, df, job_col, jobID)
         
     # Check additional logs
-    print(f"Do NOT run as root: id {netID} [Enter]")
-    uid = input("uid: ")
+    print(f"\nDo NOT run as root: id {netID} [Enter]")
+    uid = input("uid (number): ")
     checkSystemLogs(jobID, df, job_col, uid)
 
     if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
@@ -891,9 +893,10 @@ def main():
     submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
     selection = input(f"\nShow jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
     if selection in ["u", "user"]:
-        getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xls")
+        getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xlsx")
     elif selection in ["a", "all"]:
-        getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xls")
+        getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xlsx")
+    input(f"scp <YOUR_UID>@login-hpc.rcc.mcw.edu:{outdir}/tmp.xlsx <DESTINATION> [Enter]")
 
     if input("\nWould you like to investigate the user usage of the cluster the past week? [y/N]: ").lower().strip() in ["y", "yes"]:
         end_date_str = datetime.now().strftime("%Y-%m-%d")
