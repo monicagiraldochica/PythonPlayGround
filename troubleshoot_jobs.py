@@ -316,7 +316,7 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             print("sacct with netID")
             df = get_jobInfo_sacct(job, netID)
         elif stopped:
-            print("sacct no netID")
+            print(f"sacct no netID: {job}")
             df = get_jobInfo_sacct(job)
         else:
             print("scontrol")
