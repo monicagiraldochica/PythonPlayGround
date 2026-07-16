@@ -171,7 +171,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Edit Fields to match scontrol df
     df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime", "Start": "StartTime", "User": "UserId", "State": "JobState"})
-    print(f"df3:\n{df}")
     
     # Merge Req resources lines into one
     new_vals = []
@@ -186,7 +185,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row = { "Field": "ReqTRES", titles[0]:new_vals[0], titles[1]:new_vals[1], titles[2]:new_vals[2] }
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
-    print(f"df4:\n{df}")
 
     # Create new line with the CPU usage
     # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
@@ -208,7 +206,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Remove the T from the dates
     job_cols = df.columns.drop('Field')
-    fields_to_fix = [ "Submit", "Start", "End" ]
+    fields_to_fix = [ "SubmitTime", "StartTime", "EndTime" ]
     df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
     print(f"df6:\n{df}")
 
