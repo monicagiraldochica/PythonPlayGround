@@ -307,46 +307,47 @@ def printJobStats(jobID: str, df: pd.DataFrame):
 
 def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
+    print(jobs)
 
     # Calculate the joint DF with information from all jobs submitted on that date
-    all_dfs = []
-    for job in jobs:
-        if stopped and netID:
-            df = get_jobInfo_sacct(job, netID)
-        elif stopped:
-            df = get_jobInfo_sacct(job)
-        else:
-            df = get_jobInfo_scontrol(job)
+    #all_dfs = []
+    #for job in jobs:
+    #    if stopped and netID:
+    #        df = get_jobInfo_sacct(job, netID)
+    #    elif stopped:
+    #        df = get_jobInfo_sacct(job)
+    #    else:
+    #        df = get_jobInfo_scontrol(job)
 
-        if not df.empty:
-            clean_df = simplify_dataFrame(df)
-            clean_df = clean_df.rename(columns={"Value": str(job)})
-            all_dfs.append(clean_df)
+    #    if not df.empty:
+    #        clean_df = simplify_dataFrame(df)
+    #        clean_df = clean_df.rename(columns={"Value": str(job)})
+    #        all_dfs.append(clean_df)
 
-    if all_dfs:
-        joint_df = pd.concat([df.set_index("Field") for df in all_dfs], axis=1).reset_index()
+    #if all_dfs:
+    #    joint_df = pd.concat([df.set_index("Field") for df in all_dfs], axis=1).reset_index()
 
         # Save DF
-        if save and output_file:
-            with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
-                joint_df.to_excel(writer, sheet_name=submit_date)
+    #    if save and output_file:
+    #        with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
+    #            joint_df.to_excel(writer, sheet_name=submit_date)
             
-            strg = f"Information on all jobs that ran on {submit_date}"
-            if netID:
-                strg+=f" by {netID}"
-            strg+=" was saved on: "+os.path.abspath(output_file)
-            print(strg)
+    #        strg = f"Information on all jobs that ran on {submit_date}"
+    #        if netID:
+    #            strg+=f" by {netID}"
+    #        strg+=" was saved on: "+os.path.abspath(output_file)
+    #        print(strg)
 
-        return joint_df
+    #    return joint_df
 
-    else:
-        strg = f"No jobs ran on {submit_date}"
-        if netID:
-            strg+=f" by {netID}"
-        strg+=". No output generated."
-        print(strg)
+    #else:
+    #    strg = f"No jobs ran on {submit_date}"
+    #    if netID:
+    #        strg+=f" by {netID}"
+    #    strg+=". No output generated."
+    #    print(strg)
 
-        return pd.DataFrame
+    #    return pd.DataFrame
 
 def isValidDate(date: str):
     try:
