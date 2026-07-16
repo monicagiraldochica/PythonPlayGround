@@ -243,6 +243,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
     maxrss_row = df.loc[df["Field"] == "MaxRSS"].iloc[0]
     MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
+    print(f"MaxRSS: {MaxRSS}")
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
