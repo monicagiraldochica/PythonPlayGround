@@ -326,8 +326,11 @@ def printJobStats(jobID: str, df: pd.DataFrame):
 
     return out
 
-def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str=""):
-    jobs = getJobID(submit_date) if not netID else getJobID(submit_date, user=netID)
+def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+    if partition:
+        jobs = getJobID(submit_date, partition=partition, start_time=start_time, end_time=end_time) if not netID else getJobID(submit_date, user=netID, partition=partition, start_time=start_time, end_time=end_time)
+    else:    
+        jobs = getJobID(submit_date, start_time=start_time, end_time=end_time) if not netID else getJobID(submit_date, user=netID, start_time=start_time, end_time=end_time)
     jobs = [job for job in jobs if job.isdigit() ]
 
     # Calculate the joint DF with information from all jobs submitted on that date
