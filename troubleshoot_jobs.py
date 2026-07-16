@@ -202,13 +202,11 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row["Field"] = "CPUpct"
     new_row[titles[0]] = CPUpct
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    print(f"df5:\n{df}")
 
     # Remove the T from the dates
     job_cols = df.columns.drop('Field')
     fields_to_fix = [ "SubmitTime", "StartTime", "EndTime" ]
     df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
-    print(f"df6:\n{df}")
 
     # Add comment to exit codes
     fields_to_fix = [ "ExitCode", "DerivedExitCode" ]
@@ -223,7 +221,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     }
     for code,desc in dic_exitCodes.items():
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
-    print(f"df7:\n{df}")
 
     # Update StdOut
     StdOut = df.loc[df["Field"] == "StdOut", titles[0]].iloc[0]
@@ -232,7 +229,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         if netID:
             new_out = new_out.replace("%u", netID)
         df.loc[df["Field"] == "StdOut", titles[0]] = new_out
-    print(f"df8:\n{df}")
 
     # Update StdErr
     StdErr = df.loc[df["Field"] == "StdErr", titles[0]].iloc[0]
@@ -245,7 +241,8 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
-    MaxRSS = df.loc[df["Field"] == "MaxRSS", "batch"].iloc[0]
+    maxrss_row = df.loc[df["Field"] == "MaxRSS"].iloc[0]
+    MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
