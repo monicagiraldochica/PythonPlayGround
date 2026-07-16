@@ -128,6 +128,16 @@ def editRunTime(walltime: str, runtime: str) -> str:
     except Exception:
         return runtime
 
+def uniqueTitles(titles_orig):
+    new_titles = []
+    counts = {}
+
+    for title in titles_orig:
+        counts[title] = counts.get(title, 0)+1
+        new_titles.append(title+"+"*(counts[title]-1))
+    
+    return new_titles
+
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str, netID: str=""):
     format_str = ",".join(SACCT_FIELDS)
@@ -139,27 +149,26 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     except subprocess.CalledProcessError:
         # Job not found or command failed
         return pd.DataFrame()
-    print(f"result:\n{result}")
     
     output = result.stdout.strip().splitlines()
     if len(output)<3:
         return pd.DataFrame()
-    print(f"output:\n{output}")
     
     first_line = output[0].split("|")
     if "/" in first_line[1]:
         first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
     print(f"first_line:\n{first_line}")
+
     second_line = output[1].split("|")
-    print(f"second_line:\n{second_line}")
     third_line = output[2].split("|")
-    print(f"third_line:\n{third_line}")
-    titles = [first_line[1], second_line[1], third_line[1]]
+
+    titles = uniqueTitles([first_line[1], second_line[1], third_line[1]])
     print(f"titles:\n{titles}")
     if len(first_line)<len(SACCT_FIELDS) or len(second_line)<len(SACCT_FIELDS) or len(third_line)<len(SACCT_FIELDS):
         return pd.DataFrame()
+    
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
-    print(f"df:\n{df}")
+    print(f"df1:\n{df}")
 
     # Remove JobName line since it's already titles[0]
     df = df[df["Field"]!="JobName"]
