@@ -157,22 +157,17 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     first_line = output[0].split("|")
     if "/" in first_line[1]:
         first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
-    print(f"first_line:\n{first_line}")
-
     second_line = output[1].split("|")
     third_line = output[2].split("|")
 
     titles = uniqueTitles([first_line[1], second_line[1], third_line[1]])
-    print(f"titles:\n{titles}")
     if len(first_line)<len(SACCT_FIELDS) or len(second_line)<len(SACCT_FIELDS) or len(third_line)<len(SACCT_FIELDS):
         return pd.DataFrame()
     
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
-    print(f"df1:\n{df}")
 
     # Remove JobName line since it's already titles[0]
     df = df[df["Field"]!="JobName"]
-    print(f"df2:\n{df}")
 
     # Edit Fields to match scontrol df
     df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime", "Start": "StartTime", "User": "UserId", "State": "JobState"})
@@ -184,7 +179,10 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
         mem = df.query("Field=='ReqMem'")[titles[i]].iloc[0]
         nodes = len(df.query("Field=='NodeList'")[titles[i]].iloc[0].split(","))
-        new_vals+=[f"cpu={cpus},mem={mem},node={nodes}"]
+        if cpus and mem and nodes:
+            new_vals+=[f"cpu={cpus},mem={mem},node={nodes}"]
+        else:
+            new_vals+=[""]
     new_row = { "Field": "ReqTRES", titles[0]:new_vals[0], titles[1]:new_vals[1], titles[2]:new_vals[2] }
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
