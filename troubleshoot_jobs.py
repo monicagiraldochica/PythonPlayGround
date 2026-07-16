@@ -287,7 +287,7 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
-def getJobID(submit_date: str, user: str=""):
+def getJobID(submit_date: str, user: str="", partition: str=""):
     start = f"{submit_date}T00:00:00"
     end = f"{submit_date}T23:59:59"
 
@@ -296,10 +296,11 @@ def getJobID(submit_date: str, user: str=""):
     array_cmd = ["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end]
     if user:
         array_cmd+=["-u", user]
-        #returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-u", user])
     else:
         array_cmd+=["-a"]
-        #returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-a"])
+    if partition:
+        array_cmd+=["-r", partition]
+
     returncode, stderr, stdout = installib.runBash(array_cmd)
     if returncode!=0:
         print(f"ERROR: could not get jobID: {stderr}")
