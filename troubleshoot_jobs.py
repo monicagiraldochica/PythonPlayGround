@@ -287,7 +287,7 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
-def getJobID(submit_date: str, user: str="", partition: str=""):
+def getJobID(submit_date: str, *, user: str="", partition: str=""):
     start = f"{submit_date}T00:00:00"
     end = f"{submit_date}T23:59:59"
 
@@ -327,7 +327,7 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     return out
 
 def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str=""):
-    jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
+    jobs = getJobID(submit_date) if not netID else getJobID(submit_date, user=netID)
     jobs = [job for job in jobs if job.isdigit() ]
 
     # Calculate the joint DF with information from all jobs submitted on that date
@@ -816,7 +816,7 @@ def main():
     # Get arguments
     jobID, netID, submitDate, stopped, queued, outdir = parse_arguments()
     if not jobID:
-        jobs = getJobID(submitDate, netID)
+        jobs = getJobID(submitDate, user=netID)
 
         if not jobs:
             print("ERROR: missing jobID")
