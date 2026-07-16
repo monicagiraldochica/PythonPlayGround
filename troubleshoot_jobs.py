@@ -314,13 +314,13 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
     for job in jobs:
         if stopped and netID:
             print("sacct with netID")
-            #df = get_jobInfo_sacct(job, netID)
+            df = get_jobInfo_sacct(job, netID)
         elif stopped:
             print("sacct no netID")
-            #df = get_jobInfo_sacct(job)
+            df = get_jobInfo_sacct(job)
         else:
             print("scontrol")
-            #df = get_jobInfo_scontrol(job)
+            df = get_jobInfo_scontrol(job)
 
     #    if not df.empty:
     #        clean_df = simplify_dataFrame(df)
