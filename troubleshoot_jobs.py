@@ -256,7 +256,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         df.loc[df["Field"] == "RunTime", titles[0]] = RunTime
 
     df = df.reset_index(drop=True)
-    print(f"df12:\n{df}")
     return df
 
 def parse_arguments():
