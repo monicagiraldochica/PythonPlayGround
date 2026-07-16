@@ -293,10 +293,14 @@ def getJobID(submit_date: str, user: str=""):
 
     # -X: exclude job steps and show only the top‑level job records.
     # -n: remove heather.
+    array_cmd = ["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end]
     if user:
-        returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-u", user])
+        array_cmd+=["-u", user]
+        #returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-u", user])
     else:
-        returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-a"])
+        array_cmd+=["-a"]
+        #returncode, stderr, stdout = installib.runBash(["sacct", "-X", "-n", "-o", "JobID", "-S", start, "-E", end, "-a"])
+    returncode, stderr, stdout = installib.runBash(array_cmd)
     if returncode!=0:
         print(f"ERROR: could not get jobID: {stderr}")
         return None
