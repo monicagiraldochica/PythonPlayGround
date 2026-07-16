@@ -318,7 +318,6 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
             df = get_jobInfo_sacct(job)
         else:
             df = get_jobInfo_scontrol(job)
-    print(df)
 
     #    if not df.empty:
     #        clean_df = simplify_dataFrame(df)
