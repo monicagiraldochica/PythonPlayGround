@@ -287,9 +287,9 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
-def getJobID(submit_date: str, *, user: str="", partition: str=""):
-    start = f"{submit_date}T00:00:00"
-    end = f"{submit_date}T23:59:59"
+def getJobID(submit_date: str, *, user: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+    start = f"{submit_date}T{start_time}"
+    end = f"{submit_date}T{end_time}"
 
     # -X: exclude job steps and show only the top‑level job records.
     # -n: remove heather.
