@@ -139,26 +139,35 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     except subprocess.CalledProcessError:
         # Job not found or command failed
         return pd.DataFrame()
+    print(f"result:\n{result}")
     
     output = result.stdout.strip().splitlines()
     if len(output)<3:
         return pd.DataFrame()
+    print(f"output:\n{output}")
     
     first_line = output[0].split("|")
     if "/" in first_line[1]:
         first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
+    print(f"first_line:\n{first_line}")
     second_line = output[1].split("|")
+    print(f"second_line:\n{second_line}")
     third_line = output[2].split("|")
+    print(f"third_line:\n{third_line}")
     titles = [first_line[1], second_line[1], third_line[1]]
+    print(f"titles:\n{titles}")
     if len(first_line)<len(SACCT_FIELDS) or len(second_line)<len(SACCT_FIELDS) or len(third_line)<len(SACCT_FIELDS):
         return pd.DataFrame()
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
+    print(f"df:\n{df}")
 
     # Remove JobName line since it's already titles[0]
     df = df[df["Field"]!="JobName"]
+    print(f"df2:\n{df}")
 
     # Edit Fields to match scontrol df
     df["Field"] = df["Field"].replace({"Submit": "SubmitTime", "End": "EndTime", "Elapsed": "RunTime", "Start": "StartTime", "User": "UserId", "State": "JobState"})
+    print(f"df3:\n{df}")
     
     # Merge Req resources lines into one
     new_vals = []
@@ -170,6 +179,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row = { "Field": "ReqTRES", titles[0]:new_vals[0], titles[1]:new_vals[1], titles[2]:new_vals[2] }
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
+    print(f"df4:\n{df}")
 
     # Create new line with the CPU usage
     # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
@@ -187,11 +197,13 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     new_row["Field"] = "CPUpct"
     new_row[titles[0]] = CPUpct
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    print(f"df5:\n{df}")
 
     # Remove the T from the dates
     job_cols = df.columns.drop('Field')
     fields_to_fix = [ "Submit", "Start", "End" ]
     df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
+    print(f"df6:\n{df}")
 
     # Add comment to exit codes
     fields_to_fix = [ "ExitCode", "DerivedExitCode" ]
@@ -206,6 +218,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     }
     for code,desc in dic_exitCodes.items():
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
+    print(f"df7:\n{df}")
 
     # Update StdOut
     StdOut = df.loc[df["Field"] == "StdOut", titles[0]].iloc[0]
@@ -214,6 +227,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         if netID:
             new_out = new_out.replace("%u", netID)
         df.loc[df["Field"] == "StdOut", titles[0]] = new_out
+    print(f"df8:\n{df}")
 
     # Update StdErr
     StdErr = df.loc[df["Field"] == "StdErr", titles[0]].iloc[0]
@@ -222,6 +236,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         if netID:
             new_err = new_err.replace("%u", netID)
         df.loc[df["Field"] == "StdErr", titles[0]] = new_err
+    print(f"df9:\n{df}")
 
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
@@ -231,6 +246,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
+    print(f"df10:\n{df}")
 
     # Update RunTime
     RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
@@ -238,8 +254,10 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
         RunTime = editRunTime(TimeLimit, RunTime)
         df.loc[df["Field"] == "RunTime", titles[0]] = RunTime
+    print(f"df11:\n{df}")
 
     df = df.reset_index(drop=True)
+    print(f"df12:\n{df}")
     return df
 
 def parse_arguments():
