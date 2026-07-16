@@ -237,19 +237,16 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         if netID:
             new_err = new_err.replace("%u", netID)
         df.loc[df["Field"] == "StdErr", titles[0]] = new_err
-    print(f"df9:\n{df}")
 
     # Update MaxRSS
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
     maxrss_row = df.loc[df["Field"] == "MaxRSS"].iloc[0]
     MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
-    print(f"MaxRSS: {MaxRSS}")
     # .strip in this case will be checking it he string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
         df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
-    print(f"df10:\n{df}")
 
     # Update RunTime
     RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
@@ -257,7 +254,6 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
         RunTime = editRunTime(TimeLimit, RunTime)
         df.loc[df["Field"] == "RunTime", titles[0]] = RunTime
-    print(f"df11:\n{df}")
 
     df = df.reset_index(drop=True)
     print(f"df12:\n{df}")
