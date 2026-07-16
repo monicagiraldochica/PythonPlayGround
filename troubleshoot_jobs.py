@@ -308,17 +308,17 @@ def printJobStats(jobID: str, df: pd.DataFrame):
 def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str=""):
     jobs = getJobID(submit_date) if not netID else getJobID(submit_date, netID)
     jobs = [job for job in jobs if job.isdigit() ]
-    print(jobs)
 
     # Calculate the joint DF with information from all jobs submitted on that date
-    #all_dfs = []
-    #for job in jobs:
-    #    if stopped and netID:
-    #        df = get_jobInfo_sacct(job, netID)
-    #    elif stopped:
-    #        df = get_jobInfo_sacct(job)
-    #    else:
-    #        df = get_jobInfo_scontrol(job)
+    all_dfs = []
+    for job in jobs:
+        if stopped and netID:
+            df = get_jobInfo_sacct(job, netID)
+        elif stopped:
+            df = get_jobInfo_sacct(job)
+        else:
+            df = get_jobInfo_scontrol(job)
+    print(df)
 
     #    if not df.empty:
     #        clean_df = simplify_dataFrame(df)
