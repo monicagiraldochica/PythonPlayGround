@@ -388,7 +388,7 @@ def getQueuePosition(jobID: str):
         p2 = subprocess.Popen(["awk", "{print NR-1 $0}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p1.stdout.close()
 
-        p3 = subprocess.Popen(["less", "+g", "-p", jobID], stdin=p2.stdout)
+        p3 = subprocess.Popen(["less", "+g", "-p", jobID], stdin=p2.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p2.stdout.close()
 
         return p3.communicate()
