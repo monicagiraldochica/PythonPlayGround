@@ -409,7 +409,7 @@ def getSqueueInfo(netID: str, jobID: str):
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
             return "", stderr
-        return stdout.replace("\n", ""), stderr
+        return stdout, stderr
 
     except Exception as e:
         return "", f"ERROR: squeue failed: {e}"
