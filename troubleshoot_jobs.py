@@ -409,7 +409,7 @@ def getSqueueInfo(netID: str, jobID: str):
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
             return "", stderr
-        return stdout, stderr
+        return stdout.replace("\n", ""), stderr
 
     except Exception as e:
         return "", f"ERROR: squeue failed: {e}"
@@ -435,7 +435,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
-        squeue_info = getSqueueInfo(netID, jobID)
+        squeue_info = getSqueueInfo(netID, jobID).split("|")
         print(squeue_info)
         sys.exit(0)
 
