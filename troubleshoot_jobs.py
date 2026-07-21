@@ -439,12 +439,12 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         stdout, stderr = getSqueueInfo(netID, jobID)
         if stdout=="":
             print(stderr)
-            return pd.DataFrame
+            return pd.DataFrame, stopped
         
         stdout = stdout.split("|")
         if len(stdout)!=8:
             print(f"ERROR: cant parse squeue output: {stdout}")
-            return pd.DataFrame
+            return pd.DataFrame, stopped
         
         print(stdout)
         partition = stdout[1]
@@ -454,7 +454,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
 
         if status=="RUNNING":
             print("Good news! Job is now running!")
-            return get_jobInfo_scontrol(jobID)
+            return get_jobInfo_scontrol(jobID), False
         
         if reason in ["Priority", "Resources"]:
             code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
