@@ -903,78 +903,79 @@ def main():
             print("ERROR: could not get job info")
         sys.exit(1)
 
-    # Print job statistics
-    simple_df = printJobStats(jobID, df)
-    if stopped:
-        try:
-            print("\n")
-
-            MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
-            pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
-            if pct>=100:
-                print(f"Memory efficiency is {pct}%. The job hit the memory limit.")
-                #python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory
-            elif pct>70:
-                print(f"Memory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
-            elif pct<30:
-                print(f"Memory efficiency is {pct}%. The user is over-requesting memory.")
-
-            if pct<100:
-                RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
-                pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
-                if pct>80:
-                    print(f"The job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
-                elif pct<20:
-                    print(f"The job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
-
-                CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
-                AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
-                if CPUpct<5:
-                    print(f"This job is single threaded but is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
-                elif CPUpct<20:
-                    print(f"There's a high chance that the job is single threaded, but the user is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-                elif CPUpct<50:
-                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs than those requested ({AllocCPUS}).")
-            
-            #If this is far below 100%, the job is not using all allocated cores.
-        except:
-            pass
-    input("[Enter]")
-    if input("Do you want to continue investigating? [Y/n]: ").strip().lower() in ["n", "no"]:
-        sys.exit(0)
-
-    # Check if the job ran in OOD
-    job_col = df.columns.values.tolist()[1]
-    if job_col.startswith("OOD"):
-        checkOODlogs(job_col, df, netID)
-
-    # If not, check the normal logs
     else:
-        if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
-            print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
-                  GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
-                  A CPU is always needed to run a code that uses a GPU.""")
-            input("[Enter]")
+        # Print job statistics
+        simple_df = printJobStats(jobID, df)
+        if stopped:
+            try:
+                print("\n")
 
-        checkLogs(df, job_col)
+                MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
+                pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
+                if pct>=100:
+                    print(f"Memory efficiency is {pct}%. The job hit the memory limit.")
+                    #python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory
+                elif pct>70:
+                    print(f"Memory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
+                elif pct<30:
+                    print(f"Memory efficiency is {pct}%. The user is over-requesting memory.")
 
-    if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
-        sys.exit(0)
+                if pct<100:
+                    RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
+                    pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
+                    if pct>80:
+                        print(f"The job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
+                    elif pct<20:
+                        print(f"The job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
 
-    # Check if home directory is full
-    checkHomeDir(netID)
+                    CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
+                    AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
+                    if CPUpct<5:
+                        print(f"This job is single threaded but is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+                    elif CPUpct<20:
+                        print(f"There's a high chance that the job is single threaded, but the user is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+                    elif CPUpct<50:
+                        print(f"There's a high chance the job is multi threaded, but it's using less CPUs than those requested ({AllocCPUS}).")
+                
+                #If this is far below 100%, the job is not using all allocated cores.
+            except:
+                pass
+        input("[Enter]")
+        if input("Do you want to continue investigating? [Y/n]: ").strip().lower() in ["n", "no"]:
+            sys.exit(0)
 
-    # Run interactive tests
-    if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
-        interactiveTests(stopped, df, job_col, jobID)
-        
-    # Check additional logs
-    print(f"\nDo NOT run as root: id {netID} [Enter]")
-    uid = input("uid (number): ")
-    checkSystemLogs(jobID, df, job_col, uid)
+        # Check if the job ran in OOD
+        job_col = df.columns.values.tolist()[1]
+        if job_col.startswith("OOD"):
+            checkOODlogs(job_col, df, netID)
 
-    if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
-        sys.exit(0)
+        # If not, check the normal logs
+        else:
+            if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+                print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
+                    GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
+                    A CPU is always needed to run a code that uses a GPU.""")
+                input("[Enter]")
+
+            checkLogs(df, job_col)
+
+        if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
+            sys.exit(0)
+
+        # Check if home directory is full
+        checkHomeDir(netID)
+
+        # Run interactive tests
+        if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
+            interactiveTests(stopped, df, job_col, jobID)
+            
+        # Check additional logs
+        print(f"\nDo NOT run as root: id {netID} [Enter]")
+        uid = input("uid (number): ")
+        checkSystemLogs(jobID, df, job_col, uid)
+
+        if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
+            sys.exit(0)
 
     # Check other submitted jobs on the same date
     submit_info = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")
