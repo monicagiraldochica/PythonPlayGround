@@ -446,24 +446,24 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print(f"ERROR: cant parse squeue output: {stdout}")
             return pd.DataFrame, stopped
         
-        print(stdout)
-        partition = stdout[1]
-        status = stdout[4]
-        reason = stdout[7].replace("(", "").replace(")", "")
-        print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
+        print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
+        #partition = stdout[1]
+        #status = stdout[4]
+        #reason = stdout[7].replace("(", "").replace(")", "")
+        #print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
 
-        if status=="RUNNING":
-            print("Good news! Job is now running!")
-            return get_jobInfo_scontrol(jobID), False
+        #if status=="RUNNING":
+            #print("Good news! Job is now running!")
+            #return get_jobInfo_scontrol(jobID), False
         
-        if reason in ["Priority", "Resources"]:
-            code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
-            if code!=0:
-                print(f"ERROR: Could not run sprio on the job: {stderr}")
-            else:
-                stdout = stdout.split("|")
-                print(stdout)
-                print(len(stdout))
+        #if reason in ["Priority", "Resources"]:
+            #code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+            #if code!=0:
+                #print(f"ERROR: Could not run sprio on the job: {stderr}")
+            #else:
+                #stdout = stdout.split("|")
+                #print(stdout)
+                #print(len(stdout))
                 # Get resources (pos 8)
 
             #stdout, stderr = getQueuePosition(jobID) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
