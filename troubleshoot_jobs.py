@@ -391,10 +391,13 @@ def getQueuePosition(jobID: str):
         p3 = subprocess.Popen(["less", "+g", "-p", jobID], stdin=p2.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p2.stdout.close()
 
-        return p3.communicate()
+        stdout, stderr = p3.communicate()
+        if p3.returncode!=0:
+            return "", stderr
+        return stdout, stderr
 
     except Exception as e:
-        return f"ERROR: sprio failed: {e}", ""
+        return "", f"ERROR: sprio failed: {e}"
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
@@ -403,10 +406,13 @@ def getSqueueInfo(netID: str, jobID: str):
         p2 = subprocess.Popen(["grep", jobID], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p1.stdout.close()
 
-        return p2.communicate()
+        stdout, stderr = p2.communicate()
+        if p2.returncode!=0:
+            return "", stderr
+        return stdout, stderr
 
     except Exception as e:
-        return f"ERROR: squeue failed: {e}", ""
+        return "", f"ERROR: squeue failed: {e}"
 
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
     # The job finished running or failed
@@ -434,7 +440,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         sys.exit(0)
 
         #getJobsFromDate(submit_date, True, netID=netID, save=True, output_file=output)
-        #stderr, stdout = getQueuePosition(jobID)
+        #stdout, stderr = getQueuePosition(jobID)
         #input(f"Job is in position {queue_pos} in queue [Enter]")
         #input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
         #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
