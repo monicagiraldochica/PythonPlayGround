@@ -287,7 +287,7 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
-def getJobID(submit_date: str, *, user: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+def getJobsID(submit_date: str, *, user: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
     start = f"{submit_date}T{start_time}"
     end = f"{submit_date}T{end_time}"
 
@@ -327,10 +327,11 @@ def printJobStats(jobID: str, df: pd.DataFrame):
     return out
 
 def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+    print(f"Getting jobs submitted on {submit_date}, from {start_time} to {end_time}.")
     if partition:
-        jobs = getJobID(submit_date, partition=partition, start_time=start_time, end_time=end_time) if not netID else getJobID(submit_date, user=netID, partition=partition, start_time=start_time, end_time=end_time)
+        jobs = getJobsID(submit_date, partition=partition, start_time=start_time, end_time=end_time) if not netID else getJobsID(submit_date, user=netID, partition=partition, start_time=start_time, end_time=end_time)
     else:    
-        jobs = getJobID(submit_date, start_time=start_time, end_time=end_time) if not netID else getJobID(submit_date, user=netID, start_time=start_time, end_time=end_time)
+        jobs = getJobsID(submit_date, start_time=start_time, end_time=end_time) if not netID else getJobsID(submit_date, user=netID, start_time=start_time, end_time=end_time)
     jobs = [job for job in jobs if job.isdigit() ]
 
     # Calculate the joint DF with information from all jobs submitted on that date
@@ -819,7 +820,7 @@ def main():
     # Get arguments
     jobID, netID, submitDate, stopped, queued, outdir = parse_arguments()
     if not jobID:
-        jobs = getJobID(submitDate, user=netID)
+        jobs = getJobsID(submitDate, user=netID)
 
         if not jobs:
             print("ERROR: missing jobID")
@@ -881,12 +882,6 @@ def main():
     if input("Do you want to continue investigating? [Y/n]: ").strip().lower() in ["n", "no"]:
         sys.exit(0)
 
-    if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
-        print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
-              GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
-              A CPU is always needed to run a code that uses a GPU.""")
-        input("[Enter]")
-
     # Check if the job ran in OOD
     job_col = df.columns.values.tolist()[1]
     if job_col.startswith("OOD"):
@@ -894,6 +889,12 @@ def main():
 
     # If not, check the normal logs
     else:
+        if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+            print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
+                  GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
+                  A CPU is always needed to run a code that uses a GPU.""")
+            input("[Enter]")
+
         checkLogs(df, job_col)
 
     if input("\nDid you solve the issue? [y/N]: ").lower().strip() in ["y", "yes"]:
@@ -915,15 +916,65 @@ def main():
         sys.exit(0)
 
     # Check other submitted jobs on the same date
-    submit_date = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")[0]
-    selection = input(f"\nShow jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
-    if selection in ["u", "user"]:
-        getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xlsx")
-    elif selection in ["a", "all"]:
-        getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xlsx")
-    input(f"scp <YOUR_UID>@login-hpc.rcc.mcw.edu:{outdir}/tmp.xlsx <DESTINATION> [Enter]")
+    submit_info = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")
+    submit_date = submit_info[0]
+    submit_time = submit_info[1]
+    print(f"\nthis job was submitted on {submit_date} {submit_time}")
+    selection = input(f"Show jobs on {submit_date}? [u=user, a=all, n=none] (default=n): ").strip().lower()
+    if selection in ["u", "user", "a", "all"]:
+        sub_select = input(f"""What jobs do you want to see? 
+                           Select one:
+                           a: Get all jobs submitted on {submit_date}
+                           t: Get only jobs submitted around {submit_time}
+                           (default=t)""")
+        
+        if sub_select=="a":
+            if selection in ["u", "user"]:
+                getJobsFromDate(submit_date, stopped, netID=netID, save=True, output_file=f"{outdir}/tmp.xlsx")
+            elif selection in ["a", "all"]:
+                getJobsFromDate(submit_date, stopped, save=True, output_file=f"{outdir}/tmp.xlsx")
 
-    if input("\nWould you like to investigate the user usage of the cluster the past week? [y/N]: ").lower().strip() in ["y", "yes"]:
+        else:
+            dt = datetime.strptime(f"{submit_date} {submit_time}", "%Y-%m-%d %H:%M:%S")
+            before_dt = dt-timedelta(hours=3)
+            after_dt = dt+timedelta(hours=3)
+            
+            info = []
+            # If the 6 hour range stays in the same day, just print all jobs in those hours
+            if before_dt.date()==dt.date() and after_dt.date()==dt.date():
+                start_time = before_dt.strftime("%H:%M:%S")
+                end_time = after_dt.strftime("%H:%M:%S")
+                info+=[submit_date, start_time, end_time]
+            # If the 6 hour range leaks to the day before
+            # Print first from before_dt.time the previous day to a second before midnight
+            # And then from midnight to after_dt.time on the submission date
+            elif before_dt.date()<dt.date():
+                before_date = before_dt.date().strftime("%Y-%m-%d")
+                start_time = before_dt.strftime("%H:%M:%S")
+                into+=[before_date, start_time, "23:59:59"]
+                end_time = after_dt.strftime("%H:%M:%S")
+                info+=[submit_date, "00:00:00", end_time]
+            # If the 6 hour range leaks to the day after
+            # print first from before_dt.time to a second before midnight on the submission date
+            # And then from midnight to after_dt.time the next day
+            else:
+                start_time = before_dt.strftime("%H:%M:%S")
+                info+=[submit_date, start_time, "23:59:59"]
+                after_date = after_dt.date().strftime("%Y-%m-%d")
+                end_time = after_dt.strftime("%H:%M:%S")
+                info+=[after_date, "00:00:00", end_time]
+
+            i = 0
+            for submit_info in info:
+                if selection in ["u", "user"]:
+                    getJobsFromDate(submit_info[0], stopped, netID=netID, save=True, output_file=f"{outdir}/tmp_{i}.xlsx", start_time=submit_info[1], end_time=submit_info[2])
+                elif selection in ["a", "all"]:
+                    getJobsFromDate(submit_info[0], stopped, save=True, output_file=f"{outdir}/tmp.xlsx", start_time=submit_info[1], end_time=submit_info[2])
+                i+=1
+
+        input(f"scp <YOUR_UID>@login-hpc.rcc.mcw.edu:{outdir}/tmp.xlsx <DESTINATION> [Enter]")
+
+    if input("\nWould you like to investigate the user usage of the cluster during the past week? [y/N]: ").lower().strip() in ["y", "yes"]:
         end_date_str = datetime.now().strftime("%Y-%m-%d")
         start_date_str = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
         checkUserUsage(start_date_str, end_date_str, netID, f"{outdir}/{netID}_cluster_usage.xlsx")
