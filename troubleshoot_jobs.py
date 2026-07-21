@@ -449,21 +449,36 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         print(stdout)
         partition = stdout[1]
         status = stdout[4]
-        reason = stdout[7]
-        print(f"*{partition}*{status}*{reason}")
+        reason = stdout[7].replace("(", "").replace(")", "")
+        print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
 
-        # If it is Priority, get the job priority and print it
-            #input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
+        if status=="RUNNING":
+            print("Good news! Job is now running!")
+            return get_jobInfo_scontrol(jobID)
+        
+        if reason in ["Priority", "Resources"]:
+            code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+            if code!=0:
+                print(f"ERROR: Could not run sprio on the job: {stderr}")
+            else:
+                stdout = stdout.split("|")
+                print(stdout)
+                print(len(stdout))
+                # Get resources (pos 8)
+
+            #stdout, stderr = getQueuePosition(jobID) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
+            #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
-        # Check other reasons
+            # If it's resources:
+            #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
+            #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
 
-        #stdout, stderr = getQueuePosition(jobID)
-        #input(f"Job is in position {queue_pos} in queue [Enter]")
 
-        #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
-        #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
-
+        # Maintenance just need the message explaining why it's not running
+        # Dependency get the dependencies
+        # QOSMaxJobsPerUserLimit explain        
+       
         sys.exit(0)        
 
         df = pd.DataFrame
