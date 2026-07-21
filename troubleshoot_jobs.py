@@ -435,15 +435,22 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
+        # Get information from squeue
         stdout, stderr = getSqueueInfo(netID, jobID)
         if stdout=="":
             print(stderr)
             return pd.DataFrame
+        
         stdout = stdout.split("|")
+        if len(stdout)!=8:
+            print(f"ERROR: cant parse squeue output: {stdout}")
+            return pd.DataFrame
+        
         print(stdout)
-        print(len(stdout))
-        # Get and print status
-        # Get and print reason
+        partition = stdout[1]
+        status = stdout[4]
+        reason = stdout[7]
+        print(f"*{partition}*{status}*{reason}")
 
         # If it is Priority, get the job priority and print it
             #input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
