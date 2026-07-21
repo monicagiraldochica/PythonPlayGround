@@ -438,8 +438,10 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         stdout, stderr = getSqueueInfo(netID, jobID)
         if stdout=="":
             print(stderr)
-            return pd.DataFrame        
+            return pd.DataFrame
+        stdout = stdout.split("|")
         print(stdout)
+        print(len(stdout))
         # Get and print status
         # Get and print reason
 
@@ -458,6 +460,8 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         sys.exit(0)        
 
         df = pd.DataFrame
+
+        # in main there should be an else because there are things that would run even if df empty
 
     return df, stopped
 
