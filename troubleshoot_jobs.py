@@ -406,7 +406,7 @@ def getSqueueInfo(netID: str, jobID: str):
         return p2.communicate()
 
     except Exception as e:
-        return "ERROR: sprio failed: {e}", ""
+        return f"ERROR: sprio failed: {e}", ""
 
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
     # The job finished running or failed
@@ -417,14 +417,14 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
     elif not queued:
         df = get_jobInfo_scontrol(jobID)
         if df.empty:
-            print(f"Maybe job {jobID} already stopped. Trying with sacct.")
+            print(f"\nMaybe job {jobID} already stopped. Trying with sacct.")
             df = get_jobInfo_sacct(jobID, netID)
             if not df.empty:
                 stopped = True
 
     # The job is queued
     else:
-        submit_date = input("When was the job submitted? (YYYY-MM-DD) [Enter if not known]: ")
+        submit_date = input("\nWhen was the job submitted? (YYYY-MM-DD) [Enter if not known or today]: ")
         if not isValidDate(submit_date):
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
