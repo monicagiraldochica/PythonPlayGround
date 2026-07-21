@@ -386,10 +386,10 @@ def getQueuePosition(jobID: str):
         p1 = subprocess.Popen(["sprio", "-p", "gpu", "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         p2 = subprocess.Popen(["awk", "{print NR-1 $0}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        p1.close()
+        p1.stdout.close()
 
         p3 = subprocess.Popen(["less", "+g", "-p", jobID], stdin=p2.stdout)
-        p2.close()
+        p2.stdout.close()
 
         return p3.communicate()
 
@@ -401,12 +401,12 @@ def getSqueueInfo(netID: str, jobID: str):
         p1 = subprocess.Popen(["squeue", "-u", netID, "-o", "%i|%P|%j|%u|%T|%M|%D|%R"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         p2 = subprocess.Popen(["grep", jobID], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        p1.close()
+        p1.stdout.close()
 
         return p2.communicate()
 
     except Exception as e:
-        return f"ERROR: sprio failed: {e}", ""
+        return f"ERROR: squeue failed: {e}", ""
 
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
     # The job finished running or failed
