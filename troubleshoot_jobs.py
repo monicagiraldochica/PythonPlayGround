@@ -435,8 +435,8 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print("Not a valid date entered, using today as submission date.")
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
-        squeue_info = getSqueueInfo(netID, jobID)
-        print(squeue_info)
+        stdout, stderr = getSqueueInfo(netID, jobID)
+        print(stdout)
         sys.exit(0)
 
         #getJobsFromDate(submit_date, True, netID=netID, save=True, output_file=output)
