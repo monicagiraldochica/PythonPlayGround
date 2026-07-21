@@ -409,7 +409,7 @@ def getSqueueInfo(netID: str, jobID: str):
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
             return "", stderr
-        return stdout, stderr
+        return stdout.replace("\n",""), stderr
 
     except Exception as e:
         return "", f"ERROR: squeue failed: {e}"
@@ -436,8 +436,10 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
         stdout, stderr = getSqueueInfo(netID, jobID)
+        if stdout=="":
+            print(stderr)
+            return pd.DataFrame        
         print(stdout)
-        print(stderr)
         sys.exit(0)
 
         #getJobsFromDate(submit_date, True, netID=netID, save=True, output_file=output)
