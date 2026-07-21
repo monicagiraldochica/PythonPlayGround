@@ -440,15 +440,22 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print(stderr)
             return pd.DataFrame        
         print(stdout)
-        sys.exit(0)
+        # Get and print status
+        # Get and print reason
 
-        #getJobsFromDate(submit_date, True, netID=netID, save=True, output_file=output)
+        # If it is Priority, get the job priority and print it
+            #input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
+            #print the reasons why priority can be low and recommend looking at user usage the past week
+
+        # Check other reasons
+
         #stdout, stderr = getQueuePosition(jobID)
         #input(f"Job is in position {queue_pos} in queue [Enter]")
-        #input(f"Get priority of the job: 'sprio -j {jobID}' [Enter]")
+
         #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
-        # nodes is obtained in one of the functions, it could be returned and given to this one
         #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
+
+        sys.exit(0)        
 
         df = pd.DataFrame
 
