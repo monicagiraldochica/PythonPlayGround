@@ -394,7 +394,7 @@ def getQueuePosition(jobID: str):
         return p3.communicate()
 
     except Exception as e:
-        return "ERROR: sprio failed: {e}", ""
+        return f"ERROR: sprio failed: {e}", ""
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
