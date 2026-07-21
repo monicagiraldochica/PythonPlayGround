@@ -436,17 +436,18 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
         # Get information from squeue
-        stdout, stderr = getSqueueInfo(netID, jobID)
-        if stdout=="":
-            print(stderr)
-            return pd.DataFrame, stopped
+        print("a")
+        #stdout, stderr = getSqueueInfo(netID, jobID)
+        #if stdout=="":
+            #print(stderr)
+            #return pd.DataFrame, stopped
         
-        stdout = stdout.split("|")
-        if len(stdout)!=8:
-            print(f"ERROR: cant parse squeue output: {stdout}")
-            return pd.DataFrame, stopped
+        #stdout = stdout.split("|")
+        #if len(stdout)!=8:
+            #print(f"ERROR: cant parse squeue output: {stdout}")
+            #return pd.DataFrame, stopped
         
-        print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
+        #print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
         #partition = stdout[1]
         #status = stdout[4]
         #reason = stdout[7].replace("(", "").replace(")", "")
