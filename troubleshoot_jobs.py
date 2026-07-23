@@ -449,11 +449,10 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         partition = stdout[1]
         status = stdout[4]
         reason = stdout[7].replace("(", "").replace(")", "")
-        print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
 
-        #if status=="RUNNING":
-            #print("Good news! Job is now running!")
-            #return get_jobInfo_scontrol(jobID), False
+        if status=="RUNNING":
+            print(f"Good news! Job {jobID} is now running!")
+            return get_jobInfo_scontrol(jobID), False
         
         #if reason in ["Priority", "Resources"]:
             #code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
@@ -473,11 +472,11 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
             #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
 
-
         # Maintenance just need the message explaining why it's not running
         # Dependency get the dependencies
-        # QOSMaxJobsPerUserLimit explain        
-       
+        # QOSMaxJobsPerUserLimit explain       
+
+        print("all good")       
         sys.exit(0)        
 
         df = pd.DataFrame
