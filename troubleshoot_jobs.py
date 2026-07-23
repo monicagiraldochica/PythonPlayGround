@@ -473,7 +473,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                 print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
 
             stdout, stderr = getQueuePosition(jobID, partition) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
-            print(f"*{stdout}*{stderr}")
+            print(f"*stdout:{stdout}*stderr:{stderr}")
             #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
