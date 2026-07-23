@@ -408,13 +408,15 @@ def isInteractive(jobID:str):
 
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
-            return "", stderr
+            print(stderr)
+            return False
         stdout=stdout.strip()
         print(f"stdout:**{stdout}**")
-        return stdout, stderr
+        return stdout.startswith("srun")
 
     except Exception as e:
-        return "", f"ERROR: sprio failed: {e}"
+        print(f"ERROR: sprio failed: {e}")
+        return False
 
 # I know that my job should be pending because there's another interactive app running
 def getQueuePos_OOD(netID: str, jobID: str):
