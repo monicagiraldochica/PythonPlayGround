@@ -438,6 +438,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         # Get information from squeue
         print("a")
         stdout, stderr = getSqueueInfo(netID, jobID)
+        print(f"{stdout}*{stderr}*")
         if stdout=="":
             print(stderr)
             return pd.DataFrame, stopped
