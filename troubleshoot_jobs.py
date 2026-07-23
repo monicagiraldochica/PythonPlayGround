@@ -441,12 +441,12 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             if stderr!="":            
                 print(stderr)
             else:
-                print(f"ERROR: did not find job {jobID} from {netID} in queue")
+                print(f"ERROR: Did not find job {jobID} from {netID} in queue")
             return pd.DataFrame, stopped
         
         stdout = stdout.split("|")
         if len(stdout)!=8:
-            print(f"ERROR: cant parse squeue output: {stdout}")
+            print(f"ERROR: Cant parse squeue output: {stdout}")
             return pd.DataFrame, stopped
         
         partition = stdout[1]
@@ -461,11 +461,15 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
             if code!=0:
                 print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
+                tres = ""
             else:
-                stdout = stdout.split("|")
-                print(stdout)
-                print(len(stdout))
-                # Get resources (pos 8)
+                stdout_arr = stdout.split("|")
+                if len(stdout_arr)!=9:
+                    print(f"ERROR: Could not parse the output of sprio on job {jobID}: {stdout}")
+                    tres = ""
+                else:
+                    tres = stdout_arr[8]
+                print(f"*{tres}*")
 
             #stdout, stderr = getQueuePosition(jobID) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
             #input(f"Job is in position {queue_pos} in queue [Enter]")
