@@ -446,11 +446,10 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print(f"ERROR: cant parse squeue output: {stdout}")
             return pd.DataFrame, stopped
         
-        print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
-        #partition = stdout[1]
-        #status = stdout[4]
-        #reason = stdout[7].replace("(", "").replace(")", "")
-        #print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
+        partition = stdout[1]
+        status = stdout[4]
+        reason = stdout[7].replace("(", "").replace(")", "")
+        print(f"*{partition}*{status}*{reason}") ######## REMOVE THIS PRINT
 
         #if status=="RUNNING":
             #print("Good news! Job is now running!")
