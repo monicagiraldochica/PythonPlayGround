@@ -448,7 +448,8 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         if len(stdout)!=8:
             print(f"ERROR: Cant parse squeue output: {stdout}")
             return pd.DataFrame, stopped
-        
+
+        print(f"stdout:{stdout}")
         partition = stdout[1]
         status = stdout[4]
         reason = stdout[7].replace("(", "").replace(")", "")
@@ -457,23 +458,23 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print(f"Good news! Job {jobID} is now running!")
             return get_jobInfo_scontrol(jobID), False
         
-        if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
-            code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
-            if code!=0:
-                print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
-                tres = ""
-            else:
-                stdout = stdout.replace("\n", "")
-                stdout_arr = stdout.split("|")
-                if len(stdout_arr)!=9:
-                    print(f"ERROR: Could not parse the output of sprio on job {jobID}: {stdout}")
-                    tres = ""
-                else:
-                    tres = stdout_arr[8]
-                print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
+        #if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
+            #code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+            #if code!=0:
+                #print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
+                #tres = ""
+            #else:
+                #stdout = stdout.replace("\n", "")
+                #stdout_arr = stdout.split("|")
+                #if len(stdout_arr)!=9:
+                #    print(f"ERROR: Could not parse the output of sprio on job {jobID}: {stdout}")
+                #    tres = ""
+                #else:
+                #    tres = stdout_arr[8]
+                #print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
 
-            stdout, stderr = getQueuePosition(jobID, partition) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
-            print(f"*stdout:{stdout}*stderr:{stderr}")
+            #stdout, stderr = getQueuePosition(jobID, partition) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
+            #print(f"*stdout:{stdout}*stderr:{stderr}")
             #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
