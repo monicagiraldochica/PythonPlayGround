@@ -411,8 +411,6 @@ def isInteractive(jobID:str):
             print(stderr)
             return False
         stdout = stdout.strip().replace("SubmitLine=", "")
-        print(stdout)
-        print(stdout.startswith("srun"))
         return stdout.startswith("srun")
 
     except Exception as e:
@@ -469,17 +467,19 @@ def getQueuePos_OOD(netID: str, jobID: str):
 
     if jobID not in queued_interactive:
         return "", f"ERROR: could not find queue position for {jobID}"
+    
+    if len(running_interactive)==0:
+        for id in running_outside_ood:
+            if isInteractive(id):
+                running_interactive[id] = "Interactive app in the Terminal"
+    if len(running_interactive)==0:
+        return "", f"ERROR: nothing is running inside or outside OOD, {jobID} shouldn't be queued"
     if len(running_interactive)>1:
         return "", f"ERROR: more than one interactive app appears to be running in OOD"
     
-    if len(running_interactive)==0:
-        if len(running_outside_ood)==0:
-            return "", f"ERROR: nothing is running inside or outside OOD, {jobID} shouldn't be queued"
-        for id in running_outside_ood:
-            print(isInteractive(id))
+    running_id, running_app = next(iter(running_interactive.items()))
+    print(f"Job {running_id} is running an interactive app ({running_app}) and blocking the interactive queue for {netID}")
 
-    # If there are no interactive apps running, check if any of the running_outside_ood is interactive
-    # If also none of the ones running outside ood are interactive return error
     # Print which app is running and blocking the queue
 
     # If there's any jobs in queued_outside_ood, check if any of those are interactive
