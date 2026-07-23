@@ -440,7 +440,10 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         stdout, stderr = getSqueueInfo(netID, jobID)
         print(f"{stdout}*{stderr}*")
         if stdout=="":
-            print(stderr)
+            if stderr!="":            
+                print(stderr)
+            else:
+                print(f"ERROR: did not find job {jobID} from {netID} in queue")
             return pd.DataFrame, stopped
         
         stdout = stdout.split("|")
