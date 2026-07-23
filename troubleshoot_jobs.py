@@ -381,9 +381,9 @@ def isValidDate(date: str):
     except ValueError:
         return False
 
-def getQueuePosition(jobID: str):
+def getQueuePosition(jobID: str, partition: str):
     try:
-        p1 = subprocess.Popen(["sprio", "-p", "gpu", "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         p2 = subprocess.Popen(["awk", "{print NR-1 $0}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p1.stdout.close()
@@ -463,15 +463,17 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                 print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
                 tres = ""
             else:
+                stdout = stdout.replace("\n", "")
                 stdout_arr = stdout.split("|")
                 if len(stdout_arr)!=9:
                     print(f"ERROR: Could not parse the output of sprio on job {jobID}: {stdout}")
                     tres = ""
                 else:
                     tres = stdout_arr[8]
-                print(f"*{tres}*")
+                print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
 
-            #stdout, stderr = getQueuePosition(jobID) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
+            stdout, stderr = getQueuePosition(jobID, partition) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
+            print(f"*{stdout}*{stderr}")
             #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
