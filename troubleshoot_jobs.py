@@ -450,7 +450,9 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             return pd.DataFrame, stopped
 
         print(f"stdout:{stdout}")
-        partition = stdout[1]
+        name = stdout[2]
+        partition = stdout[1] if not name.startswith("sys/dashboard") else "ood"
+        print(f"partition:{partition}*")
         status = stdout[4]
         reason = stdout[7].replace("(", "").replace(")", "")
 
