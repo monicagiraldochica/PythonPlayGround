@@ -400,14 +400,10 @@ def getQueuePos_notOOD(jobID: str, partition: str):
         return "", f"ERROR: sprio failed: {e}"
 
 def getQueuePos_OOD(netID: str, jobID: str):
-    code, stderr, stdout = installib.runBash(["squeue", "-u", netID])
+    code, stderr, stdout = installib.runBash(["squeue", "-u", netID, "-h", "-o", "%j|%P|%u|%T|%M|%D%R"])
     print(f"code:{code}*")
     print(f"stderr:{stderr}*")
     print(f"stdout:{stdout}*")
-    #result = subprocess.run("squeue -u mkeith", shell=True)
-    #print(result.stdout)
-    #result = subprocess.run(["squeue", "-u", "mkeith"])
-    #print(result.stdout)
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
