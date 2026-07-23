@@ -436,6 +436,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
         # Get information from squeue
+        print("a")
         stdout, stderr = getSqueueInfo(netID, jobID)
         if stdout=="":
             print(stderr)
