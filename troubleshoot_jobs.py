@@ -410,7 +410,9 @@ def isInteractive(jobID:str):
         if p2.returncode!=0:
             print(stderr)
             return False
-        stdout=stdout.strip()
+        stdout = stdout.strip()
+        print(stdout)
+        print(stdout.startswith("srun"))
         return stdout.startswith("srun")
 
     except Exception as e:
