@@ -381,7 +381,7 @@ def isValidDate(date: str):
     except ValueError:
         return False
 
-def getQueuePosition(jobID: str, partition: str):
+def getQueuePos_notOOD(jobID: str, partition: str):
     try:
         p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
@@ -398,6 +398,10 @@ def getQueuePosition(jobID: str, partition: str):
 
     except Exception as e:
         return "", f"ERROR: sprio failed: {e}"
+
+def getQueuePos_OOD(netID: str, jobID: str):
+    code, stderr, stdout = installib.runBash(["squeue", "-u", netID])
+    print(f"*{code}*{stderr}*{stdout}")
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
@@ -473,9 +477,13 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                     tres = stdout_arr[8]
 
             print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
-            stdout, stderr = getQueuePosition(jobID, partition)
-            print(f"*stdout:{stdout}*")
-            print(f"*stderr:{stderr}*")
+            if partition=="ood":
+                #stdout, stderr = 
+                getQueuePos_OOD(jobID, partition)
+            else:
+                stdout, stderr = getQueuePos_notOOD(jobID, partition)
+            #print(f"*stdout:{stdout}*")
+            #print(f"*stderr:{stderr}*")
             #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
