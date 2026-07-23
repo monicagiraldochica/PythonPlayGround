@@ -411,7 +411,6 @@ def isInteractive(jobID:str):
             print(stderr)
             return False
         stdout=stdout.strip()
-        print(f"stdout:**{stdout}**")
         return stdout.startswith("srun")
 
     except Exception as e:
@@ -475,7 +474,7 @@ def getQueuePos_OOD(netID: str, jobID: str):
         if len(running_outside_ood)==0:
             return "", f"ERROR: nothing is running inside or outside OOD, {jobID} shouldn't be queued"
         for id in running_outside_ood:
-            isInteractive(id)
+            print(isInteractive(id))
 
     # If there are no interactive apps running, check if any of the running_outside_ood is interactive
     # If also none of the ones running outside ood are interactive return error
