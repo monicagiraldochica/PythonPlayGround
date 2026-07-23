@@ -442,12 +442,11 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             return pd.DataFrame, stopped
         
         stdout = stdout.split("|")
-        print(f"*{stdout}*")
-        #if len(stdout)!=8:
-            #print(f"ERROR: cant parse squeue output: {stdout}")
-            #return pd.DataFrame, stopped
+        if len(stdout)!=8:
+            print(f"ERROR: cant parse squeue output: {stdout}")
+            return pd.DataFrame, stopped
         
-        #print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
+        print(f"stdout: {stdout}") ######## REMOVE THIS PRINT
         #partition = stdout[1]
         #status = stdout[4]
         #reason = stdout[7].replace("(", "").replace(")", "")
