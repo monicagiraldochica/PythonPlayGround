@@ -436,9 +436,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             submit_date = datetime.now().strftime("%Y-%m-%d")
 
         # Get information from squeue
-        print("a")
         stdout, stderr = getSqueueInfo(netID, jobID)
-        print(f"{stdout}*{stderr}*")
         if stdout=="":
             if stderr!="":            
                 print(stderr)
@@ -461,13 +459,12 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         
         if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
             code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
-            print(f"*{code}*{stderr}*{stdout}")
-            #if code!=0:
-                #print(f"ERROR: Could not run sprio on the job: {stderr}")
-            #else:
-                #stdout = stdout.split("|")
-                #print(stdout)
-                #print(len(stdout))
+            if code!=0:
+                print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
+            else:
+                stdout = stdout.split("|")
+                print(stdout)
+                print(len(stdout))
                 # Get resources (pos 8)
 
             #stdout, stderr = getQueuePosition(jobID) # FIZ IN THIS FUNCTION THAT QUEUE IS NOT ALWAYS GPU, would this be needed for other reasons?
