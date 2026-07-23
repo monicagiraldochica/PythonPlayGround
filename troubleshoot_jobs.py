@@ -410,7 +410,7 @@ def isInteractive(jobID:str):
         if p2.returncode!=0:
             print(stderr)
             return False
-        stdout = stdout.strip()
+        stdout = stdout.strip().replace("SubmitLine=", "")
         print(stdout)
         print(stdout.startswith("srun"))
         return stdout.startswith("srun")
