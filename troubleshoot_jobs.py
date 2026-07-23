@@ -399,11 +399,66 @@ def getQueuePos_notOOD(jobID: str, partition: str):
     except Exception as e:
         return "", f"ERROR: sprio failed: {e}"
 
+# I know that my job should be pending because there's another interactive app running
 def getQueuePos_OOD(netID: str, jobID: str):
-    code, stderr, stdout = installib.runBash(["squeue", "-u", netID, "-h", "-o", "%j|%P|%u|%T|%M|%D%R"])
-    print(f"code:{code}*")
-    print(f"stderr:{stderr}*")
-    print(f"stdout:{stdout}*")
+    code, stderr, stdout = installib.runBash(["squeue", "-u", netID, "-h", "-o", "%i|%j|%T|%R"])
+    if code!=0:
+        return "", stderr
+
+    running_interactive = {} # Interactive apps
+    queued_interactive = {}
+
+    running_outside_ood = [] # Could be an interactive app (but not necessarily)
+    queued_outside_ood = [] # Could be an interactive app (but not necessarily, but for QOSMaxJobsPerUserLimit reason)
+
+    for line in stdout.splitlines():
+        line = line.replace("\n", "").split("|")
+        if len(line)!=4:
+            return "", f"ERROR: unexpected squeue output: {line}"
+
+        id = line[0]
+        name = line[1]
+        status = line[2]
+        reason = line[3].replace("(", "").replace(")", "")
+        ood = name.startswith("sys/dashboard")
+        qosMax = reason=="QOSMaxJobsPerUserLimit"
+
+        if ood:
+            app_name = name.replace("sys/dashboard/sys/bc_hpc_", "")
+
+            if status=="RUNNING":
+                running_interactive[id] = app_name
+            elif status=="PENDING" and qosMax:
+                queued_interactive[id] = app_name
+            elif id==jobID:
+                return "", f"ERROR: could not find queue position for {jobID}: {line}"
+
+        else:
+            if id==jobID:
+                return "", f"ERROR: could not find queue position for {jobID}: {line}"
+            elif status=="RUNNING":
+                running_outside_ood+=[id]
+            elif status=="PENDING" and qosMax:
+                queued_outside_ood+=[id]
+
+
+    print(f"Running interactive: {running_interactive}")
+    print(f"Queued interactive: {queued_interactive}")
+    print(f"Running outside OOD: {running_outside_ood}")
+    print(f"Queued outside OOD for QOSMaxJobsPerUserLimit: {queued_outside_ood}")
+    # If jobID is not in queued_in_ood return error
+    # If nothing is running inside or outside ood return error
+    # If more than one interactive app is running in ood return error
+
+    # If there are no interactive apps running, check if any of the running_outside_ood is interactive
+    # If also none of the ones running outside ood are interactive return error
+    # Print which app is running and blocking the queue
+
+    # If there's any jobs in queued_outside_ood, check if any of those are interactive
+    # For those that are interactive, add to queued_interactive
+
+    # Order queued_interactive by sprio priority
+    # Check how many are ahead of jobID
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
@@ -447,12 +502,12 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             if stderr!="":            
                 print(stderr)
             else:
-                print(f"ERROR: Did not find job {jobID} from {netID} in queue")
+                print(f"ERROR: did not find job {jobID} from {netID} in queue")
             return pd.DataFrame, stopped
         
         stdout = stdout.split("|")
         if len(stdout)!=8:
-            print(f"ERROR: Cant parse squeue output: {stdout}")
+            print(f"ERROR: cant parse squeue output: {stdout}")
             return pd.DataFrame, stopped
 
         name = stdout[2]
@@ -467,18 +522,18 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
             code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
             if code!=0:
-                print(f"ERROR: Could not run sprio on job {jobID}: {stderr}")
+                print(f"ERROR: could not run sprio on job {jobID}: {stderr}")
                 tres = ""
             else:
                 stdout = stdout.replace("\n", "")
                 stdout_arr = stdout.split("|")
                 if len(stdout_arr)!=9:
-                    print(f"ERROR: Could not parse the output of sprio on job {jobID}: {stdout}")
+                    print(f"ERROR: could not parse the output of sprio on job {jobID}: {stdout}")
                     tres = ""
                 else:
                     tres = stdout_arr[8]
 
-            print(f"*{tres}*") # REMOVE THIS PRINT ONCE USED
+            print(f"Job is requesting the following resources: {tres} (just FYI)")
             if partition=="ood":
                 #stdout, stderr = 
                 getQueuePos_OOD(netID, jobID)
