@@ -454,8 +454,9 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             print(f"Good news! Job {jobID} is now running!")
             return get_jobInfo_scontrol(jobID), False
         
-        #if reason in ["Priority", "Resources"]:
-            #code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+        if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
+            code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+            print(f"*{code}*{stderr}*{stdout}")
             #if code!=0:
                 #print(f"ERROR: Could not run sprio on the job: {stderr}")
             #else:
