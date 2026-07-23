@@ -409,6 +409,7 @@ def isInteractive(jobID:str):
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
             return "", stderr
+        stdout=stdout.strip()
         print(f"stdout:**{stdout}**")
         return stdout, stderr
 
