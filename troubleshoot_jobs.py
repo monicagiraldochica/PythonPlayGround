@@ -405,7 +405,7 @@ def getQueuePos_OOD(netID: str, jobID: str):
     #print("STDERR:", repr(stderr))
     #print("STDOUT:")
     #print(stdout)
-    result = subprocess.run(["squeue", "-u", netID])
+    result = subprocess.run("squeue -u mkeith", shell=True)
     print(result.stdout)
 
 def getSqueueInfo(netID: str, jobID: str):
