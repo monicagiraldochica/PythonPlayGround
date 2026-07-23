@@ -401,7 +401,10 @@ def getQueuePos_notOOD(jobID: str, partition: str):
 
 def getQueuePos_OOD(netID: str, jobID: str):
     code, stderr, stdout = installib.runBash(["squeue", "-u", netID])
-    print(f"*{code}*{stderr}*{stdout}")
+    print("RETURN CODE:", code)
+    print("STDERR:", repr(stderr))
+    print("STDOUT:")
+    print(stdout)
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
