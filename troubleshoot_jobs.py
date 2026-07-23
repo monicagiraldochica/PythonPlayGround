@@ -399,6 +399,22 @@ def getQueuePos_notOOD(jobID: str, partition: str):
     except Exception as e:
         return "", f"ERROR: sprio failed: {e}"
 
+def isInteractive(jobID:str):
+    try:
+        p1 = subprocess.Popen(["scontrol", "show", "job", jobID], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        p2 = subprocess.Popen(["grep", "SubmitLine"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1.stdout.close()
+
+        stdout, stderr = p2.communicate()
+        if p2.returncode!=0:
+            return "", stderr
+        print(f"stdout:**{stdout}**")
+        return stdout, stderr
+
+    except Exception as e:
+        return "", f"ERROR: sprio failed: {e}"
+
 # I know that my job should be pending because there's another interactive app running
 def getQueuePos_OOD(netID: str, jobID: str):
     code, stderr, stdout = installib.runBash(["squeue", "-u", netID, "-h", "-o", "%i|%j|%T|%R"])
@@ -446,9 +462,17 @@ def getQueuePos_OOD(netID: str, jobID: str):
     print(f"Queued interactive: {queued_interactive}")
     print(f"Running outside OOD: {running_outside_ood}")
     print(f"Queued outside OOD for QOSMaxJobsPerUserLimit: {queued_outside_ood}")
-    # If jobID is not in queued_in_ood return error
-    # If nothing is running inside or outside ood return error
-    # If more than one interactive app is running in ood return error
+
+    if jobID not in queued_interactive:
+        return "", f"ERROR: could not find queue position for {jobID}"
+    if len(running_interactive)>1:
+        return "", f"ERROR: more than one interactive app appears to be running in OOD"
+    
+    if len(running_interactive)==0:
+        if len(running_outside_ood)==0:
+            return "", f"ERROR: nothing is running inside or outside OOD, {jobID} shouldn't be queued"
+        for id in running_outside_ood:
+            isInteractive(id)
 
     # If there are no interactive apps running, check if any of the running_outside_ood is interactive
     # If also none of the ones running outside ood are interactive return error
