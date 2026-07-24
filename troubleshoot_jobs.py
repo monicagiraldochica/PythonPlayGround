@@ -497,8 +497,6 @@ def getQueuePos_OOD(netID: str, jobID: str):
             print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
             continue
 
-        print(f"job {id}: priority {priority}")
-
         # Add the job ID in the ordered list, according to the priority
         insert_pos = len(ordered_id)
         for i in range(len(ordered_id)):
@@ -506,11 +504,10 @@ def getQueuePos_OOD(netID: str, jobID: str):
                 insert_pos = i
                 break
         ordered_id.insert(insert_pos, id)
-    print(id_prio)
-    print(ordered_id)
 
-    # Order the interactive queued jobs by priority
-    # Check how many are ahead of jobID
+    # Return the position of jobID in the ordered list by priority
+    return str(ordered_id.index(jobID)), ""
+    
 
 def getSqueueInfo(netID: str, jobID: str):
     try:
@@ -587,12 +584,11 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
 
             print(f"Job is requesting the following resources: {tres} (just FYI)")
             if partition=="ood":
-                #stdout, stderr = 
-                getQueuePos_OOD(netID, jobID)
+                stdout, stderr = getQueuePos_OOD(netID, jobID)
             else:
                 stdout, stderr = getQueuePos_notOOD(jobID, partition)
-            #print(f"*stdout:{stdout}*")
-            #print(f"*stderr:{stderr}*")
+            print(f"*stdout:{stdout}*")
+            print(f"*stderr:{stderr}*")
             #input(f"Job is in position {queue_pos} in queue [Enter]")
             #print the reasons why priority can be low and recommend looking at user usage the past week
 
