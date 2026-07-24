@@ -500,13 +500,13 @@ def getQueuePos_OOD(netID: str, jobID: str):
         print(f"job {id}: priority {priority}")
 
         # Add the job ID in the ordered list, according to the priority
-    #    i = 0
-    #    for i in range(len(ordered_id)):
-    #        if priority<id_prio[ordered_id[i]]:
-    #            break
-    #    ordered_id.insert(i, id)
-    #print(id_prio)
-    #print(ordered_id)
+        i = 0
+        for i in range(len(ordered_id)):
+            if priority<id_prio[ordered_id[i]]:
+                break
+        ordered_id.insert(i, id)
+    print(id_prio)
+    print(ordered_id)
 
     # Order the interactive queued jobs by priority
     # Check how many are ahead of jobID
