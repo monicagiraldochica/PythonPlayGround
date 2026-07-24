@@ -497,7 +497,8 @@ def getQueuePos_OOD(netID: str, jobID: str):
 
         # Save the job priority
         try:
-            id_prio[id] = int(stdout)
+            stdout = int(stdout)
+            id_prio[id] = stdout
         except:
             print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
             continue
