@@ -569,36 +569,37 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
             return get_jobInfo_scontrol(jobID), False
         
         if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
-            code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
-            if code!=0:
-                print(f"ERROR: could not run sprio on job {jobID}: {stderr}")
-                tres = ""
-            else:
-                stdout = stdout.replace("\n", "")
-                stdout_arr = stdout.split("|")
-                if len(stdout_arr)!=9:
-                    print(f"ERROR: could not parse the output of sprio on job {jobID}: {stdout}")
-                    tres = ""
+            if reason=="Resources":
+                code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
+
+                if code!=0:
+                    print(f"ERROR: could not run sprio on job {jobID}: {stderr}")
                 else:
-                    tres = stdout_arr[8]
+                    stdout = stdout.replace("\n", "")
+                    stdout_arr = stdout.split("|")
+                    if len(stdout_arr)!=9:
+                        print(f"ERROR: could not parse the output of sprio on job {jobID}: {stdout}")
+                    else:
+                        tres = stdout_arr[8]
+                        print(f"Job is requesting the following resources: {tres}")
 
-            print(f"Job is requesting the following resources: {tres} (just FYI)")
-            if partition=="ood":
-                stdout, stderr = getQueuePos_OOD(netID, jobID)
+                        #input(f"Check how busy the nodes are: 'sinfo' [Enter]") %r will give the partition name
+                        #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
+
             else:
-                stdout, stderr = getQueuePos_notOOD(jobID, partition)
-            print(f"*stdout:{stdout}*")
-            print(f"*stderr:{stderr}*")
-            #input(f"Job is in position {queue_pos} in queue [Enter]")
-            #print the reasons why priority can be low and recommend looking at user usage the past week
+                if partition=="ood":
+                    stdout, stderr = getQueuePos_OOD(netID, jobID)
+                else:
+                    stdout, stderr = getQueuePos_notOOD(jobID, partition)
+                print(f"*stdout:{stdout}*")
+                print(f"*stderr:{stderr}*")
+                # if stdout(queuePos)=0, it is the next one to run
+                # Otherwise queuePos ahead of it
 
-            # If it's resources:
-            #input(f"Check how busy the nodes are: 'sinfo' [Enter]")
-            #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
+                # QOSMaxJobsPerUserLimit explain    
 
         # Maintenance just need the message explaining why it's not running
-        # Dependency get the dependencies
-        # QOSMaxJobsPerUserLimit explain       
+        # Dependency get the dependencies    
 
         print("all good")       
         sys.exit(0)        
