@@ -480,12 +480,38 @@ def getQueuePos_OOD(netID: str, jobID: str):
     running_id, running_app = next(iter(running_interactive.items()))
     print(f"Job {running_id} is running an interactive app ({running_app}) and blocking the interactive queue for {netID}")
 
-    # Print which app is running and blocking the queue
+    for id in queued_outside_ood:
+        if isInteractive(id):
+            queued_interactive[id] = "Interactive app in the Terminal"
 
-    # If there's any jobs in queued_outside_ood, check if any of those are interactive
-    # For those that are interactive, add to queued_interactive
+    # Get the priority of all queued interactive jobs
+    # And order the jobs by priority
+    id_prio = {}
+    ordered_id = []
+    for id in queued_interactive.keys():
+        # Get the job priority
+        code, stderr, stdout = installib.runBash(["sprio", "-j", id, "-o", "%Y", "-h"])
+        if code!=0:
+            print(stderr)
+            continue
 
-    # Order queued_interactive by sprio priority
+        # Save the job priority
+        try:
+            id_prio[id] = int(stdout)
+        except:
+            print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
+            continue
+
+        # Add the job ID in the ordered list, according to the priority
+        i = 0
+        for i in len(ordered_id):
+            if stdout<id_prio[ordered_id[i]]:
+                break
+        ordered_id.insert(i, id)
+    print(id_prio)
+    print(ordered_id)
+
+    # Order the interactive queued jobs by priority
     # Check how many are ahead of jobID
 
 def getSqueueInfo(netID: str, jobID: str):
