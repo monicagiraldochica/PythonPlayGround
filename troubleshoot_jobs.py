@@ -500,11 +500,12 @@ def getQueuePos_OOD(netID: str, jobID: str):
         print(f"job {id}: priority {priority}")
 
         # Add the job ID in the ordered list, according to the priority
-        i = 0
+        insert_pos = 0
         for i in range(len(ordered_id)):
             if priority<id_prio[ordered_id[i]]:
+                insert_pos = i
                 break
-        ordered_id.insert(i, id)
+        ordered_id.insert(insert_pos, id)
     print(id_prio)
     print(ordered_id)
 
