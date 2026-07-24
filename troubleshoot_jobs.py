@@ -459,12 +459,6 @@ def getQueuePos_OOD(netID: str, jobID: str):
             elif status=="PENDING" and qosMax:
                 queued_outside_ood+=[id]
 
-
-    print(f"Running interactive: {running_interactive}")
-    print(f"Queued interactive: {queued_interactive}")
-    print(f"Running outside OOD: {running_outside_ood}")
-    print(f"Queued outside OOD for QOSMaxJobsPerUserLimit: {queued_outside_ood}")
-
     if jobID not in queued_interactive:
         return "", f"ERROR: could not find queue position for {jobID}"
     
@@ -484,31 +478,31 @@ def getQueuePos_OOD(netID: str, jobID: str):
         if isInteractive(id):
             queued_interactive[id] = "Interactive app in the Terminal"
 
-    print(queued_interactive)
-
     # Get the priority of all queued interactive jobs
     # And order the jobs by priority
-    #id_prio = {}
-    #ordered_id = []
-    #for id in queued_interactive.keys():
+    id_prio = {}
+    ordered_id = []
+    for id in queued_interactive.keys():
         # Get the job priority
-    #    code, stderr, stdout = installib.runBash(["sprio", "-j", id, "-o", "%Y", "-h"])
-    #    if code!=0:
-    #        print(stderr)
-    #        continue
+        code, stderr, stdout = installib.runBash(["sprio", "-j", id, "-o", "%Y", "-h"])
+        if code!=0:
+            print(stderr)
+            continue
 
         # Save the job priority
-    #    try:
-    #        stdout = int(stdout)
-    #        id_prio[id] = stdout
-    #    except:
-    #        print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
-    #        continue
+        try:
+            priority = int(stdout)
+            id_prio[id] = priority
+        except:
+            print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
+            continue
+
+        print(f"job {id}: priority {priority}")
 
         # Add the job ID in the ordered list, according to the priority
     #    i = 0
     #    for i in range(len(ordered_id)):
-    #        if stdout<id_prio[ordered_id[i]]:
+    #        if priority<id_prio[ordered_id[i]]:
     #            break
     #    ordered_id.insert(i, id)
     #print(id_prio)
