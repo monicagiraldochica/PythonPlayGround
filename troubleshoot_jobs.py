@@ -484,33 +484,35 @@ def getQueuePos_OOD(netID: str, jobID: str):
         if isInteractive(id):
             queued_interactive[id] = "Interactive app in the Terminal"
 
+    print(queued_interactive)
+
     # Get the priority of all queued interactive jobs
     # And order the jobs by priority
-    id_prio = {}
-    ordered_id = []
-    for id in queued_interactive.keys():
+    #id_prio = {}
+    #ordered_id = []
+    #for id in queued_interactive.keys():
         # Get the job priority
-        code, stderr, stdout = installib.runBash(["sprio", "-j", id, "-o", "%Y", "-h"])
-        if code!=0:
-            print(stderr)
-            continue
+    #    code, stderr, stdout = installib.runBash(["sprio", "-j", id, "-o", "%Y", "-h"])
+    #    if code!=0:
+    #        print(stderr)
+    #        continue
 
         # Save the job priority
-        try:
-            stdout = int(stdout)
-            id_prio[id] = stdout
-        except:
-            print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
-            continue
+    #    try:
+    #        stdout = int(stdout)
+    #        id_prio[id] = stdout
+    #    except:
+    #        print(f"ERROR: wrong priority format for {id} from sprio: {stdout}")
+    #        continue
 
         # Add the job ID in the ordered list, according to the priority
-        i = 0
-        for i in range(len(ordered_id)):
-            if stdout<id_prio[ordered_id[i]]:
-                break
-        ordered_id.insert(i, id)
-    print(id_prio)
-    print(ordered_id)
+    #    i = 0
+    #    for i in range(len(ordered_id)):
+    #        if stdout<id_prio[ordered_id[i]]:
+    #            break
+    #    ordered_id.insert(i, id)
+    #print(id_prio)
+    #print(ordered_id)
 
     # Order the interactive queued jobs by priority
     # Check how many are ahead of jobID
