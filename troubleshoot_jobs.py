@@ -524,6 +524,16 @@ def getSqueueInfo(netID: str, jobID: str):
     except Exception as e:
         return "", f"ERROR: squeue failed: {e}"
 
+def checkPartition(partition: str):
+    code, stderr, stdout = installib.runBash(["sinfo", "-p", "normal", "-o", "%D|%t|%N", "-h"])
+
+    if code!=0:
+        print(f"Could not get sinfo in {partition} partition: {stderr}")
+        return
+
+    sinfo = stdout.splitlines()
+    print(sinfo)
+
 def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
     # The job finished running or failed
     if stopped:
@@ -583,6 +593,9 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                         tres = stdout_arr[8]
                         print(f"Job is requesting the following resources: {tres}")
 
+                        # Check how busy nodes are in a specific partition
+                        checkPartition(stdout_arr[1])
+
                         #input(f"Check how busy the nodes are: 'sinfo' [Enter]") %r will give the partition name
                         #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
 
@@ -591,12 +604,18 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                     stdout, stderr = getQueuePos_OOD(netID, jobID)
                 else:
                     stdout, stderr = getQueuePos_notOOD(jobID, partition)
-                print(f"*stdout:{stdout}*")
-                print(f"*stderr:{stderr}*")
-                # if stdout(queuePos)=0, it is the next one to run
-                # Otherwise queuePos ahead of it
 
-                # QOSMaxJobsPerUserLimit explain    
+                if stderr!="":
+                    print(f"ERROR: could not get the queue position for {jobID}: {stderr}")
+                    return pd.DataFrame, stopped
+
+                if int(stdout)==0:
+                    print(f"Job {jobID} is the next in queue and will run as soon as the current interactive job is done")
+                else:
+                    print(f"There are {stdout} jobs in queue ahead of {jobID}. {jobID} will run after the current interactive job, and those ahead are done.")
+
+                # QOSMaxJobsPerUserLimit explain
+                # Priority explain
 
         # Maintenance just need the message explaining why it's not running
         # Dependency get the dependencies    
@@ -605,8 +624,6 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         sys.exit(0)        
 
         df = pd.DataFrame
-
-        # in main there should be an else because there are things that would run even if df empty
 
     return df, stopped
 
