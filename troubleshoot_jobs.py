@@ -528,13 +528,63 @@ def checkPartition(partition: str):
     code, stderr, stdout = installib.runBash(["sinfo", "-p", "normal", "-o", "%D|%t|%N", "-h"])
 
     if code!=0:
-        print(f"Could not get sinfo in {partition} partition: {stderr}")
+        print(f"ERROR: could not get sinfo in {partition} partition: {stderr}")
         return
 
     sinfo = stdout.splitlines()
-    print(sinfo)
+    if len(sinfo)==0:
+        print(f"ERROR: could not get sinfo in {partition} partition")
+        return
 
-def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str=""):
+    for line in sinfo:
+        array = line.split("|")
+        if len(array)!=3:
+            print(f"ERROR: could not parse sinfo output line: {line}")
+            continue
+
+        print(f"{array[0]} nodes are in {array[1]} state: {array[2]}")
+        input("To check what jobs are running in any of those nodes: squeue | grep <node> [Enter]")
+
+def maintenanceEmail(window: str, netID: str, jobID: str):
+    print("Send the user the following email:\n")
+
+    print(f"""
+    Hello {netID},
+
+    Job {jobID} is currently queued because of an upcoming/scheduled system maintenance window.
+    This is happening on {window}.
+
+    Jobs whose requested wall time would extend beyond the maintenance start time, will not begin execution until maintenance has been completed. This is done to ensure jobs are not interrupted by the scheduled outage.
+
+    If possible, you can modify and resubmit your job with a shorter wall time request. Or you can leave the job in queue and it will start running once maintenance has ended and compute resources become available again.
+
+    As a reminder, maintenance notifications are displayed when you connect to the cluster via SSH or access it through Open OnDemand. We also send an email a week before. Please review these messages carefully, as they contain important information including the maintenance start and end times, along with other cluster announcements that may affect your work.
+
+    If you have any questions about your job's wall time requirements or scheduling, please let us know.
+
+    Thanks,
+    RCC
+    """)
+
+def priorityEmail(jobID: str, netID: str, lastLine: str):
+    print("Send the user the following email:\n")
+
+    print(f"""
+    Hello {netID},
+    
+    Job {jobID} is currently queued because because other jobs in the system have a higher scheduling priority at this time. This is normal behavior on a shared HPC cluster and does not indicate a problem with your job.
+
+    The scheduler determines job priority using several factors, including the requested resources and the resources that the user has used the past days. To ensure fair use of cluster resources, users who have consumed a larger share of the cluster in recent days may see reduced scheduling priority compared to users who have used fewer resources. This helps provide equitable access to the system for all users.
+
+    At this time, no action is necessarily required. Your job will continue to accrue priority while it remains in the queue and will start automatically when sufficient resources become available and its priority allows it to be scheduled.
+
+    However, if you want to increase your priority and have your jobs run faster, I would suggest checking if you are requesting more resources than needed in your scripts. You can send us some of the scripts that you use the most and we can check if there is a more efficient way for you to request resources. You can also reduce the resources requested in the current job and re-submit, which can sometimes improve scheduling opportunities.
+
+    Thanks,
+    RCC
+    """)
+
+def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
     # The job finished running or failed
     if stopped:
         df = get_jobInfo_sacct(jobID, netID)
@@ -580,6 +630,7 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
         
         if reason in ["Priority", "Resources", "QOSMaxJobsPerUserLimit"]:
             if reason=="Resources":
+                print(f"Job {jobID} is waiting for resources to come available.")
                 code, stderr, stdout = installib.runBash(["sprio", "-h", "-j", jobID, "-o", "%i|%r|%Y|%S|%A|%F|%J|%Q|%T"])
 
                 if code!=0:
@@ -595,9 +646,8 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
 
                         # Check how busy nodes are in a specific partition
                         checkPartition(stdout_arr[1])
-
-                        #input(f"Check how busy the nodes are: 'sinfo' [Enter]") %r will give the partition name
-                        #input(f"Check which jobs are running on a node: 'squeue | grep <node>'")
+                        print("Ask the user to send you the script to see if they can request resources differently.")
+                        print("Remind the user that the more resources they request, the longer queue wait times they will have.")
 
             else:
                 if partition=="ood":
@@ -605,23 +655,36 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool, output: str
                 else:
                     stdout, stderr = getQueuePos_notOOD(jobID, partition)
 
-                if stderr!="":
-                    print(f"ERROR: could not get the queue position for {jobID}: {stderr}")
-                    return pd.DataFrame, stopped
+                if reason=="QOSMaxJobsPerUserLimit":
+                    print(f"Job {jobID} is queued because {netID} has reached the number of running jobs allowed per user for {partition}.")                
 
-                if int(stdout)==0:
-                    print(f"Job {jobID} is the next in queue and will run as soon as the current interactive job is done")
+                    if stderr!="":
+                        print(f"ERROR: could not get the queue position for {jobID}: {stderr}")
+                        return
+
+                    if int(stdout)==0:
+                        print(f"Job {jobID} is the next in queue and will run as soon as the current interactive job is done.")
+                    else:
+                        print(f"There are {stdout} jobs in queue ahead of {jobID}. {jobID} will run after the current interactive job, and those ahead are done.")
+
                 else:
-                    print(f"There are {stdout} jobs in queue ahead of {jobID}. {jobID} will run after the current interactive job, and those ahead are done.")
+                    print(f"""
+                    Job {jobID} is queued because of its Priority.
+                    Check the user ({netID}) usage the week before submission date to see if the user is being requesting many resources and it's affecting their jobs priority.
+                    """)
+                    if int(stdout)==0:
+                        priorityEmail(jobID, netID, f"Job {jobID} is the next in queue according to its priority for the {partition} partition.")
+                    else:
+                        priorityEmail(jobID, netID, f"There are {stdout} jobs in queue ahead of {jobID} according to their priority. {jobID} will run once those get assigned their resources.")
 
-                # QOSMaxJobsPerUserLimit explain
-                # Priority explain
+        if reason=="Maintenance":
+            print(f"Job {jobID} is queued because of the upcoming maintenance.")
+            window = input("When does maintenance start? (i.e. April 2, 2025 from 9am-5pm): ")
+            maintenanceEmail(window, netID, jobID)
 
-        # Maintenance just need the message explaining why it's not running
-        # Dependency get the dependencies    
-
-        print("all good")       
-        sys.exit(0)        
+        if "Dependency" in reason:
+            print(f"Job {jobID} is queued because one or more dependencies are not satisfied: {reason}")
+            print("Send link to video about creating advanced SLURM scripts, which has a section on dependencies: https://youtu.be/-4mBhe5cK7o?si=VyaPi9XtiiduWXR6")
 
         df = pd.DataFrame
 
@@ -1037,7 +1100,7 @@ def main():
             jobID = jobs[0]
 
     # Get job statistics
-    df, stopped = getJobStats(jobID, netID, queued, stopped, f"{outdir}/{jobID}.xlsx")
+    df, stopped = getJobStats(jobID, netID, queued, stopped)
     if df.empty:
         if not queued:
             print("ERROR: could not get job info")
@@ -1180,6 +1243,8 @@ def main():
         end_date_str = datetime.now().strftime("%Y-%m-%d")
         start_date_str = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
         checkUserUsage(start_date_str, end_date_str, netID, f"{outdir}/{netID}_cluster_usage.xlsx")
+
+    print("Share video on how to troubleshoot jobs: https://youtu.be/XaI2_D2YpRw?si=9BqSRZaj-I_KL1Ca")
 
 if __name__ == "__main__":
     main()
