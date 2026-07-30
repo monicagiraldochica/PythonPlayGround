@@ -388,25 +388,37 @@ def getQueuePos_notOOD(jobID: str, partition: str):
 
     if code!=0:
         return "", stderr
+    
     return stdout.replace("\n", ""), stderr
 
 def isInteractive(jobID:str):
-    try:
-        p1 = subprocess.Popen(["scontrol", "show", "job", jobID], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        p2 = subprocess.Popen(["grep", "SubmitLine"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        p1.stdout.close()
+    cmd1 = ["scontrol", "show", "job", jobID]
+    cmd2 = ["grep", "SubmitLine"]
+    code, stderr, stdout = installib.runPipedCommands([cmd1, cmd2])
 
-        stdout, stderr = p2.communicate()
-        if p2.returncode!=0:
-            print(stderr)
-            return False
-        stdout = stdout.strip().replace("SubmitLine=", "")
-        return stdout.startswith("srun")
-
-    except Exception as e:
-        print(f"ERROR: sprio failed: {e}")
+    if code!=0:
+        print(stderr)
         return False
+    
+    stdout = stdout.strip().replace("SubmitLine=", "")
+    return stdout.startswith("srun")
+
+    #try:
+    #    p1 = subprocess.Popen(["scontrol", "show", "job", jobID], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+    #    p2 = subprocess.Popen(["grep", "SubmitLine"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    #    p1.stdout.close()
+
+    #    stdout, stderr = p2.communicate()
+    #    if p2.returncode!=0:
+    #        print(stderr)
+    #        return False
+    #    stdout = stdout.strip().replace("SubmitLine=", "")
+    #    return stdout.startswith("srun")
+
+    #except Exception as e:
+    #    print(f"ERROR: sprio failed: {e}")
+    #    return False
 
 # I know that my job should be pending because there's another interactive app running
 def getQueuePos_OOD(netID: str, jobID: str):
