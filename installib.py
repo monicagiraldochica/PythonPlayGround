@@ -44,6 +44,9 @@ def runPipedCommands(commands: list[list]):
         p1.stdout.close()
 
         stdout, stderr = p2.communicate()
+        print(f"stdout:*{stdout}*")
+        print(f"stderr:*{stderr}*")
+        print(f"p2.returncode:*{p2.returncode}*")
         if p2.returncode!=0:
             return "", stderr
         return stdout.replace("\n", ""), stderr
