@@ -46,12 +46,12 @@ def runPipedCommands(commands: list[list]):
             prev_stdout = p.stdout
             processes.append(p)
 
-            stdout, stderr = processes[-1].communicate()
+        stdout, stderr = processes[-1].communicate()
 
-            for p in processes[:-1]:
-                p.wait()
+        for p in processes[:-1]:
+            p.wait()
             
-            return processes[-1].returncode, stderr, stdout
+        return processes[-1].returncode, stderr, stdout
         
     except Exception as e:
          err = (e.stderr or e.stdout or str(e)).strip()
