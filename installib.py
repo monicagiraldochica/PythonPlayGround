@@ -37,11 +37,10 @@ def test(commands):
         prev_proc = None
 
         for cmd in commands:
-            if prev_proc is not None:
-                p = subprocess.Popen(cmd, stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            else:
+            if prev_proc is None:
                 p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if prev_proc is not None:
+            else:
+                p = subprocess.Popen(cmd, stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 prev_proc.stdout.close()
             prev_proc = p
 
