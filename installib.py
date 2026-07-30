@@ -34,20 +34,20 @@ def runBash(cmd: list, output_file: str=""):
 
 def test(commands):
     try:
-        prev_stdout = None
+        prev_proc = None
 
         p1 = subprocess.Popen(commands[0], stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if prev_stdout is not None:
-            prev_stdout.close()
-        prev_stdout = p1.stdout
+        if prev_proc is not None:
+            prev_proc.stdout.close()
+        prev_proc = p1
         
-        p2 = subprocess.Popen(commands[1], stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if prev_stdout is not None:
-            prev_stdout.close()
-        prev_stdout = p2.stdout
+        p2 = subprocess.Popen(commands[1], stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if prev_proc is not None:
+            prev_proc.stdout.close()
+        prev_proc = p2
 
-        stdout, stderr = p2.communicate()
-        if p2.returncode!=0:
+        stdout, stderr = prev_proc.communicate()
+        if prev_proc.returncode!=0:
             return "", stderr
         return stdout.replace("\n", ""), stderr
 
