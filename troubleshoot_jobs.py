@@ -391,7 +391,7 @@ def getQueuePos_notOOD(jobID: str, partition: str):
         stdout, stderr = p2.communicate()
         if p2.returncode!=0:
             return "", stderr
-        return stdout, stderr
+        return stdout.replace("\n", ""), stderr
 
     except Exception as e:
         return "", f"ERROR: sprio failed: {e}"
