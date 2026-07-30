@@ -382,14 +382,15 @@ def isValidDate(date: str):
         return False
 
 def getQueuePos_notOOD(jobID: str, partition: str):
-    code, stderr, stdout = installib.runPipedCommands([
-        ["sprio", "-p", partition, "--sort", "-y"],
-        ["awk", f"$1=={jobID} {{print NR-1}}"]
-    ])
+    print("Hola!")
+    #code, stderr, stdout = installib.runPipedCommands([
+    #    ["sprio", "-p", partition, "--sort", "-y"],
+    #    ["awk", f"$1=={jobID} {{print NR-1}}"]
+    #])
 
-    if code!=0:
-         return "", stderr
-    return stdout.replace("\n", ""), stderr
+    #if code!=0:
+    #     return "", stderr
+    #return stdout.replace("\n", ""), stderr
 
     #try:
     #    p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
