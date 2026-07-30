@@ -33,25 +33,32 @@ def runBash(cmd: list, output_file: str=""):
             file_handle.close()
 
 def runPipedCommands(commands: list[list]):
-    print("entro")
+    print("entro2")
     try:
-        print("como vas")
-        #processes = []
-        #prev_stdout = None
+        processes = []
+        prev_stdout = None
 
-        #for cmd in commands:
-        #    p = subprocess.Popen(cmd, stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        for cmd in commands:
+            print(f"command: {cmd}")
+            p = subprocess.Popen(cmd, stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-        #    if prev_stdout is not None:
-        #        prev_stdout.close()
+            if prev_stdout is not None:
+                print("prev_stdout is not None")
+                prev_stdout.close()
 
-        #    prev_stdout = p.stdout
-        #    processes.append(p)
+            prev_stdout = p.stdout
+            processes.append(p)
 
-        #stdout, stderr = processes[-1].communicate()
+        stdout, stderr = processes[-1].communicate()
+        print(stdout)
+        print(stderr)
 
-        #for p in processes[:-1]:
-        #    p.wait()
+        for p in processes[:-1]:
+            p.wait()
+
+        print(f"processes[-1].returncode: {processes[-1].returncode}")
+        print(f"stderr: {stderr}")
+        print(f"stdout: {stdout}")
             
         #return processes[-1].returncode, stderr, stdout
         
