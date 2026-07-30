@@ -34,24 +34,25 @@ def runBash(cmd: list, output_file: str=""):
 
 def runPipedCommands(commands: list[list]):
     try:
-        processes = []
-        prev_stdout = None
+        print("como vas")
+        #processes = []
+        #prev_stdout = None
 
-        for cmd in commands:
-            p = subprocess.Popen(cmd, stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        #for cmd in commands:
+        #    p = subprocess.Popen(cmd, stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-            if prev_stdout is not None:
-                prev_stdout.close()
+        #    if prev_stdout is not None:
+        #        prev_stdout.close()
 
-            prev_stdout = p.stdout
-            processes.append(p)
+        #    prev_stdout = p.stdout
+        #    processes.append(p)
 
-        stdout, stderr = processes[-1].communicate()
+        #stdout, stderr = processes[-1].communicate()
 
-        for p in processes[:-1]:
-            p.wait()
+        #for p in processes[:-1]:
+        #    p.wait()
             
-        return processes[-1].returncode, stderr, stdout
+        #return processes[-1].returncode, stderr, stdout
         
     except Exception as e:
          err = (e.stderr or e.stdout or str(e)).strip()
