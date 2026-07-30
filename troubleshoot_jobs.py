@@ -385,7 +385,11 @@ def getQueuePos_notOOD(jobID: str, partition: str):
     print("bibibi")
     cmd1 = ["sprio", "-p", partition, "--sort", "-y"]
     cmd2 = ["awk", "$1=="+jobID+" {print NR-1}"]
-    return installib.test([cmd1, cmd2])
+    code, stderr, stdout = installib.test([cmd1, cmd2])
+
+    if code!=0:
+        return "", stderr
+    return stdout.replace("\n", ""), stderr
 
 def isInteractive(jobID:str):
     try:

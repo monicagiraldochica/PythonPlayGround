@@ -35,7 +35,6 @@ def runBash(cmd: list, output_file: str=""):
 def test(commands):
     try:
         prev_proc = None
-
         for cmd in commands:
             if prev_proc is None:
                 p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -44,23 +43,12 @@ def test(commands):
                 prev_proc.stdout.close()
             prev_proc = p
 
-        #p1 = subprocess.Popen(commands[0], stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        #if prev_proc is not None:
-        #    prev_proc.stdout.close()
-        #prev_proc = p1
-        
-        #p2 = subprocess.Popen(commands[1], stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        #if prev_proc is not None:
-        #    prev_proc.stdout.close()
-        #prev_proc = p2
-
         stdout, stderr = prev_proc.communicate()
-        if prev_proc.returncode!=0:
-            return "", stderr
-        return stdout.replace("\n", ""), stderr
+        return prev_proc.returncode, stderr, stdout
 
     except Exception as e:
-        return "", f"ERROR: sprio failed: {e}"
+        err = (e.stderr or e.stdout or str(e)).strip()
+        return e.returncode, err, ""
 
 def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0, exact_vers: bool=False):
     python_info = sys.version_info
