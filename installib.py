@@ -11,7 +11,7 @@ import re
 import shutil
 import textwrap
 
-def runBash(cmd, output_file: str=""):
+def runBash(cmd: list, output_file: str=""):
     file_handle = None
     try:
         if output_file:
