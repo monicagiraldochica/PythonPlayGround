@@ -382,7 +382,7 @@ def isValidDate(date: str):
         return False
 
 def getQueuePos_notOOD(jobID: str, partition: str):
-    print("lololo")
+    print("lululu")
     cmd1 = ["sprio", "-p", partition, "--sort", "-y"]
     cmd2 = ["awk", "$1=="+jobID+" {print NR-1}"]
     return installib.test([cmd1, cmd2])
