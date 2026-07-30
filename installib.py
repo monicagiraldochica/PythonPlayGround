@@ -32,7 +32,7 @@ def runBash(cmd: list, output_file: str=""):
         if file_handle:
             file_handle.close()
 
-def test(commands):
+def runPipedCommands(commands: list[list]):
     try:
         prev_proc = None
         for cmd in commands:
