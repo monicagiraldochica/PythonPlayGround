@@ -32,11 +32,11 @@ def runBash(cmd: list, output_file: str=""):
         if file_handle:
             file_handle.close()
 
-def test(jobID: str, partition: str):
+def test(commands):
     try:
-        p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1 = subprocess.Popen(commands[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
-        p2 = subprocess.Popen(["awk", "$1=="+jobID+" {print NR-1}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p2 = subprocess.Popen(commands[1], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         p1.stdout.close()
 
         stdout, stderr = p2.communicate()
