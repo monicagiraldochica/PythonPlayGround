@@ -33,6 +33,7 @@ def runBash(cmd: list, output_file: str=""):
             file_handle.close()
 
 def runPipedCommands(commands: list[list]):
+    print("entro")
     try:
         print("como vas")
         #processes = []
@@ -55,8 +56,9 @@ def runPipedCommands(commands: list[list]):
         #return processes[-1].returncode, stderr, stdout
         
     except Exception as e:
-         err = (e.stderr or e.stdout or str(e)).strip()
-         return e.returncode, err, ""
+        print("error")
+         #err = (e.stderr or e.stdout or str(e)).strip()
+         #return e.returncode, err, ""
 
 def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0, exact_vers: bool=False):
     python_info = sys.version_info
