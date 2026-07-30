@@ -494,21 +494,14 @@ def getQueuePos_OOD(netID: str, jobID: str):
     # Return the position of jobID in the ordered list by priority
     return str(ordered_id.index(jobID)), ""
     
-
 def getSqueueInfo(netID: str, jobID: str):
-    try:
-        p1 = subprocess.Popen(["squeue", "-u", netID, "-o", "%i|%P|%j|%u|%T|%M|%D|%R"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        p2 = subprocess.Popen(["grep", jobID], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        p1.stdout.close()
+    cmd1 = ["squeue", "-u", netID, "-o", "%i|%P|%j|%u|%T|%M|%D|%R"]
+    cmd2 = ["grep", jobID]
+    code, stderr, stdout = installib.runPipedCommands([cmd1, cmd2])
 
-        stdout, stderr = p2.communicate()
-        if p2.returncode!=0:
-            return "", stderr
-        return stdout.replace("\n",""), stderr
-
-    except Exception as e:
-        return "", f"ERROR: squeue failed: {e}"
+    if code!=0:
+        return "", stderr
+    return stdout.replace("\n",""), stderr
 
 def checkPartition(partition: str):
     code, stderr, stdout = installib.runBash(["sinfo", "-p", "normal", "-o", "%D|%t|%N", "-h"])
