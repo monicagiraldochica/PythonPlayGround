@@ -32,6 +32,21 @@ def runBash(cmd: list, output_file: str=""):
         if file_handle:
             file_handle.close()
 
+def test(jobID: str, partition: str):
+    try:
+        p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        p2 = subprocess.Popen(["awk", "$1=="+jobID+" {print NR-1}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1.stdout.close()
+
+        stdout, stderr = p2.communicate()
+        if p2.returncode!=0:
+            return "", stderr
+        return stdout.replace("\n", ""), stderr
+
+    except Exception as e:
+        return "", f"ERROR: sprio failed: {e}"
+
 def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0, exact_vers: bool=False):
     python_info = sys.version_info
     major = python_info.major or 0

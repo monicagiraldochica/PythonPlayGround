@@ -382,20 +382,8 @@ def isValidDate(date: str):
         return False
 
 def getQueuePos_notOOD(jobID: str, partition: str):
-    print("lalala")
-    try:
-        p1 = subprocess.Popen(["sprio", "-p", partition, "--sort", "-y"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        p2 = subprocess.Popen(["awk", "$1=="+jobID+" {print NR-1}"], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        p1.stdout.close()
-
-        stdout, stderr = p2.communicate()
-        if p2.returncode!=0:
-            return "", stderr
-        return stdout.replace("\n", ""), stderr
-
-    except Exception as e:
-        return "", f"ERROR: sprio failed: {e}"
+    print("lelele")
+    installib.test(jobID, partition)
 
 def isInteractive(jobID:str):
     try:
