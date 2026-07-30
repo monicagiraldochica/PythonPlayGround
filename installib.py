@@ -36,7 +36,17 @@ def runPipedCommands(commands: list[list]):
     print("entro3")
     try:
         print(commands[0])
+        p1 = subprocess.Popen(commands[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
         print(commands[1])
+
+        p2 = subprocess.Popen(commands[1], stdin= p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        p1.stdout.close()
+
+        stdout, stderr = p2.communicate()
+        if p2.returncode!=0:
+            return "", stderr
+        return stdout.replace("\n", ""), stderr
         
     except Exception as e:
         print("error")
