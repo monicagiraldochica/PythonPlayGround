@@ -383,7 +383,7 @@ def isValidDate(date: str):
 
 def getQueuePos_notOOD(jobID: str, partition: str):
     print("lelele")
-    installib.test(jobID, partition)
+    return installib.test(jobID, partition)
 
 def isInteractive(jobID:str):
     try:
