@@ -33,29 +33,8 @@ def runBash(cmd: list, output_file: str=""):
             file_handle.close()
 
 def runPipedCommands(commands: list[list]):
-    try:
-        processes = []
-        prev_stdout = None
-
-        for cmd in commands:
-            p = subprocess.Popen(cmd, stdin=prev_stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-            if prev_stdout is not None:
-                prev_stdout.close()
-
-            prev_stdout = p.stdout
-            processes.append(p)
-
-        stdout, stderr = processes[-1].communicate()
-
-        for p in processes[:-1]:
-            p.wait()
-            
-        return processes[-1].returncode, stderr, stdout
-        
-    except Exception as e:
-         err = (e.stderr or e.stdout or str(e)).strip()
-         return e.returncode, err, ""
+   print(commands[0])
+   print(commands[1])
 
 def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0, exact_vers: bool=False):
     python_info = sys.version_info
