@@ -36,15 +36,21 @@ def test(commands):
     try:
         prev_proc = None
 
-        p1 = subprocess.Popen(commands[0], stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if prev_proc is not None:
-            prev_proc.stdout.close()
-        prev_proc = p1
+        for cmd in commands:
+            p = subprocess.Popen(cmd, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if prev_proc is not None:
+                prev_proc.stdout.close()
+            prev_proc = p
+
+        #p1 = subprocess.Popen(commands[0], stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        #if prev_proc is not None:
+        #    prev_proc.stdout.close()
+        #prev_proc = p1
         
-        p2 = subprocess.Popen(commands[1], stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if prev_proc is not None:
-            prev_proc.stdout.close()
-        prev_proc = p2
+        #p2 = subprocess.Popen(commands[1], stdin=prev_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        #if prev_proc is not None:
+        #    prev_proc.stdout.close()
+        #prev_proc = p2
 
         stdout, stderr = prev_proc.communicate()
         if prev_proc.returncode!=0:
