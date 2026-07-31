@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Development"
+
 import pandas as pd
 from pathlib import Path
 from datetime import datetime

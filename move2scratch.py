@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Production"
+__status__ = "Development"
 __purpose__ = "Copy files to scratch before submission"
 
 import argparse
