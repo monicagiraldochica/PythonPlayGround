@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Production"
+__status__ = "Alpha"
 __purpose__ = "Install a Perl package"
 
 # Check python version
