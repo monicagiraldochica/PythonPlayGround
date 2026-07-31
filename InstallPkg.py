@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Alpha"
+__status__ = "Development"
 __purpose__ = "Install modules with make"
 
 import sys

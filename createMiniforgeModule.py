@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = "Monica Keith"
-__status__ = "Alpha"
+__status__ = "Development"
 __purpose__ = "Create a module using miniforge"
 
 # Check python version
