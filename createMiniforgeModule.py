@@ -6,7 +6,8 @@ __purpose__ = "Create a module using miniforge"
 # Check python version
 import installib
 import sys
-if not installib.checkPythonVers(3, 7, True)[0]:
+OK, major, minor, micro =  installib.checkPythonVers(3, 7, True)
+if not OK:
     print("ERROR: This script requires Python 3.7\n")
     sys.exit(1)
 
@@ -14,9 +15,10 @@ import argparse
 import re
 import os
 from pathlib import Path
+from textwrap import dedent
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Install bew nodule using miniforge")
+    parser = argparse.ArgumentParser(description="Install new nodule using miniforge")
     parser.add_argument("--main-pkg", help="Name of the module to be created", required=True)
     parser.add_argument("--version", help="Module version", required=True)
     args = parser.parse_args()
@@ -86,24 +88,40 @@ def main():
 
             # The module was created at some point, but it was disabled
             else:
-                msg+=f"and there's a module folder for this app ({ml_folder}). However, the module is not available.\nDo you want to proceed? [y/N]: "           
+                msg+=dedent(f"""and there's a module folder for this app ({ml_folder}). 
+                                However, the module is not available.
+                                Do you want to proceed? [y/N]: """)      
 
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
 
         elif os.path.isdir(apps_path):
-            msg = f"{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.\nContent of {apps_path}:\n{installib.contentFolder(apps_path)}\nDo you want to proceed? [y/N]: "
+            msg = dedent( f"""{main_pkg} was previously downloaded in {apps_path}, outside miniforge, but no module was created.
+                            Content of {apps_path}:
+                            {installib.contentFolder(apps_path)}
+                            Do you want to proceed? [y/N]: """)
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
 
-    if input("Is this running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
-        print(f"Take note in which node you're located, then run: screen -S {main_pkg}_python")
+    if input("Is this script running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
+        print(dedent(f"""This script needs to run inside a screen process.
+                        Take note in which node you're located.
+                        Then run: screen -S {main_pkg}_python"""))
         sys.exit(0)
 
     # Create screen process for the actual install
     node = input("In which node are you running the install?: ")
+    input("Login as root in that node [Enter]")
     input(f"Create a screen process for the actual install: screen -S {main_pkg}_install [Enter]")
 
+    # load required modules
+    input("ml load miniforge")
+    if input(f"Does {main_pkg} use GPU? [y/N]: ").strip().lower() not in ["y", "yes"]:
+        input("ml load cuda")
+    if input(f"Does {main_pkg} use MPI? [y/N]: ").strip().lower() not in ["y", "yes"]:
+        input("ml load openmpi")
+
+    # Create conda environment
     if create_env:
         if micro:
             default_py = f"{major}.{minor}.{micro}"
@@ -113,9 +131,15 @@ def main():
         venv_python = input(f"\nWhat python version is required by {main_pkg}/{version} (i.e. python>=3.10, python=3.13. [Enter] if no specific version required): ") or f"python={default_py}"
         if (not venv_python.startswith("python=")) and (not venv_python.startswith("python>")):
             venv_python = f"python={venv_python}"
-        input(f"\nconda create -n {env_name} {venv_python} [Enter]")
+        conda_create_cmd = f"\nconda create -n {env_name} {venv_python}"
+
+        for channel in input("Required channels ([Enter] if no specific channels required): ").strip().lower().split(","):
+            conda_create_cmd+=f"-c {channel}"
+
+        input(f"\n{conda_create_cmd} [Enter]")
         input(f"conda env list | grep {env_name} [Enter]")
 
+    # Activate conda environment
     if os.path.isdir(forge_dir):
         input(f"\nconda activate {env_name} [Enter]")
     else:
