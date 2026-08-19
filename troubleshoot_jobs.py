@@ -196,6 +196,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     AllocCPUS = int(df.loc[df["Field"] == "AllocCPUS", titles[0]].iloc[0])
     if RunTime_sec!=0:
         CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
+        print("RunTime_sec is not zero")
     else:
         CPUpct = 0
         print("RunTime_sec is zero")
