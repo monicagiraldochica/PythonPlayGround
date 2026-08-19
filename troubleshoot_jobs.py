@@ -1096,7 +1096,7 @@ def main():
                 pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
                 if pct>=100:
                     print(f"Memory efficiency is {pct}%. The job hit the memory limit.")
-                    #python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory
+                    print("The user can use python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory.")
                 elif pct>70:
                     print(f"Memory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
                 elif pct<30:
