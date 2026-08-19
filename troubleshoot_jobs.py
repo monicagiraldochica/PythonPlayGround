@@ -198,6 +198,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
     else:
         CPUpct = 0
+        print("RunTime_sec is zero")
     new_row = {col: "" for col in df.columns}
     new_row["Field"] = "CPUpct"
     new_row[titles[0]] = CPUpct
