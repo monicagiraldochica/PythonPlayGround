@@ -1110,16 +1110,17 @@ def main():
                     elif pct<20:
                         print(f"The job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
 
+                # If CPU efficiency is far below 100%, the job is not using all allocated cores.
                 CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
                 AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
+                CPUused = round(AllocCPUS*CPUpct*100)
                 if CPUpct<5:
-                    print(f"This job is single threaded but is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+                    print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
                 elif CPUpct<20:
-                    print(f"There's a high chance that the job is single threaded, but the user is requesting {AllocCPUS}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+                    print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
                 elif CPUpct<50:
-                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs than those requested ({AllocCPUS}).")
+                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")                
                 
-                #If this is far below 100%, the job is not using all allocated cores.
             except:
                 pass
         input("[Enter]")
