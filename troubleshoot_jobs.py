@@ -768,8 +768,10 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, 
     - Run commands preceded by 'time ' if needed.
     - Run commands or script preceded by 'strace -o output.txt --failed-only '.
     - Run 'top -i -u {netID}' (-i to hide zombie or idle processes):
+        - Gives the processes running from {netID} on the compute node.
         - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. That could explain some of longer run times.
         - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
+    [Enter]
     """)
         
     if input("\nDo you want to continue investigating further? [y/N]").lower().strip() not in ["y", "yes"]:
