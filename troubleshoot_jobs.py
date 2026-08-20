@@ -770,6 +770,19 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, 
         - Gives the processes running from {netID} on the compute node.
         - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. That could explain some of longer run times.
         - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
+        - If a process has 100% for CPU %, it does NOT mean that is using all requested CPUs. It just means is using 100% of one CPU:
+            - 100% -> the process is using approximately 1 core.
+            - 400% -> the process is using approximately 4 cores.
+            - 2400% -> the process is using approximately 24 cores.
+        - For the number of CPUs being used, is better to use jobstats. Top is more useful for memory peaks but not for CPU usage because it shows the activity for the entire node by default.
+        - Normally, top shows one row per process, combining CPU usage from all its threads. With top -H, it shows one row per thread. The thread IDs appear in the PID column, even though they are technically TIDs.
+        - This shows a one-time snapshot with one row for the process:
+            - PID: process ID
+            - PPID: parent process ID
+            - NLWP: total number of threads created by the process
+            - %CPU: CPU usage aggregated at the process level
+            - CMD: command
+    - This also gives the average number of cores (which should match the output of jobstats): ps -u {netID} -o %cpu= | awk '{{sum += $1}} END {{printf "Approximately %.2f CPU cores\\n", sum/100}}'
     [Enter]
     """)
         
