@@ -1150,17 +1150,16 @@ def main():
             if stopped:
                 CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
                 AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
-                CPUused = round(AllocCPUS*CPUpct*100)
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
                 CPUpct = float(input("CPU efficiency (CPU utilization per node): ").replace("%", ""))
                 AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
-                AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
-                CPUused = round(AllocCPUS*CPUpct/100)
+                AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))                
         except Exception as e:
             print(f"Could not get the CPU efficiency of the job: {e}")
             CPUpct = -1
 
+        CPUused = round(AllocCPUS*CPUpct/100)
         if CPUpct<5:
             print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
         elif CPUpct<20:
