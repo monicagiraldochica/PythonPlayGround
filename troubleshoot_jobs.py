@@ -701,28 +701,34 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
         input("Close KeePass [Enter]")
         input(f"vi /var/www/ood/apps/sys/{app_name}/template/script.sh.erb [Enter]")
 
-def checkLogs(df: pd.DataFrame, job_col: str):    
-    if "StdErr" in df["Field"].values:
-        stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-        if os.path.isfile(stdErr):
-            with open(stdErr, "r") as f:
-                contentErr = f.read()
+def checkLogs(df: pd.DataFrame, job_col: str):
+    fields = df["Field"].values
+    if "WorkDir" in fields:
+        workDir = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
+
+        if "StdErr" in fields:
+            stdErr = workDir+"/"+df.loc[df["Field"] == "StdErr", job_col].iloc[0]
+            if os.path.isfile(stdErr):
+                with open(stdErr, "r") as f:
+                    contentErr = f.read()
+            else:
+                print(f"StdErr file doenst exist: {stdErr}")
+                contentErr = ""
         else:
             contentErr = ""
-    else:
-        contentErr = ""
 
-    if "StdOut" in df["Field"].values:
-        stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-        if os.path.isfile(stdOut):
-            with open(stdOut, "r") as f:
-                contentOut = f.read()
+        if "StdOut" in fields:
+            stdOut =  workDir+"/"+df.loc[df["Field"] == "StdOut", job_col].iloc[0]
+            if os.path.isfile(stdOut):
+                with open(stdOut, "r") as f:
+                    contentOut = f.read()
+            else:
+                print(f"StdOut file doenst exist: {stdOut}")
+                contentOut = ""
         else:
-            print("StdOut file doenst exist")
             contentOut = ""
     else:
-        print("StdOut not in Fields")
-        contentOut = ""
+        contentOut = contentErr = ""
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
         nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
@@ -730,13 +736,15 @@ def checkLogs(df: pd.DataFrame, job_col: str):
             Check if the /tmp folder is full in {nodes}.""")
         input("Enter")
 
-    print(f"""\nContent of error log ({stdErr}):
-    {contentErr}""")
-    input("[Enter]")
+    if contentErr:
+        print(f"""\nContent of error log ({stdErr}):
+        {contentErr}""")
+        input("[Enter]")
 
-    print(f"""\nContent of output log ({stdOut}):
-    {contentOut}""")
-    input("[Enter]")
+    if contentOut:
+        print(f"""\nContent of output log ({stdOut}):
+        {contentOut}""")
+        input("[Enter]")
 
 def checkHomeDir(netID: str):
     input("\nIn a different Terminal, login as root (if you haven't done so) [Enter]")
