@@ -745,7 +745,7 @@ def checkHomeDir(netID: str):
             sys.exit(0)
     input("Log off the user [Enter]")
 
-def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):    
+def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, netID: str):    
     if stopped:            
         partition = input("What partition was the job running in? (default: normal): ") or "normal"
         job_time = input("Job time (default 01:00:00): ") or "01:00:00"
@@ -767,7 +767,7 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str):
     Options:
     - Run commands preceded by 'time ' if needed.
     - Run commands or script preceded by 'strace -o output.txt --failed-only '.
-    - Run 'top -i' (-i to hide zombie or idle processes):
+    - Run 'top -i -u {netID}' (-i to hide zombie or idle processes):
         - If the load average is higher than the number of CPUs ({num_cpus}), that will mean that all cores are being used, and some processes are waiting for CPU time. That could explain some of longer run times.
         - Check how many jobs are running and how many are sleeping (waiting for CPU to become available).
     """)
@@ -1176,7 +1176,7 @@ def main():
 
         # Run interactive tests
         if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
-            interactiveTests(stopped, df, job_col, jobID)
+            interactiveTests(stopped, df, job_col, jobID, netID)
             
         # Check additional logs
         print(f"\nDo NOT run as root: id {netID} [Enter]")
