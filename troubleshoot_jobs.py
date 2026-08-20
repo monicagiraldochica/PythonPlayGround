@@ -704,15 +704,21 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
 def checkLogs(df: pd.DataFrame, job_col: str):    
     if "StdErr" in df["Field"].values:
         stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-        with open(stdErr, "r") as f:
-            contentErr = f.read()
+        if os.path.isfile(stdErr):
+            with open(stdErr, "r") as f:
+                contentErr = f.read()
+        else:
+            contentErr = ""
     else:
         contentErr = ""
 
     if "StdOut" in df["Field"].values:
         stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-        with open(stdOut, "r") as f:
-            contentOut = f.read()
+        if os.path.isfile(stdOut):
+            with open(stdOut, "r") as f:
+                contentOut = f.read()
+        else:
+            contentOut = ""
     else:
         contentOut = ""
         
@@ -1152,7 +1158,7 @@ def main():
                 AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
-                CPUpct = float(input("CPU efficiency (CPU utilization per node): ").replace("%", ""))
+                CPUpct = float(input("CPU efficiency (CPU utilization per node): ").replace("%", ""), 2)
                 AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
                 AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))                
         except Exception as e:
@@ -1161,7 +1167,7 @@ def main():
 
         CPUused = round(AllocCPUS*CPUpct/100)
         if CPUpct<5:
-            print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+            print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU or check if the commands are missing a flag to implement the expected threads.")
         elif CPUpct<20:
             print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
         elif CPUpct<50:
