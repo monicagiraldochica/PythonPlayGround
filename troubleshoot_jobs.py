@@ -718,8 +718,10 @@ def checkLogs(df: pd.DataFrame, job_col: str):
             with open(stdOut, "r") as f:
                 contentOut = f.read()
         else:
+            print("StdOut file doenst exist")
             contentOut = ""
     else:
+        print("StdOut not in Fields")
         contentOut = ""
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
@@ -728,11 +730,11 @@ def checkLogs(df: pd.DataFrame, job_col: str):
             Check if the /tmp folder is full in {nodes}.""")
         input("Enter")
 
-    print(f"""\nContent of error log:
+    print(f"""\nContent of error log ({stdErr}):
     {contentErr}""")
     input("[Enter]")
 
-    print(f"""\nContent of output log:
+    print(f"""\nContent of output log ({stdOut}):
     {contentOut}""")
     input("[Enter]")
 
