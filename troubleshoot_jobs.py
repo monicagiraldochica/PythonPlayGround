@@ -708,21 +708,23 @@ def checkLogs(df: pd.DataFrame, job_col: str):
 
         try:
             stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-            stdErr = f"{workDir}/{stdErr}"
-            with open(stdErr, "r") as f:
+            stdErr_path = f"{workDir}/{stdErr}"
+            with open(stdErr_path, "r") as f:
                 contentErr = f.read()
         except Exception as e:
-            print(f"Can't read error log {stdErr}: {e}")
+            if stdErr!="":
+                print(f"Can't read error log {stdErr_path}: {e}")
             stdErr = ""
             contentErr = ""
 
         try:
             stdOut = str(df.loc[df["Field"] == "StdOut", job_col].iloc[0])
-            stdOut = f"{workDir}/{stdOut}"
-            with open(stdOut, "r") as f:
+            stdOut_path = f"{workDir}/{stdOut}"
+            with open(stdOut_path, "r") as f:
                 contentOut = f.read()
         except Exception as e:
-            print(f"Can't read output log {stdOut}: {e}")
+            if stdOut!="":
+                print(f"Can't read output log {stdOut_path}: {e}")
             stdOut = ""
             contentOut = ""
         
