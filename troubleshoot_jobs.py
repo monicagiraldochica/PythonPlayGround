@@ -545,13 +545,15 @@ def maintenanceEmail(window: str, netID: str, jobID: str):
     RCC
     """)
 
-def priorityEmail(jobID: str, netID: str, lastLine: str):
+def priorityEmail(jobID: str, netID: str, info: str):
     print("Send the user the following email:\n")
 
     print(f"""
     Hello {netID},
     
     Job {jobID} is currently queued because because other jobs in the system have a higher scheduling priority at this time. This is normal behavior on a shared HPC cluster and does not indicate a problem with your job.
+
+    {info}
 
     The scheduler determines job priority using several factors, including the requested resources and the resources that the user has used the past days. To ensure fair use of cluster resources, users who have consumed a larger share of the cluster in recent days may see reduced scheduling priority compared to users who have used fewer resources. This helps provide equitable access to the system for all users.
 
