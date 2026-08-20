@@ -714,6 +714,7 @@ def checkLogs(df: pd.DataFrame, job_col: str):
         except Exception as e:
             if stdErr!="":
                 print(f"Can't read error log {stdErr_path}: {e}")
+                input("Open file in a different Terminal as root [Enter]")
             stdErr = ""
             contentErr = ""
 
@@ -725,6 +726,7 @@ def checkLogs(df: pd.DataFrame, job_col: str):
         except Exception as e:
             if stdOut!="":
                 print(f"Can't read output log {stdOut_path}: {e}")
+                input("Open file in a different Terminal as root [Enter]")
             stdOut = ""
             contentOut = ""
         
