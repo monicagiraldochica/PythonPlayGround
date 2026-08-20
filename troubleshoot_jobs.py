@@ -1152,8 +1152,7 @@ def main():
                 print(f"Can't calculate the number of CPU being used. AllocTRES: {AllocTRES}.")
 
             AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
-            CPUused = round(AllocCPUS*CPUpct*100)
-
+            CPUused = round(AllocCPUS*CPUpct/100)
             if CPUpct<5:
                 print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
             elif CPUpct<20:
