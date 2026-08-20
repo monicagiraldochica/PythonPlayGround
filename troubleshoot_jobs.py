@@ -701,16 +701,16 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
         input("Close KeePass [Enter]")
         input(f"vi /var/www/ood/apps/sys/{app_name}/template/script.sh.erb [Enter]")
 
-def checkLogs(df: pd.DataFrame, job_col: str):
-    stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-    if stdErr:
+def checkLogs(df: pd.DataFrame, job_col: str):    
+    if "StdErr" in df["Field"].values:
+        stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
         with open(stdErr, "r") as f:
             contentErr = f.read()
     else:
         contentErr = ""
 
-    stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-    if stdOut:
+    if "StdOut" in df["Field"].values:
+        stdOut = df.loc[df["Field"] == "StdOut", job_col].iloc[0]
         with open(stdOut, "r") as f:
             contentOut = f.read()
     else:
@@ -718,7 +718,6 @@ def checkLogs(df: pd.DataFrame, job_col: str):
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
         nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
-        nodes = ",".join(nodes)
         print(f"""\n'No space left on device' error found in the logs.
             Check if the /tmp folder is full in {nodes}.""")
         input("Enter")
@@ -1160,7 +1159,7 @@ def main():
             elif CPUpct<50:
                 print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
 
-            input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory.")
+            input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory. [Enter]")
 
             if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
                 print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
