@@ -1154,7 +1154,7 @@ def main():
         # If CPU efficiency is far below 100%, the job is not using all allocated cores.
         try:
             if stopped:
-                CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
+                CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0], 2)
                 AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
