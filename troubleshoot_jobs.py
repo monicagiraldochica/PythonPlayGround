@@ -1105,67 +1105,68 @@ def main():
             print("ERROR: could not get job info")
         sys.exit(1)
 
-    # Print job statistics
-    else:        
+    else:
+        # Print job statistics 
         simple_df = printJobStats(jobID, df)
+        print("\n")
 
-        if stopped:
-            try:
-                print("\n")
-
+        # Analyze the memory usage of the job
+        try:
+            if stopped:
                 MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
-                pct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
-                if pct>=100:
-                    print(f"Memory efficiency is {pct}%. The job hit the memory limit.")
-                    print("The user can use python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory.")
-                elif pct>70:
-                    print(f"Memory efficiency is {pct}%. The job was close to the limit and could easily OOM on other inputs.")
-                elif pct<30:
-                    print(f"Memory efficiency is {pct}%. The user is over-requesting memory.")
+                MEMpct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
+            else:
+                input(f"Run: jobstats {jobID} [Enter]")
+                MEMpct = float(input("CPU memory usage percentage: ").replace("%", ""))
+        except Exception as e:
+            print(f"Could not get the % of memory used by the job: {e}")
+            MEMpct = -1
 
-                if pct<100:
-                    RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
-                    pct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
-                    if pct>80:
-                        print(f"The job ran in {pct}% of the requested wall time. It could hit wall time in future runs.")
-                    elif pct<20:
-                        print(f"The job ran in {pct}% of the requested wall time. The user is over-requesting wall time.")
+        if MEMpct>=100:
+            print(f"Memory efficiency is {MEMpct}%. The job hit the memory limit.")
+            print("The user can use python -m memory_profiler script.py if it's a python script to see what parts of the code are using more memory.")
+        elif MEMpct>70:
+            print(f"Memory efficiency is {MEMpct}%. The job was close to the limit and could easily OOM on other inputs.")
+        elif MEMpct<30 and MEMpct>0:
+            print(f"Memory efficiency is {MEMpct}%. The user is over-requesting memory.")      
 
-                # If CPU efficiency is far below 100%, the job is not using all allocated cores.
+        # Analyze the wall time usage of the job
+        if MEMpct<100:
+            try:
+                RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
+                TMpct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
+            except Exception as e:
+                print(f"Could not get the % of wall time used by the job: {e}")
+                TMpct = -1
+
+            if TMpct>80:
+                print(f"The job ran in {TMpct}% of the requested wall time. It could hit wall time in future runs.")
+            elif TMpct<20 and TMpct>0:
+                print(f"The job ran in {TMpct}% of the requested wall time. The user is over-requesting wall time.")
+
+        # Analyze the CPU usage of the job
+        # If CPU efficiency is far below 100%, the job is not using all allocated cores.
+        try:
+            if stopped:
                 CPUpct = float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0])
                 AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
                 CPUused = round(AllocCPUS*CPUpct*100)
-                if CPUpct<5:
-                    print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
-                elif CPUpct<20:
-                    print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-                elif CPUpct<50:
-                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")                
-                
-            except:
-                pass
-
-        else:
-            input(f"Run: jobstats {jobID} [Enter]")
-
-            CPUpct = input("CPU efficiency (CPU utilization per node): ").replace("%", "")
-            try:
-                CPUpct = float(CPUpct)
-
+            else:
+                input(f"Run: jobstats {jobID} [Enter]")
+                CPUpct = float(input("CPU efficiency (CPU utilization per node): ").replace("%", ""))
                 AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
                 AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
                 CPUused = round(AllocCPUS*CPUpct/100)
+        except Exception as e:
+            print(f"Could not get the CPU efficiency of the job: {e}")
+            CPUpct = -1
 
-                if CPUpct<5:
-                    print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
-                elif CPUpct<20:
-                    print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-                elif CPUpct<50:
-                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
-                input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory. [Enter]")
-
-            except:
-                print("Not a valid value, can't calculate the number of CPU being used.")
+        if CPUpct<5:
+            print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+        elif CPUpct<20:
+            print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+        elif CPUpct<50:
+            print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")  
 
         input("[Enter]")
 
