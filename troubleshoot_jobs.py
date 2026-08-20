@@ -1105,9 +1105,10 @@ def main():
             print("ERROR: could not get job info")
         sys.exit(1)
 
-    else:
-        # Print job statistics
+    # Print job statistics
+    else:        
         simple_df = printJobStats(jobID, df)
+
         if stopped:
             try:
                 print("\n")
@@ -1143,6 +1144,29 @@ def main():
                 
             except:
                 pass
+
+        else:
+            input(f"Run: jobstats {jobID} [Enter]")
+
+            CPUpct = input("CPU efficiency (CPU utilization per node): ").replace("%", "")
+            try:
+                CPUpct = float(CPUpct)
+
+                AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
+                AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
+                CPUused = round(AllocCPUS*CPUpct/100)
+
+                if CPUpct<5:
+                    print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+                elif CPUpct<20:
+                    print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+                elif CPUpct<50:
+                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
+                input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory. [Enter]")
+
+            except:
+                print("Not a valid value, can't calculate the number of CPU being used.")
+
         input("[Enter]")
 
         # Check if the job ran in OOD
@@ -1152,28 +1176,6 @@ def main():
 
         # If not, check the normal logs
         else:
-            print(f"Run: jobstats {jobID}")
-            CPUpct = input("CPU efficiency (CPU utilization per node): ").replace("%", "")
-            try:
-                CPUpct = float(CPUpct)
-            except:
-                print("Not a valid value, can't calculate the number of CPU being used.")
-
-            AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
-            if not AllocTRES.startswith("cpu="):
-                print(f"Can't calculate the number of CPU being used. AllocTRES: {AllocTRES}.")
-
-            AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
-            CPUused = round(AllocCPUS*CPUpct/100)
-            if CPUpct<5:
-                print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
-            elif CPUpct<20:
-                print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-            elif CPUpct<50:
-                print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
-
-            input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory. [Enter]")
-
             if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
                 print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
                     GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
