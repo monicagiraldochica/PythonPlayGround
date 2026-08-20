@@ -1132,8 +1132,6 @@ def main():
             except:
                 pass
         input("[Enter]")
-        if input("Do you want to continue investigating? [Y/n]: ").strip().lower() in ["n", "no"]:
-            sys.exit(0)
 
         # Check if the job ran in OOD
         job_col = df.columns.values.tolist()[1]
@@ -1144,21 +1142,24 @@ def main():
         else:
             print(f"Run: jobstats {jobID}")
             CPUpct = input("CPU efficiency (CPU utilization per node): ").replace("%", "")
-            if not isinstance(CPUpct, (int, float)):
-                print("Not a valid value, can't calculate the number of CPU being used.")
-            else:
+            try:
                 CPUpct = float(CPUpct)
-                AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
-                if not AllocTRES.startswith("cpu="):
-                    print(f"Can't calculate the number of CPU being used. AllocTRES: {AllocTRES}.")
-                AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
-                CPUused = round(AllocCPUS*CPUpct*100)
-                if CPUpct<5:
-                    print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
-                elif CPUpct<20:
-                    print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-                elif CPUpct<50:
-                    print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
+            except:
+                print("Not a valid value, can't calculate the number of CPU being used.")
+
+            AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
+            if not AllocTRES.startswith("cpu="):
+                print(f"Can't calculate the number of CPU being used. AllocTRES: {AllocTRES}.")
+
+            AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
+            CPUused = round(AllocCPUS*CPUpct*100)
+
+            if CPUpct<5:
+                print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU.")
+            elif CPUpct<20:
+                print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+            elif CPUpct<50:
+                print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
 
             input("From the output of jobstats you can also check memory efficiency (CPU memory usage per node) to see if the user is over requesting memory.")
 
