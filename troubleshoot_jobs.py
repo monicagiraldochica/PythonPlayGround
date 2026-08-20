@@ -26,7 +26,9 @@ SCONTROL_FIELDS = [ "UserId", "JobState", "Partition", "WorkDir", "StdErr", "Std
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id: str):
     # Run scontrol command
-    [returncode, stderr, stdout] = installib.runBash(["scontrol", "show", "job", str(job_id)])
+    cmd = ["scontrol", "show", "job", str(job_id)]
+    print(f"Getting job information from: {' '.join(cmd)}")
+    [returncode, stderr, stdout] = installib.runBash(cmd)
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"scontrol failed: {err}")
@@ -144,7 +146,9 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
 
     try:
         # Run acct command
-        result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader", "--parsable2"], capture_output=True, text=True, check=True)
+        cmd = ["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader", "--parsable2"]
+        print(f"Getting job infformation from: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
     except subprocess.CalledProcessError:
         # Job not found or command failed
