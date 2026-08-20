@@ -706,29 +706,25 @@ def checkLogs(df: pd.DataFrame, job_col: str):
     if "WorkDir" in fields:
         workDir = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
 
-        if "StdErr" in fields:
-            stdErr = workDir+"/"+df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-            if os.path.isfile(stdErr):
-                with open(stdErr, "r") as f:
-                    contentErr = f.read()
-            else:
-                print(f"StdErr file doenst exist: {stdErr}")
-                contentErr = ""
-        else:
+        try:
+            stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
+            stdErr = f"{workDir}/{stdErr}"
+            with open(stdErr, "r") as f:
+                contentErr = f.read()
+        except Exception as e:
+            print(f"Can't read error log {stdErr}: {e}")
+            stdErr = ""
             contentErr = ""
 
-        if "StdOut" in fields:
-            stdOut =  workDir+"/"+df.loc[df["Field"] == "StdOut", job_col].iloc[0]
-            if os.path.isfile(stdOut):
-                with open(stdOut, "r") as f:
-                    contentOut = f.read()
-            else:
-                print(f"StdOut file doenst exist: {stdOut}")
-                contentOut = ""
-        else:
+        try:
+            stdOut = str(df.loc[df["Field"] == "StdOut", job_col].iloc[0])
+            stdOut = f"{workDir}/{stdOut}"
+            with open(stdOut, "r") as f:
+                contentOut = f.read()
+        except Exception as e:
+            print(f"Can't read output log {stdOut}: {e}")
+            stdOut = ""
             contentOut = ""
-    else:
-        contentOut = contentErr = ""
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
         nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
