@@ -24,7 +24,7 @@ SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Par
 SCONTROL_FIELDS = [ "UserId", "JobState", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
 
 # Only works for running, queued or recently finished jobs
-def get_jobInfo_scontrol(job_id: str):
+def get_jobInfo_scontrol(job_id: str) -> pd.DataFrame:
     # Run scontrol command
     cmd = ["scontrol", "show", "job", str(job_id)]
     print(f"Getting job information from: {' '.join(cmd)}")
@@ -58,9 +58,7 @@ def get_jobInfo_scontrol(job_id: str):
     return df
 
 def parseMem(value: str):
-    unit = value[-1].upper()
-    value = value[:-1]
-    return value, unit
+    return value[:-1], value[-1].upper()
 
 def editMemUsage(ReqMem: str, MaxMem: str) -> str:
     # Define unit multipliers
@@ -77,19 +75,17 @@ def editMemUsage(ReqMem: str, MaxMem: str) -> str:
 
         # Compute percentage
         pct = (MaxBytes / ReqBytes) * 100
-        pct_str = f"{pct:.2f}".strip('0').rstrip('.')
-        if not pct_str:
-            pct_str = "0"
+        pct_str = f"{pct:.2f}".rstrip('0').rstrip('.')
 
         return f"{MaxMem} ({pct_str}% of ReqMem)"
     
-    except Exception:
+    except (ValueError, KeyError, ZeroDivisionError):
         return MaxMem
 
 def parseTime(t: str) -> int:
     t = t.strip()
     if "-" in t:
-        days, time_part = t.split("-")
+        days, time_part = t.split("-", 1)
     else:
         days = 0
         time_part = t
@@ -99,7 +95,7 @@ def parseTime(t: str) -> int:
     if len(time_part)==3:
         hours = time_part[0]
         minutes = time_part[1]
-        seconds = time_part[2]
+        seconds = time_part[2].split(".")[0]
     
     elif len(time_part)==2:
         hours = 0
@@ -126,7 +122,7 @@ def editRunTime(walltime: str, runtime: str) -> str:
 
         return f"{runtime} ({pct_str}% of WallTime)"
     
-    except Exception:
+    except (ValueError, ZeroDivisionError):
         return runtime
 
 def uniqueTitles(titles_orig):
@@ -140,16 +136,18 @@ def uniqueTitles(titles_orig):
     return new_titles
 
 # Better to use for failed or completed jobs
-def get_jobInfo_sacct(job_id: str, netID: str=""):
+def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
     format_str = ",".join(SACCT_FIELDS)
 
     try:
         # Run acct command
         cmd = ["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader", "--parsable2"]
-        print(f"Getting job infformation from: {' '.join(cmd)}")
+        print(f"Getting job information from: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        err = (e.stderr or e.stdout or "").strip()
+        print(f"sacct failed: {err}")
         # Job not found or command failed
         return pd.DataFrame()
     
@@ -158,14 +156,15 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
         return pd.DataFrame()
     
     first_line = output[0].split("|")
-    if "/" in first_line[1]:
-        first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
     second_line = output[1].split("|")
     third_line = output[2].split("|")
-
-    titles = uniqueTitles([first_line[1], second_line[1], third_line[1]])
     if len(first_line)<len(SACCT_FIELDS) or len(second_line)<len(SACCT_FIELDS) or len(third_line)<len(SACCT_FIELDS):
         return pd.DataFrame()
+
+    if "/" in first_line[1]:
+        first_line[1] = f"OOD_{os.path.basename(first_line[1])}"
+
+    titles = uniqueTitles([first_line[1], second_line[1], third_line[1]])
     
     df = pd.DataFrame({ "Field": SACCT_FIELDS, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
@@ -197,7 +196,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     RunTime = RunTime.split(" ")[0]
     RunTime_sec = parseTime(RunTime)
     AllocCPUS = int(df.loc[df["Field"] == "AllocCPUS", titles[0]].iloc[0])
-    if RunTime_sec!=0:
+    if RunTime_sec>0 and AllocCPUS>0 and CPUtime_sec>0:
         CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
     else:
         CPUpct = 0
@@ -245,7 +244,7 @@ def get_jobInfo_sacct(job_id: str, netID: str=""):
     ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
     maxrss_row = df.loc[df["Field"] == "MaxRSS"].iloc[0]
     MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
-    # .strip in this case will be checking it he string has any non white characters
+    # strip() in this case will be checking if the string has any non white characters
     if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
         ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
         MaxRSS = editMemUsage(ReqMem, MaxRSS)
@@ -266,27 +265,28 @@ def parse_arguments():
     parser.add_argument("--user", help="netID", required=True)
     parser.add_argument("--outdir", help="Output folder to save any generated files", required=True)
 
-    parser.add_argument("--stopped", action="store_true", help="Job finished running or failed")
-    parser.add_argument("--queued", action="store_true", help="Job never ran")
+    status = parser.add_mutually_exclusive_group()
+    status.add_argument("--stopped", action="store_true", help="Job finished running or failed")
+    status.add_argument("--queued", action="store_true", help="Job never ran")
 
     parser.add_argument("--jobid", help="jobID")
     parser.add_argument("--submit-date", help="Date when job was submitted (YYYY-MM-DD)")
 
     args = parser.parse_args()
 
-    outdir = args.outdir
-    outdir = outdir[:-1] if outdir.endswith("/") else outdir
-
-    if args.stopped and args.queued:
-        parser.error("You can't provide both --stopped and --queued flags.")
+    outdir = os.path.normpath(args.outdir)
 
     if not (args.jobid or args.submit_date):
         parser.error("You must provide --jobid and/or --submit-date")
+
+    if args.jobid and not args.jobid.isdigit():
+        parser.error("--jobid must be an integer")
+
     if args.submit_date:
         try:
             datetime.strptime(args.submit_date, "%Y-%m-%d")
         except ValueError:
-            parser.error("submit-date must be in format YYYY-MM-DD")
+            parser.error("--submit-date must be in format YYYY-MM-DD")
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
