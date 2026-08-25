@@ -28,13 +28,13 @@ def get_jobInfo_scontrol(job_id: str):
     # Run scontrol command
     cmd = ["scontrol", "show", "job", str(job_id)]
     print(f"Getting job information from: {' '.join(cmd)}")
-    [returncode, stderr, stdout] = installib.runBash(cmd)
+    returncode, stderr, stdout = installib.runBash(cmd)
     if returncode!=0:
         err = (stderr or stdout or "").strip()
         print(f"scontrol failed: {err}")
         return pd.DataFrame()
 
-    output = stdout.strip() if stdout else ""
+    output = (stdout or "").strip()
     if (not output) or ("JobId" not in output):
         # Job not in memory or invalid
         return pd.DataFrame()
@@ -46,11 +46,10 @@ def get_jobInfo_scontrol(job_id: str):
     data = dict(re.findall(r'(\S+?)=(\S+)', output))
 
     # Extract only requested fields
-    info = [(field, data.get(field, "")) for field in SCONTROL_FIELDS]
+    info = [(field, data.get(field, "")) for field in SCONTROL_FIELDS if data.get(field) not in [None, "", "(null)", "None"]]
 
     # Edit DF
     df = pd.DataFrame(info, columns=["Field", "Value"])
-    df = df[~df["Value"].isin([None, '', "(null)", "None"])]
     for col in ["ReqTRES", "AllocTRES"]:
         df.loc[df["Field"]==col, "Value"] = df.loc[df["Field"]==col, "Value"].str.replace(r',billing=.*$', '', regex=True)
     df.loc[df["Field"]=="UserId", "Value"] = df.loc[df["Field"]=="UserId", "Value"].str.replace(r'\(.*$', '', regex=True)
