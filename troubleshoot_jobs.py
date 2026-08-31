@@ -1220,6 +1220,7 @@ def main():
             sys.exit(0)
 
     # Check other submitted jobs on the same date
+    print(df)
     submit_info = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split("T")
     submit_date = submit_info[0]
     submit_time = submit_info[1]
