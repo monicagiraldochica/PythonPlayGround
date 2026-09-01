@@ -759,38 +759,36 @@ def didOODappStart(log_file: str, netID: str, workdir: str):
 
         app_name = match.group(1)
         port = match.group(2)
-        print(f"The failure happened before {app_name} session start. {app_name} was not able to open on port {port}.")
-        print(f"Check if you're able to start a {app_name} as the user:")
+        print(f"\nThe failure happened before {app_name} session start. {app_name} was not able to open on port {port}.")
+        print(f"Check if you're able to start a {app_name} as the {netID}:")
         impersonateUserOOD(netID)
 
-        if input(f"Where you able to start a {app_name} session as {netID}? [y/N] ").lower().strip() in ["y", "yes"]:
+        if input(f"Where you able to start a {app_name} session as {netID}? [y/N]: ").lower().strip() in ["y", "yes"]:
             return -1
         
-        print(f"Check AS ROOT if the users home directory has wrong permissions:")
+        print(f"\nCheck AS ROOT if {netID} home directory has wrong permissions:")
         input("sudo su - [Enter]")
         input(f"ll -a /home/{netID}/ [Enter]")
 
-        print(f"Do NOT run as root: id {netID}")
+        input(f"\nDo NOT run as root: id {netID} [Enter]")
         grp = input("group (sg-something): ")
 
-        if input("Are permissions correct? [Y/n]: ").lower().strip() in ["n", "not"]:
+        if input("\nAre permissions correct? [Y/n]: ").lower().strip() in ["n", "not"]:
             input(f"Run as root: chown -R {netID}:{grp} /home/{netID}/ [Enter]")
 
-            print(f"Check if now you're able to start a {app_name} session:")
+            print(f"\nCheck if now you're able to start a {app_name} session:")
             impersonateUserOOD(netID)
 
             if input("Did that solve the issue? [Y/n]: ").lower().strip() not in ["n", "not"]:
                 homeDirErrorEmail(app_name)
                 return 1
 
-        print("The following steps should reproduce and print the error that is being produced when trying to start the session:")
+        print("\nThe following steps should reproduce and print the error that is being produced when trying to start the session:")
         input(f"su - {netID} [Enter]")
         input(f"srun --ntasks=1 --time=01:00:00 --job-name=test --account={grp} --partition=normal --mem=2gb --pty bash [Enter]")
 
         # Get the list of modules that were loaded right before the session attempted to start
         modules = modulesInOODlogFile(content)
-        print(modules)
-        input(">>>>>> ")
         if not modules:
             print(dedent(f"""
             Could not obtain the list of modules that were loaded before starting the {app_name} session.
@@ -800,7 +798,7 @@ def didOODappStart(log_file: str, netID: str, workdir: str):
             """))
             modules = input(">> ").strip().split(",")
         for module in modules:
-            input(f"module load {module}")
+            input(f"module load {module} [Enter]")
 
         input(f"cd {workdir} [Enter]")
 
