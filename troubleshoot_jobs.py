@@ -744,9 +744,14 @@ def homeDirErrorEmail(app_name: str=""):
 # Return 1 if the problem was solved, -1 if not
 def didOODappStart(log_file: str, netID: str, workdir: str):
     try:
-        with open(log_file, "r") as f:
+        # Temporarily copy the log file to a location where it can be accessed
+        input(f"Copy {log_file} into a location where it can be read by this script (not root) [Enter]")
+        new_log_file = input("NEW log file path: ")
+        with open(new_log_file, "r") as f:
             content = f.read()
+        os.remove(new_log_file)
 
+        # Check if there is a Timed out error in the log file
         match = re.search(r"Timed out waiting for ([^\r\n]+) to open port (\d+)", content)
         if not match:
             print("It seems that the OOD session was able to start and the error happened while running the app.")
@@ -821,7 +826,7 @@ def didOODappStart(log_file: str, netID: str, workdir: str):
         return 1
 
     except Exception as e:
-        print(f"Could not check {log_file} to see if the OOD session started: {e}")
+        print(f"Could not check if the OOD session started: {e}")
         return -1
 
 # Try to solve the mystery of why the OOD session failed through the log file
