@@ -842,7 +842,7 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
     print(f"\nThis job ran in OOD: {app_name}")
 
     # Check if the app was even able to start
-    workdir = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
+    workdir = getDFvalue(df, "WorkDir", job_col)
     log_file = f"{workdir}/output.log"
     if didOODappStart(log_file, netID, workdir):
         return
@@ -866,33 +866,26 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
 
 # Try to solve the mystery of why the SLURM job failed through the log files
 def checkLogs(df: pd.DataFrame, job_col: str):
-    fields = df["Field"].values
-    if "WorkDir" in fields:
-        workDir = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
+    workDir = getDFvalue(df, workDir, job_col)
 
-        try:
-            stdErr = df.loc[df["Field"] == "StdErr", job_col].iloc[0]
-            stdErr_path = f"{workDir}/{stdErr}"
-            with open(stdErr_path, "r") as f:
-                contentErr = f.read()
-        except Exception as e:
-            if stdErr!="":
-                print(f"Can't read error log {stdErr_path}: {e}")
-                input("Open file in a different Terminal as root [Enter]")
-            stdErr = ""
-            contentErr = ""
+    stdErr = getDFvalue(df, "StdErr", job_col)
+    input(f"copy {stdErr} to a location that can be read by this script [Enter]")
+    stdErr = input("New path for StdErr ([Enter] if current path should be readable): ") or stdErr
 
-        try:
-            stdOut = str(df.loc[df["Field"] == "StdOut", job_col].iloc[0])
-            stdOut_path = f"{workDir}/{stdOut}"
-            with open(stdOut_path, "r") as f:
-                contentOut = f.read()
-        except Exception as e:
-            if stdOut!="":
-                print(f"Can't read output log {stdOut_path}: {e}")
-                input("Open file in a different Terminal as root [Enter]")
-            stdOut = ""
-            contentOut = ""
+    stdOut = getDFvalue(df, "StdOut", job_col)
+    input(f"copy {stdOut} to a location that can be read by this script [Enter]")
+    stdOut = input("New path for StdOut ([Enter] if current path should be readable): ") or stdOut
+
+    try:
+        with open(f"{workDir}/{stdErr}", "r") as f:
+            contentErr = f.read()
+        with open(f"{workDir}/{stdOut}", "r") as f:
+            contentOut = f.read()
+        
+    except Exception as e:
+        print(f"There was an error reading the log files: {e}")
+        contentErr = ""
+        contentOut = ""
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
         nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
