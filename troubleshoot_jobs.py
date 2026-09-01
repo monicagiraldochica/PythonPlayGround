@@ -23,6 +23,7 @@ import getpass
 from datetime import datetime, timedelta
 import numpy as np
 import matplotlib.pyplot as plt
+from textwrap import dedent
 
 SACCT_FIELDS = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Partition", "WorkDir", "StdErr", "StdOut", "Submit", "Start", "End", "Elapsed", "Timelimit", "TotalCPU", "AllocCPUS", "NodeList", "ReqCPUS", "ReqMem", "MaxRSS" ]
 SCONTROL_FIELDS = [ "UserId", "JobState", "Partition", "WorkDir", "StdErr", "StdOut", "Command", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "NodeList", "ReqTRES", "AllocTRES" ]
@@ -678,21 +679,168 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
 
     return df, stopped
 
-def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
-    app_name = job_col.replace("OOD_", "")
-    print(f"\nThis job ran in OOD: {app_name}")
-
-    # Check the session log
-    input("\nIn a different Terminal, login as root [Enter]")
-    workdir_value = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
-    input(f"vi {workdir_value}/output.log [Enter]")
-
-    # Impersonate the user
+def impersonateUserOOD(netID: str):
     input("\nGo to KeyCloack in Google Chrome [Enter]")
     input("Login as admin [Enter]")
     input(f"Manage realms > ondemand > users > search '{netID}' > click on user > Action > Impersonate [Enter]")
     input("https://ondemand.rcc.mcw.edu/ [Enter]")
     input(f"Sign out as '{netID}' from OnDemand and KeyCloak [Enter]")
+
+def modulesInOODlogFile(content: str) -> list[str]:
+    modules = []
+    in_section = False
+
+    for line in content.splitlines():
+        if line.strip() == "Currently Loaded Modules:":
+            in_section = True
+            continue
+
+        if in_section:
+            # Allow blank lines before the module list.
+            if not line.strip():
+                if modules:
+                    break
+                continue
+
+            # Stop when we reach text outside the module list.
+            if not re.match(r"^\s*\d+\)", line):
+                break
+
+            modules.extend(re.findall(r"\d+\)\s+(\S+)", line))
+
+    return modules
+
+def homeDirErrorEmail(app_name: str=""):
+    print(dedent(f"""
+    Message to the user:
+
+    Hi <user's name>,
+    """))
+
+    if app_name:
+        print(dedent(f"""
+        {app_name} session was not able to open because the permissions inside some hidden files in your home directory were wrong and {app_name} did not have the correct permissions to run.
+        """))
+    else:
+        print(dedent(f"""
+        Your SLURM job possibly failed because the permissions inside some hidden files in your home directory were wrong. Even if it that was not the reason for failure of this job, it could cause future jobs to fail, specially OOD applications.
+        """))
+
+    print(dedent(f"""
+    This can happen if the home directory is being mounted in a local machine via SSHFS or a different way that we do not support. I would advice that you do not access your cluster home directory as a mounted folder or drive on your computer.
+
+    You can check our supported file-transfer methods in our documentation: https://docs.rcc.mcw.edu/storage/file-transfer/?h=
+
+    A specially useful and easy to use tool is Globus: https://docs.rcc.mcw.edu/storage/globus/
+
+    Please let me know if you have any additional questions. For now, I fixed the permissions in your home directory.
+
+    Thanks,
+    RCC
+    """))
+
+# Check if the problem with the OOD app happened before the app even launched
+# If it did, check if it was because of a permissions error in the users' home directory
+# Return 1 if the problem was solved, -1 if not
+def didOODappStart(log_file: str, netID: str, workdir: str):
+    try:
+        with open(log_file, "r") as f:
+            content = f.read()
+
+        match = re.search(r"Timed out waiting for ([^\r\n]+) to open port (\d+)", content)
+        if not match:
+            print("It seems that the OOD session was able to start and the error happened while running the app.")
+            return -1
+
+        app_name = match.group(1)
+        port = match.group(2)
+        print(f"The failure happened before {app_name} session start. {app_name} was not able to open on port {port}.")
+        print(f"Check if you're able to start a {app_name} as the user:")
+        impersonateUserOOD(netID)
+
+        if input(f"Where you able to start a {app_name} session as {netID}? [y/N] ").lower().strip() in ["y", "yes"]:
+            return -1
+        
+        print(f"Check AS ROOT if the users home directory has wrong permissions:")
+        input("sudo su - [Enter]")
+        input(f"ll -a /home/{netID}/ [Enter]")
+
+        print(f"Do NOT run as root: id {netID}")
+        grp = input("group (sg-something): ")
+
+        if input("Are permissions correct? [Y/n]: ").lower().strip() in ["n", "not"]:
+            input(f"Run as root: chown -R {netID}:{grp} /home/{netID}/ [Enter]")
+
+            print(f"Check if now you're able to start a {app_name} session:")
+            impersonateUserOOD(netID)
+
+            if input("Did that solve the issue? [Y/n]: ").lower().strip() not in ["n", "not"]:
+                homeDirErrorEmail(app_name)
+                return 1
+
+        print("The following steps should reproduce and print the error that is being produced when trying to start the session:")
+        input(f"su - {netID} [Enter]")
+        input(f"srun --ntasks=1 --time=01:00:00 --job-name=test --account={grp} --partition=normal --mem=2gb --pty bash [Enter]")
+
+        # Get the list of modules that were loaded right before the session attempted to start
+        modules = modulesInOODlogFile(content)
+        print(modules)
+        input(">>>>>> ")
+        if not modules:
+            print(dedent(f"""
+            Could not obtain the list of modules that were loaded before starting the {app_name} session.
+            Please provide any modules that you know should be loaded.
+            For example, for R Studio one would need to load a version of rstudio-server and R.
+            Divide the modules by commas.
+            """))
+            modules = input(">> ").strip().split(",")
+        for module in modules:
+            input(f"module load {module}")
+
+        input(f"cd {workdir} [Enter]")
+
+        # Activate RStudio logging settings if applicable
+        if app_name=="RStudio Server":
+            input("export RS_LOG_LEVEL=debug [Enter]")
+            input("export RS_LOGGER_TYPE=stderr [Enter]")
+
+        # Get the line immediately before the timeout message.
+        line_start = content.rfind("\n", 0, match.start()) + 1
+        previous_lines = content[:line_start].splitlines()
+        previous_line = previous_lines[-1].strip() if previous_lines else ""
+        if previous_line.startswith("+"):
+            command = previous_line[1:].strip()
+            print(f"If this command seems incorrect, get the correct command from {log_file}.")
+            input(f"{command} [Enter]")
+        else:
+            print("Could not find the command before the timeout message.")
+            input(f"Get the command from {log_file} and run it in the interactive session [Enter]")
+
+        if input("Was the mystery resolved? [y/N]: ").strip().lower() not in ["y", "yes"]:
+            return -1
+        return 1
+
+    except Exception as e:
+        print(f"Could not check {log_file} to see if the OOD session started: {e}")
+        return -1
+
+# Try to solve the mystery of why the OOD session failed through the log file
+def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
+    app_name = job_col.replace("OOD_", "")
+    print(f"\nThis job ran in OOD: {app_name}")
+
+    # Check if the app was even able to start
+    workdir = df.loc[df["Field"] == "WorkDir", job_col].iloc[0]
+    log_file = f"{workdir}/output.log"
+    if didOODappStart(log_file, netID, workdir):
+        return
+
+    # Inspect the session log
+    input("\nIn a different Terminal, login as root [Enter]")
+    input(f"vi {log_file} [Enter]")
+
+    # Impersonate the user
+    impersonateUserOOD(netID)
 
     # Edit the app if needed
     if input("\nDo you need to edit something in the OnDemand app? [y/N]: ").strip().lower() in ["y", "yes"]:
@@ -704,6 +852,7 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
         input("Close KeePass [Enter]")
         input(f"vi /var/www/ood/apps/sys/{app_name}/template/script.sh.erb [Enter]")
 
+# Try to solve the mystery of why the SLURM job failed through the log files
 def checkLogs(df: pd.DataFrame, job_col: str):
     fields = df["Field"].values
     if "WorkDir" in fields:
@@ -749,20 +898,32 @@ def checkLogs(df: pd.DataFrame, job_col: str):
         {contentOut}""")
         input("[Enter]")
 
+# Check if the reason why the job failed is because of a problem with the home directory
 def checkHomeDir(netID: str):
     input("\nIn a different Terminal, login as root (if you haven't done so) [Enter]")
     input(f"su - {netID} [Enter]")
+
+    # Check if the home directory is full
     input(f"mydisks [Enter]")
     if input("Is the home directory full? [y/N]: ").strip().lower() in ["y", "yes"]:
         input("https://qfs2.rcc.mcw.edu/login [Enter]")
         input("Login as your user (include mcwcorp) [Enter]")
         input("Analytics > Capacity Explorer > homefs > check which subfolders are filling the home directory [Enter]")
 
-        if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
-            input("Log off the user [Enter]")
-            sys.exit(0)
-    input("Log off the user [Enter]")
+    # Check if the home directory has wrong permissions
+    print("Check if the home directory has wrong permissions:")
+    input(f"ll -a /home/{netID}/ [Enter]")
+    if input("Are permissions correct? [Y/n]: ").lower().strip() in ["n", "not"]:
+        input(f"Do NOT run as root: id {netID} [Enter]")
+        grp = input("group (sg-something): ")
+        input(f"Run as root: chown -R {netID}:{grp} /home/{netID}/ [Enter]")
+        homeDirErrorEmail()
 
+    if input("Do you want to continue investigating further? [y/N]: ").lower().strip() not in ["y", "yes"]:
+        input("Log off the user [Enter]")
+        sys.exit(0)
+
+# Run interactive tests to troubleshoot the job
 def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, netID: str):    
     if stopped:            
         partition = input("What partition was the job running in? (default: normal): ") or "normal"
@@ -1192,7 +1353,8 @@ def main():
 
         # Check if the job ran in OOD
         job_col = df.columns.values.tolist()[1]
-        if job_col.startswith("OOD"):
+        is_ood = job_col.startswith("OOD")
+        if is_ood:
             checkOODlogs(job_col, df, netID)
 
         # If not, check the normal logs
@@ -1213,7 +1375,8 @@ def main():
 
         # Run interactive tests
         if input("\nDo you want to run an interactive job to check the code? [y/N]: ").lower().strip() in ["y", "yes"]:
-            interactiveTests(stopped, df, job_col, jobID, netID)
+            if not is_ood:
+                interactiveTests(stopped, df, job_col, jobID, netID)
             
         # Check additional logs
         print(f"\nDo NOT run as root: id {netID} [Enter]")
@@ -1224,8 +1387,6 @@ def main():
             sys.exit(0)
 
     # Check other submitted jobs on the same date
-    print(df)
-    input(">>>>>>> ")
     submit_info = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split(" ")
     submit_date = submit_info[0]
     submit_time = submit_info[1]
