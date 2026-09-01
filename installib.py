@@ -3,8 +3,17 @@ __author__ = "Monica Keith"
 __status__ = "Alpha"
 __purpose__ = "Common functions for my cluster tools"
 
-import subprocess
 import sys
+# Check Python version before importing other modules.
+if sys.version_info[:3] != (3, 12, 10):
+    print(
+        "ERROR: This script requires Python 3.12.10. "
+        "Current version: {}.{}.{}".format(*sys.version_info[:3]),
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+import subprocess
 from pathlib import Path
 import os
 import re
@@ -49,19 +58,6 @@ def runPipedCommands(commands: list[list]):
     except Exception as e:
         err = (e.stderr or e.stdout or str(e)).strip()
         return e.returncode, err, ""
-
-def checkPythonVers(req_major: int=0, req_minor: int=0, req_micro: int=0, exact_vers: bool=False):
-    python_info = sys.version_info
-    major = python_info.major or 0
-    minor = python_info.minor or 0
-    micro = python_info.micro or 0
-    print(f"Python version: {major}.{minor}.{micro}")
-
-    if (not exact_vers) and (major<req_major or (major==req_major and minor<req_minor) or (major==req_major and minor==req_minor and micro<req_micro)):
-        return False, major, minor, micro
-    if exact_vers and (major!=req_major or minor!=req_minor or micro!=req_micro):
-        return False, major, minor, micro
-    return True, major, minor, micro
 
 def downloadPackage(download_in_apps: bool, pkg_url: str, mdl_name: str, mdl_vers: str, git: bool=False):
     download_dir = f"/hpc/apps/{mdl_name}/{mdl_vers}" if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"

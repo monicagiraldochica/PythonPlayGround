@@ -3,14 +3,17 @@ __author__ = "Monica Keith"
 __status__ = "Development"
 __purpose__ = "Create a module using miniforge"
 
-# Check python version
-import installib
 import sys
-OK, major, minor, micro =  installib.checkPythonVers(3, 7, True)
-if not OK:
-    print("ERROR: This script requires Python 3.7\n")
+# Check Python version before importing other modules.
+if sys.version_info[:3] != (3, 12, 10):
+    print(
+        "ERROR: This script requires Python 3.12.10. "
+        "Current version: {}.{}.{}".format(*sys.version_info[:3]),
+        file=sys.stderr,
+    )
     sys.exit(1)
 
+import installib
 import argparse
 import re
 import os

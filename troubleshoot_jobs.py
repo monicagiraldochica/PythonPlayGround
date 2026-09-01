@@ -3,13 +3,17 @@ __author__ = "Monica Keith"
 __status__ = "Development"
 __purpose__ = "Troubleshoot cluster jobs"
 
-# Check python version
-import installib
 import sys
-if not installib.checkPythonVers(3, 12, 10, True)[0]:
-    print("ERROR: This script requires Python 3.12.10\n")
+# Check Python version before importing other modules.
+if sys.version_info[:3] != (3, 12, 10):
+    print(
+        "ERROR: This script requires Python 3.12.10. "
+        "Current version: {}.{}.{}".format(*sys.version_info[:3]),
+        file=sys.stderr,
+    )
     sys.exit(1)
 
+import installib
 import subprocess
 import pandas as pd
 import re

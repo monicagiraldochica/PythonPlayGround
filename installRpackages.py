@@ -3,12 +3,17 @@ __author__ = "Monica Keith"
 __status__ = "Development"
 __purpose__ = "Install R packages"
 
-import installib
 import sys
-if not installib.checkPythonVers(3, 7, True)[0]:
-    print("ERROR: This script requires Python 3.7\n")
+# Check Python version before importing other modules.
+if sys.version_info[:3] != (3, 12, 10):
+    print(
+        "ERROR: This script requires Python 3.12.10. "
+        "Current version: {}.{}.{}".format(*sys.version_info[:3]),
+        file=sys.stderr,
+    )
     sys.exit(1)
 
+import installib
 import os
 import argparse
 from pathlib import Path
