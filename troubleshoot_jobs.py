@@ -140,10 +140,10 @@ def uniqueTitles(titles_orig):
     
     return new_titles
 
-# Get the first matching value, or None if the field or required column is missing.
-def getDFvalue(df: pd.DataFrame, field: str, search_col: str):
+# Get the first matching value, or "" if the field or required column is missing.
+def getDFvalue(df: pd.DataFrame, field: str, search_col: str) -> str:
     try:
-        return df.loc[df["Field"] == field, search_col].iloc[0]
+        return str(df.loc[df["Field"] == field, search_col].iloc[0])
     except (KeyError, IndexError):
         return ""
 
@@ -190,10 +190,10 @@ def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
     # Merge Req resources lines into one
     new_vals = []
     for i in range(len(titles)):
-        #cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
         cpus = getDFvalue(df, "ReqCPUS", titles[i])
-        mem = df.query("Field=='ReqMem'")[titles[i]].iloc[0]
-        nodes = len(df.query("Field=='NodeList'")[titles[i]].iloc[0].split(","))
+        mem = getDFvalue(df, "ReqMem", titles[i])
+        node_list = getDFvalue(df, "NodeList", titles[i])
+        nodes = len(node_list.split(",")) if node_list else 0
         if cpus and mem and nodes:
             new_vals+=[f"cpu={cpus},mem={mem},node={nodes}"]
         else:
@@ -204,12 +204,9 @@ def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
 
     # Create new line with the CPU usage
     # CPU Utilization % = TotalCPU / (AllocCPUS × Elapsed)
-    CPUtime = df.loc[df["Field"] == "TotalCPU", titles[0]].iloc[0]
-    CPUtime_sec = parseTime(CPUtime)
-    RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
-    RunTime = RunTime.split(" ")[0]
-    RunTime_sec = parseTime(RunTime)
-    AllocCPUS = int(df.loc[df["Field"] == "AllocCPUS", titles[0]].iloc[0])
+    CPUtime_sec = parseTime(getDFvalue(df, "TotalCPU", titles[0]))
+    RunTime_sec = parseTime(getDFvalue(df, "RunTime", titles[0]).split(" ")[0])
+    AllocCPUS = int(getDFvalue(df, "AllocCPUS", titles[0]) or -1)
     if RunTime_sec>0 and AllocCPUS>0 and CPUtime_sec>0:
         CPUpct = (CPUtime_sec / (AllocCPUS * RunTime_sec)) * 100
     else:
@@ -239,35 +236,38 @@ def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
 
     # Update StdOut
-    StdOut = df.loc[df["Field"] == "StdOut", titles[0]].iloc[0]
-    if isinstance(StdOut, str) and StdOut.strip():
+    StdOut = getDFvalue(df, "StdOut", titles[0])
+    if StdOut.strip():
         new_out = StdOut.replace("%x", titles[0]).replace("%j", job_id)
         if netID:
             new_out = new_out.replace("%u", netID)
         df.loc[df["Field"] == "StdOut", titles[0]] = new_out
 
     # Update StdErr
-    StdErr = df.loc[df["Field"] == "StdErr", titles[0]].iloc[0]
-    if isinstance(StdErr, str) and StdErr.strip():
+    StdErr = getDFvalue(df, "StdErr", titles[0])
+    if StdErr.strip():
         new_err = StdErr.replace("%x", titles[0]).replace("%j", job_id)
         if netID:
             new_err = new_err.replace("%u", netID)
         df.loc[df["Field"] == "StdErr", titles[0]] = new_err
 
     # Update MaxRSS
-    ReqTRES = df.loc[df["Field"] == "ReqTRES", titles[0]].iloc[0]
-    maxrss_row = df.loc[df["Field"] == "MaxRSS"].iloc[0]
-    MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
-    # strip() in this case will be checking if the string has any non white characters
-    if isinstance(ReqTRES, str) and isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
-        ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
-        MaxRSS = editMemUsage(ReqMem, MaxRSS)
-        df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
+    ReqTRES = getDFvalue(df, "ReqTRES", titles[0])
+    maxrss_rows = df.loc[df["Field"] == "MaxRSS"]
+    if not maxrss_rows.empty:
+        maxrss_row = maxrss_rows.iloc[0]
+        MaxRSS = next((v for v in maxrss_row.drop("Field") if pd.notna(v) and str(v).strip() != ""), "")
+
+        # strip() in this case will be checking if the string has any non white characters
+        if isinstance(MaxRSS, str) and ReqTRES.strip() and MaxRSS.strip():
+            ReqMem = ReqTRES.split(",")[1].replace("mem=", "")
+            MaxRSS = editMemUsage(ReqMem, MaxRSS)
+            df.loc[df["Field"] == "MaxRSS", titles[0]] = MaxRSS
 
     # Update RunTime
-    RunTime = df.loc[df["Field"] == "RunTime", titles[0]].iloc[0]
-    TimeLimit = df.loc[df["Field"] == "Timelimit", titles[0]].iloc[0]
-    if isinstance(RunTime, str) and isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
+    RunTime = getDFvalue(df, "RunTime", titles[0])
+    TimeLimit = getDFvalue(df, "Timelimit", titles[0])
+    if isinstance(TimeLimit, str) and RunTime.strip() and TimeLimit.strip():
         RunTime = editRunTime(TimeLimit, RunTime)
         df.loc[df["Field"] == "RunTime", titles[0]] = RunTime
 
