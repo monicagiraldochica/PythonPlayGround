@@ -140,7 +140,15 @@ def uniqueTitles(titles_orig):
     
     return new_titles
 
-# Better to use for failed or completed jobs
+# Get the first matching value, or None if the field or required column is missing.
+def getDFvalue(df: pd.DataFrame, field: str, search_col: str):
+    try:
+        return df.loc[df["Field"] == field, search_col].iloc[0]
+    except (KeyError, IndexError):
+        return ""
+
+# Get job accounting info from sacct
+# Best to use for failed or completed jobs
 def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
     format_str = ",".join(SACCT_FIELDS)
 
@@ -182,7 +190,8 @@ def get_jobInfo_sacct(job_id: str, netID: str="") -> pd.DataFrame:
     # Merge Req resources lines into one
     new_vals = []
     for i in range(len(titles)):
-        cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
+        #cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
+        cpus = getDFvalue(df, "ReqCPUS", titles[i])
         mem = df.query("Field=='ReqMem'")[titles[i]].iloc[0]
         nodes = len(df.query("Field=='NodeList'")[titles[i]].iloc[0].split(","))
         if cpus and mem and nodes:
