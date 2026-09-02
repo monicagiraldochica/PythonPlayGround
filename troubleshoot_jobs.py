@@ -888,7 +888,7 @@ def checkLogs(df: pd.DataFrame, job_col: str):
         contentOut = ""
         
     if ("No space left on device" in contentErr) or ("No space left on device" in contentOut):
-        nodes = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
+        nodes = getDFvalue(df, "NodeList", job_col)
         print(f"""\n'No space left on device' error found in the logs.
             Check if the /tmp folder is full in {nodes}.""")
         input("Enter")
@@ -936,7 +936,7 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, 
         ntasks = input("# of threads (default 1): ") or "1"
         mem = input("Amount of memory (default 7.5gb): ") or "75gb"
         ticket = input("Ticket #: ")
-        num_cpus = int(df.loc[df["Field"] == "AllocCPUS", job_col].iloc[0])
+        num_cpus = int(getDFvalue(df, "AllocCPUS", job_col) or -1)        
             
         # srun can't run as root
         input("In a Terminal, logged as root, copy any files you will need to YOUR rccadmin scratch [Enter]")
@@ -944,7 +944,7 @@ def interactiveTests(stopped: bool, df: pd.DataFrame, job_col: str, jobID: str, 
         input(f"srun --ntasks={ntasks} --time={job_time} --job-name=ticket_{ticket} --account=rccadmin --partition={partition} --mem={mem} --pty bash [Enter]")
 
     else:
-        num_cpus = int(df.loc[df["Field"] == "AllocTRES", job_col].iloc[0].split(",")[0].replace("cpu=",""))
+        num_cpus = int(getDFvalue(df, "AllocTRES", job_col).split(",")[0].replace("cpu=", "") or -1)
         input(f"srun --jobid={jobID} --pty bash [Enter]")
 
     input(f"""
@@ -981,7 +981,7 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
     input("sudo su - [Enter]")
     input(f"grep {jobID} /var/log/slurm/slurmctld.log [Enter]")
 
-    node_list = df.loc[df["Field"] == "NodeList", job_col].iloc[0]
+    node_list = getDFvalue(df, "NodeList", job_col)
     print(f"\nCheck logs in the specific nodes ({node_list}):")
     for node in node_list.split(","):
         print(f"Log into {node}:")
@@ -1141,7 +1141,7 @@ def analyzeBigDF(df: pd.DataFrame, outputs: list[str], titles: list[str], sort: 
     ######################
     ### Plot CPU usage ###
     ######################
-    CPUpct = [ float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
+    CPUpct = [float(x) for x in df.loc[df["Field"] == "CPUpct"].iloc[0, 1:].tolist()]
     plot_pctUsed_resources(CPUpct, titles[3], "CPU Used (% of Requested)", outputs[3], -1, 50)
 
     return df
@@ -1298,7 +1298,7 @@ def main():
         # Analyze the memory usage of the job
         try:
             if stopped:
-                MaxRSS = simple_df.loc[simple_df["Field"] == "MaxRSS", "Value"].iloc[0]
+                MaxRSS = getDFvalue(simple_df, "MaxRSS", "Value")
                 MEMpct = float(MaxRSS.split(" ")[1].replace("(", "").replace("%", ""))
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
@@ -1318,7 +1318,7 @@ def main():
         # Analyze the wall time usage of the job
         if MEMpct<100:
             try:
-                RunTime = simple_df.loc[simple_df["Field"] == "RunTime", "Value"].iloc[0]
+                RunTime = getDFvalue(simple_df, "RunTime", "Value")
                 TMpct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
             except Exception as e:
                 print(f"Could not get the % of wall time used by the job: {e}")
@@ -1333,13 +1333,13 @@ def main():
         # If CPU efficiency is far below 100%, the job is not using all allocated cores.
         try:
             if stopped:
-                CPUpct = round(float(simple_df.loc[simple_df["Field"] == "CPUpct", "Value"].iloc[0]), 2)
-                AllocCPUS = int(simple_df.loc[simple_df["Field"] == "AllocCPUS", "Value"].iloc[0])
+                CPUpct = round(float(getDFvalue(simple_df, "CPUpct", "Value")), 2)
+                AllocCPUS = int(getDFvalue(simple_df, "AllocCPUS", "Value"))
                 CPUused = round(AllocCPUS*CPUpct/100)
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
                 CPUpct = round(float(input("CPU efficiency (CPU utilization per node): ").replace("%", "")), 2)
-                AllocTRES = simple_df.loc[simple_df["Field"] == "AllocTRES", "Value"].iloc[0]
+                AllocTRES = getDFvalue(simple_df, "AllocTRES", "Value")
                 AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
                 CPUused = round(AllocCPUS*CPUpct/100)           
         except Exception as e:
@@ -1392,7 +1392,7 @@ def main():
             sys.exit(0)
 
     # Check other submitted jobs on the same date
-    submit_info = df.loc[df["Field"] == "SubmitTime", job_col].iloc[0].split(" ")
+    submit_info = getDFvalue(df, "SubmitTime", job_col)
     submit_date = submit_info[0]
     submit_time = submit_info[1]
     print(f"\nthis job was submitted on {submit_date} {submit_time}")
