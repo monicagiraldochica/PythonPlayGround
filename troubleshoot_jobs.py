@@ -986,7 +986,7 @@ def checkSystemLogs(jobID: str, df: pd.DataFrame, job_col: str, uid: str):
     for node in node_list.split(","):
         print(f"Log into {node}:")
         print(f"- Option 1: from a login node: ssh {node} > sudo su -")
-        print(f"- Option 2: go back to hn01, sudo, then: scyld-nodectl -i {node} ssh")
+        print(f"- Option 2: go back to hn01, sudo su -, then: scyld-nodectl -i {node} ssh")
         input(f"grep {jobID} /var/log/messages [Enter]")
         searches = ["kill", "oom", "error"]
         if node.startswith("gn"):
@@ -1293,6 +1293,7 @@ def main():
     else:
         # Print job statistics 
         simple_df = printJobStats(jobID, df)
+        failed = getDFvalue(simple_df, "JobState", "Value")=="FAILED"
         print("\n")
 
         # Analyze the memory usage of the job
@@ -1303,6 +1304,7 @@ def main():
             else:
                 input(f"Run: jobstats {jobID} [Enter]")
                 MEMpct = float(input("CPU memory usage percentage: ").replace("%", ""))
+
         except Exception as e:
             print(f"Could not get the % of memory used by the job: {e}")
             MEMpct = -1
@@ -1316,7 +1318,7 @@ def main():
             print(f"Memory efficiency is {MEMpct}%. The user is over-requesting memory.")      
 
         # Analyze the wall time usage of the job
-        if MEMpct<100:
+        if not failed and MEMpct<100:
             try:
                 RunTime = getDFvalue(simple_df, "RunTime", "Value")
                 TMpct = float(RunTime.split(" ")[1].replace("(", "").replace("%", ""))
@@ -1341,7 +1343,8 @@ def main():
                 CPUpct = round(float(input("CPU efficiency (CPU utilization per node): ").replace("%", "")), 2)
                 AllocTRES = getDFvalue(simple_df, "AllocTRES", "Value")
                 AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
-                CPUused = round(AllocCPUS*CPUpct/100)           
+                CPUused = round(AllocCPUS*CPUpct/100)  
+
         except Exception as e:
             print(f"Could not get the CPU efficiency of the job: {e}")
             CPUpct = -1
