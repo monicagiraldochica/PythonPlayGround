@@ -869,12 +869,14 @@ def checkLogs(df: pd.DataFrame, job_col: str):
     workDir = getDFvalue(df, "workDir", job_col)
 
     stdErr = getDFvalue(df, "StdErr", job_col)
-    input(f"copy {stdErr} to a location that can be read by this script [Enter]")
-    stdErr = input("New path for StdErr ([Enter] if current path should be readable): ") or stdErr
+    if stdErr:
+        input(f"copy StdErr ({stdErr}) to a location that can be read by this script [Enter]")
+        stdErr = input("New path for StdErr ([Enter] if current path should be readable): ") or stdErr
 
     stdOut = getDFvalue(df, "StdOut", job_col)
-    input(f"copy {stdOut} to a location that can be read by this script [Enter]")
-    stdOut = input("New path for StdOut ([Enter] if current path should be readable): ") or stdOut
+    if stdOut:
+        input(f"copy StdOut {stdOut} to a location that can be read by this script [Enter]")
+        stdOut = input("New path for StdOut ([Enter] if current path should be readable): ") or stdOut
 
     try:
         with open(f"{workDir}/{stdErr}", "r") as f:
@@ -1352,26 +1354,21 @@ def main():
             print(f"Could not get the CPU efficiency of the job: {e}")
             CPUpct = -1
 
-        
-        if CPUpct<5:
-            print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU or check if the commands are missing a flag to implement the expected threads.")
-        elif CPUpct<20:
-            print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
-        elif CPUpct<50:
-            print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
-        else:
-            print("CPU efficiency is acceptable.") 
+        if CPUpct>0:
+            if CPUpct<5:
+                print(f"This job is single threaded. It is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Ask the user to request only one CPU or check if the commands are missing a flag to implement the expected threads.")
+            elif CPUpct<20:
+                print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
+            elif CPUpct<50:
+                print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
+            else:
+                print("CPU efficiency is acceptable.") 
 
         input("[Enter]")
 
         # Check if the job ran in OOD
-        print(">>>>")
-        print(df)
-        print(df.columns.values.tolist())
         job_col = df.columns.values.tolist()[1]
-        print(f"job_col: {job_col}")
         is_ood = job_col.startswith("OOD")
-        print(f"is_ood: {is_ood}")
         if is_ood:
             checkOODlogs(job_col, df, netID)
 
