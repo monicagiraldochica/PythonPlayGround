@@ -866,7 +866,7 @@ def checkOODlogs(job_col: str, df: pd.DataFrame, netID: str):
 
 # Try to solve the mystery of why the SLURM job failed through the log files
 def checkLogs(df: pd.DataFrame, job_col: str):
-    workDir = getDFvalue(df, workDir, job_col)
+    workDir = getDFvalue(df, "workDir", job_col)
 
     stdErr = getDFvalue(df, "StdErr", job_col)
     input(f"copy {stdErr} to a location that can be read by this script [Enter]")
