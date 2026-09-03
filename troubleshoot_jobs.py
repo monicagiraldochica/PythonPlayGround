@@ -1365,16 +1365,24 @@ def main():
         input("[Enter]")
 
         # Check if the job ran in OOD
+        print(">>>>")
+        print(df)
+        print(df.columns.values.tolist())
         job_col = df.columns.values.tolist()[1]
+        print(f"job_col: {job_col}")
         is_ood = job_col.startswith("OOD")
+        print(f"is_ood: {is_ood}")
         if is_ood:
             checkOODlogs(job_col, df, netID)
 
         # If not, check the normal logs
         else:
-            print(simple_df)
-            input(">>>")
-            if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+            node_list = getDFvalue(simple_df, "NodeList", "Value")
+            if node_list:
+                gpu = "gn" in node_list
+            else:
+                gpu = input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]
+            if gpu and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
                 print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
                     GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
                     A CPU is always needed to run a code that uses a GPU.""")
