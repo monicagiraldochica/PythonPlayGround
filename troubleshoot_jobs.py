@@ -1315,7 +1315,9 @@ def main():
         elif MEMpct>70:
             print(f"Memory efficiency is {MEMpct}%. The job was close to the limit and could easily OOM on other inputs.")
         elif MEMpct<30 and MEMpct>0:
-            print(f"Memory efficiency is {MEMpct}%. The user is over-requesting memory.")      
+            print(f"Memory efficiency is {MEMpct}%. The user is over-requesting memory.")
+        else:
+            print("Memory efficiency is acceptable.")  
 
         # Analyze the wall time usage of the job
         if not failed and MEMpct<100:
@@ -1330,6 +1332,8 @@ def main():
                 print(f"The job ran in {TMpct}% of the requested wall time. It could hit wall time in future runs.")
             elif TMpct<20 and TMpct>0:
                 print(f"The job ran in {TMpct}% of the requested wall time. The user is over-requesting wall time.")
+            else:
+                print("The requested wall time seems acceptable.")
 
         # Analyze the CPU usage of the job
         # If CPU efficiency is far below 100%, the job is not using all allocated cores.
@@ -1339,7 +1343,6 @@ def main():
                 AllocCPUS = int(getDFvalue(simple_df, "AllocCPUS", "Value"))
                 CPUused = round(AllocCPUS*CPUpct/100)
             else:
-                input(f"Run: jobstats {jobID} [Enter]")
                 CPUpct = round(float(input("CPU efficiency (CPU utilization per node): ").replace("%", "")), 2)
                 AllocTRES = getDFvalue(simple_df, "AllocTRES", "Value")
                 AllocCPUS = int(AllocTRES.split(",")[0].replace("cpu=", ""))
@@ -1355,7 +1358,9 @@ def main():
         elif CPUpct<20:
             print(f"There's a high chance that the job is single threaded. The user is requesting {AllocCPUS} CPUs, but using {CPUused}. CPU efficiency is {CPUpct}%. Check the code to make sure it's multi-threaded.")
         elif CPUpct<50:
-            print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")  
+            print(f"There's a high chance the job is multi threaded, but it's using less CPUs ({CPUused}) than those requested ({AllocCPUS}).")
+        else:
+            print("CPU efficiency is acceptable.") 
 
         input("[Enter]")
 
@@ -1367,6 +1372,8 @@ def main():
 
         # If not, check the normal logs
         else:
+            print(simple_df)
+            input(">>>")
             if (input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]) and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
                 print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
                     GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
@@ -1395,7 +1402,11 @@ def main():
             sys.exit(0)
 
     # Check other submitted jobs on the same date
-    submit_info = getDFvalue(df, "SubmitTime", job_col)
+    submitTime = getDFvalue(df, "SubmitTime", job_col)
+    if "T" in submitTime:
+        submit_info = submitTime.split("T")
+    else:
+        submit_info = submitTime.split(" ")
     submit_date = submit_info[0]
     submit_time = submit_info[1]
     print(f"\nthis job was submitted on {submit_date} {submit_time}")
