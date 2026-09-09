@@ -304,7 +304,7 @@ def parse_arguments():
 
     return args.jobid, args.user, args.submit_date, args.stopped, args.queued, outdir
 
-def getJobsID(submit_date: str, *, user: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+def getJobsID(submit_date: str, *, user: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59") -> list[str]:
     start = f"{submit_date}T{start_time}"
     end = f"{submit_date}T{end_time}"
 
@@ -321,35 +321,32 @@ def getJobsID(submit_date: str, *, user: str="", partition: str="", start_time: 
     returncode, stderr, stdout = installib.runBash(array_cmd)
     if returncode!=0:
         print(f"ERROR: could not get jobID: {stderr}")
-        return None
+        return []
     
     return [val.strip() for val in stdout.strip().splitlines()]
 
 # Returns a new DF with only two columns: Field, Value
 # Value is the value in the first non empty column for that field in the original df
-def simplify_dataFrame(df: pd.DataFrame):
+def simplify_dataFrame(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for row in df.itertuples():
         field = row.Field
-        value = next((v for v in row[2:] if v not in ("", None)), None)
+        value = next((v for v in row[2:] if pd.notna(v) and v != ""), "")
         rows.append([field, str(value)])
 
     return pd.DataFrame(rows, columns=["Field", "Value"])
 
-def printJobStats(jobID: str, df: pd.DataFrame):
+def printJobStats(jobID: str, df: pd.DataFrame) -> pd.DataFrame:
     print(f"\nJob statistics for {jobID}:\n")
     out = simplify_dataFrame(df)
     print(out.to_markdown(index=False))
 
     return out
 
-def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59"):
+def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: bool=False, output_file: str="", partition: str="", start_time: str="00:00:00", end_time: str="23:59:59") -> pd.DataFrame:
     print(f"Getting jobs submitted on {submit_date}, from {start_time} to {end_time}.")
-    if partition:
-        jobs = getJobsID(submit_date, partition=partition, start_time=start_time, end_time=end_time) if not netID else getJobsID(submit_date, user=netID, partition=partition, start_time=start_time, end_time=end_time)
-    else:    
-        jobs = getJobsID(submit_date, start_time=start_time, end_time=end_time) if not netID else getJobsID(submit_date, user=netID, start_time=start_time, end_time=end_time)
-    jobs = [job for job in jobs if job.isdigit() ]
+    jobs = getJobsID(submit_date, user=netID, partition=partition, start_time=start_time, end_time=end_time)
+    jobs = [job for job in jobs if job.replace("_", "").isdigit()]
 
     # Calculate the joint DF with information from all jobs submitted on that date
     all_dfs = []
@@ -383,18 +380,18 @@ def getJobsFromDate(submit_date: str, stopped: bool, *, netID: str="", save: boo
         return joint_df
 
     else:
-        strg = f"No jobs ran on {submit_date}"
+        strg = f"No job statistics available for {submit_date}"
         if netID:
             strg+=f" by {netID}"
         strg+=". No output generated."
         print(strg)
 
-        return pd.DataFrame
+        return pd.DataFrame()
 
-def isValidDate(date: str):
+def isValidDate(date: str) -> bool:
     try:
-        datetime.strptime(date, "%Y-%m-%d")
-        return True
+        parsed = datetime.strptime(date, "%Y-%m-%d")
+        return parsed.date().isoformat() == date
     except ValueError:
         return False
 
@@ -610,12 +607,12 @@ def getJobStats(jobID: str, netID: str, queued: bool, stopped: bool):
                 print(stderr)
             else:
                 print(f"ERROR: did not find job {jobID} from {netID} in queue")
-            return pd.DataFrame, stopped
+            return pd.DataFrame(), stopped
         
         stdout = stdout.split("|")
         if len(stdout)!=8:
             print(f"ERROR: cant parse squeue output: {stdout}")
-            return pd.DataFrame, stopped
+            return pd.DataFrame(), stopped
 
         name = stdout[2]
         partition = stdout[1] if not name.startswith("sys/dashboard") else "ood"
@@ -1259,7 +1256,7 @@ def checkUserUsage(start_date_str: str, end_date_str: str, netID: str, file_path
 
         return big_df
     
-    return pd.DataFrame
+    return pd.DataFrame()
 
 def main():
     # Make sure I'm NOT root (sacct and scontrol wont work as root)
