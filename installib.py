@@ -63,45 +63,40 @@ def downloadPackage(download_in_apps: bool, pkg_url: str, mdl_name: str, mdl_ver
     download_dir = f"/hpc/apps/{mdl_name}/{mdl_vers}" if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
 
     # Create and navigate to the download directory
-    Path(download_dir).mkdir(parents=True, exist_ok=True)
-    os.chdir(download_dir)
+    input(f"mkdir -p {download_dir} [Enter]")
+    input(f"cd {download_dir} [Enter]")
 
     # Download and unzip package
     if git:
-        returncode, stderr, stdout = runBash(["git clone", pkg_url])
+        input(f"git clone {pkg_url} [Enter]")
 
     else:
-        returncode, stderr1, stdout1 = runBash(["wget", pkg_url])
-        if returncode==0:
-            returncode, stderr2, stdout2 = decompress(pkg_url.rsplit("/", 1)[-1])
-        stderr = stderr1+stderr2
-        stdout = stdout1+stdout2
+        input(f"wget {pkg_url} [Enter]")
 
-    return returncode, stderr, stdout, download_dir
+    decompress(pkg_url.rsplit("/", 1)[-1])
 
-# Returns returncode, stderr, stdout
 def decompress(filename: str):
     if filename.endswith(".rpm"):
         cmd = f"rpm2cpio {filename} | cpio -idv"
-        return runBash(["bash", "-lc", cmd])
     
     elif filename.endswith(".zip"):
-        return runBash(["unzip", filename])
+        cmd = f"unzip {filename}"
     
     elif filename.endswith(".tgz") or filename.endswith(".tar.gz"):
-        return runBash(["tar", "-xvzf", filename])
+        cmd = f"tar -xvzf {filename}"
     
     elif filename.endswith(".tar.bz2"):
-        return runBash(["tar", "xvfj", filename])
+        cmd = f"tar xvfj {filename}"
     
     elif filename.endswith(".tar.xz"):
-        return runBash(["tar", "xf", filename])
+        cmd = f"tar xf {filename}"
     
     elif filename.endswith(".gz"):
-        return runBash(["gzip", "-dk", filename])
+        cmd = f"gzip -dk {filename}"
     
     else:
-        return 2, f"Dont know how to extract {filename}", ""
+        cmd = f"Decompress {filename}"
+    input(f"{cmd} [Enter]")
 
 def version_key(s):
     return tuple(map(int, s.split('/')[1].split('.')))
@@ -324,10 +319,12 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
 
         return True
     
-def cloneRepos(mdl_name: str, mdl_version: str):
+def cloneRepos(mdl_name: str, mdl_version: str) -> list[str]:
     git_dirs = []
+
     if input("\nDo you need to clone any repos? [y/N]: ").strip().lower() in ("y", "yes"):
         repos = input("https git repos divided by comma: ").split(",")
+
         for repo in repos:
             repo_name = repo.split("/")[-1].replace(".git", "")
             download_in_apps = input(f"Does {repo_name} need to be downloaded in /hpc/apps? [y/N]: ").strip().lower() in ["y", "yes"]
@@ -336,13 +333,10 @@ def cloneRepos(mdl_name: str, mdl_version: str):
             # Check that the repository wasn't already downloaded, otherwise, download
             if os.path.isdir(download_dir):
                 print(f"{download_dir} already exists, skipping this download.")
+
             else:
-                returncode, stderr, stdout, download_dir = downloadPackage(download_in_apps, repo, mdl_name, mdl_version, True)
-                if returncode!=0:
-                    err = (stderr or stdout or "").strip()
-                    print(f"ERROR: could not download {mdl_name}: {err}")
-                    sys.exit(1)
-                print(f"Package successfully downloaded to {download_dir}")
+                downloadPackage(download_in_apps, repo, mdl_name, mdl_version, True)
+                
             git_dirs+=[download_dir]
 
             req_file = f"{download_dir}/requirements.txt"

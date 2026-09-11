@@ -48,10 +48,8 @@ def downloadedMiniforgeVersions(pkg: str, path:str) -> list[str]:
     return [f"{path}/{name}" for name in names]
 
 def main():
-    # Make sure I'm root in a login node, and miniforge is loaded
     input("\nssh into login node [Enter]")
     input("sudo su - [Enter]")
-    input("ml load miniforge [Enter]")
 
     [main_pkg, version] = parse_arguments()
 
@@ -107,10 +105,9 @@ def main():
                 sys.exit(1)
 
     if input("Is **THIS** script running in a screen process (not the actual install)? [y/N]: ").strip().lower() not in ["y", "yes"]:
-        print(dedent(f"""This script needs to run inside a screen process.
-                        Take note in which node you're located.
-                        Then run: screen -S {main_pkg}_python"""))
+        print("This script needs to run inside a screen process")
         sys.exit(0)
+    this_screen = input("What is the name of this screen process?: ")
 
     # Create screen process for the actual install
     node = input("In which node will you be running the install?: ")
@@ -118,11 +115,11 @@ def main():
     input(f"Create a screen process for the actual install: screen -S {main_pkg}_install [Enter]")
 
     # load required modules
-    input("ml load miniforge")
-    if input(f"Does {main_pkg} use GPU? [y/N]: ").strip().lower() not in ["y", "yes"]:
-        input("ml load cuda")
-    if input(f"Does {main_pkg} use MPI? [y/N]: ").strip().lower() not in ["y", "yes"]:
-        input("ml load openmpi")
+    input("ml load miniforge [Enter]")
+    if input(f"Does {main_pkg} use GPU? [y/N]: ").strip().lower() in ["y", "yes"]:
+        input("ml load cuda [Enter]")
+    if input(f"Does {main_pkg} use MPI? [y/N]: ").strip().lower() in ["y", "yes"]:
+        input("ml load openmpi [Enter]")
 
     # Create conda environment
     if create_env:
@@ -140,7 +137,8 @@ def main():
         conda_create_cmd = f"\nconda create -n {env_name} {venv_python}"
 
         for channel in input("Required channels ([Enter] if no specific channels required): ").strip().lower().split(","):
-            conda_create_cmd+=f"-c {channel}"
+            if channel:
+                conda_create_cmd+=f" -c {channel}"
 
         input(f"\n{conda_create_cmd} [Enter]")
         input(f"conda env list | grep {env_name} [Enter]")
@@ -149,7 +147,7 @@ def main():
     if os.path.isdir(forge_dir):
         input(f"\nconda activate {env_name} [Enter]")
     else:
-        print(f"Conda dir was not created: {forge_dir}")
+        print(f"\nConda dir was not created: {forge_dir}")
         sys.exit(1)
 
     # Clone git repos if applicable
@@ -227,8 +225,8 @@ def main():
 
     # Close screen processes
     input(f"Login to {node} as root [Enter]")
-    input(f"screen -S {main_pkg}_install -X quit [Enter]")
-    print(f"*** Remember to kill this screen process: screen -S {main_pkg}_python -X quit ***")
+    input(f"Kill the install screen process: screen -S {main_pkg}_install -X quit [Enter]")
+    print(f"Kill this screen process too: screen -S {this_screen} -X quit [Enter]")
 
 if __name__ == "__main__":
     main()
