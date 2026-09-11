@@ -106,14 +106,14 @@ def main():
             if input(msg).strip().lower() not in ("yes", "y"):
                 sys.exit(1)
 
-    if input("Is this script running in a screen process? [y/N]: ").strip().lower() not in ["y", "yes"]:
+    if input("Is **THIS** script running in a screen process (not the actual install)? [y/N]: ").strip().lower() not in ["y", "yes"]:
         print(dedent(f"""This script needs to run inside a screen process.
                         Take note in which node you're located.
                         Then run: screen -S {main_pkg}_python"""))
         sys.exit(0)
 
     # Create screen process for the actual install
-    node = input("In which node are you running the install?: ")
+    node = input("In which node will you be running the install?: ")
     input("Login as root in that node [Enter]")
     input(f"Create a screen process for the actual install: screen -S {main_pkg}_install [Enter]")
 
@@ -126,6 +126,9 @@ def main():
 
     # Create conda environment
     if create_env:
+        major = sys.version_info.major
+        minor = sys.version_info.minor
+        micro = sys.version_info.micro
         if micro:
             default_py = f"{major}.{minor}.{micro}"
         else:
