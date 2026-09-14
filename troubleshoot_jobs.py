@@ -403,7 +403,7 @@ def getQueuePos_notOOD(jobID: str, partition: str):
     if code!=0:
         return "", stderr
     
-    return stdout.replace("\n", ""), stderr
+    return stdout.strip(), stderr
 
 def isInteractive(jobID:str):
     cmd1 = ["scontrol", "show", "job", jobID]
