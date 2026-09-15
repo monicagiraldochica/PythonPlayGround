@@ -209,6 +209,7 @@ def main():
     print(f"\nAvailable packages for {main_pkg}:")
     input(f"ml avail {main_pkg} [Enter]")
     print(f"\nModule information:")
+    input(f"ml help {main_pkg}/{version} [Enter]")
     input(f"ml show {main_pkg}/{version} [Enter]")
 
     # Run final tests
