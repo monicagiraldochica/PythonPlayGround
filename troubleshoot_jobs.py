@@ -867,18 +867,18 @@ def checkLogs(df: pd.DataFrame, job_col: str):
 
     stdErr = getDFvalue(df, "StdErr", job_col)
     if stdErr:
-        input(f"copy StdErr ({stdErr}) to a location that can be read by this script [Enter]")
-        stdErr = input("New path for StdErr ([Enter] if current path should be readable): ") or stdErr
+        input(f"copy StdErr ({workDir}/{stdErr}) to a location that can be read by this script [Enter]")
+        stdErr = input("New path for StdErr ([Enter] if current path should be readable): ") or f"{workDir}/{stdErr}"
 
     stdOut = getDFvalue(df, "StdOut", job_col)
     if stdOut:
-        input(f"copy StdOut {stdOut} to a location that can be read by this script [Enter]")
-        stdOut = input("New path for StdOut ([Enter] if current path should be readable): ") or stdOut
+        input(f"copy StdOut ({workDir}/{stdOut}) to a location that can be read by this script [Enter]")
+        stdOut = input("New path for StdOut ([Enter] if current path should be readable): ") or f"{workDir}/{stdOut}"
 
     try:
-        with open(f"{workDir}/{stdErr}", "r") as f:
+        with open(stdErr, "r") as f:
             contentErr = f.read()
-        with open(f"{workDir}/{stdOut}", "r") as f:
+        with open(stdOut, "r") as f:
             contentOut = f.read()
         
     except Exception as e:
@@ -1376,7 +1376,7 @@ def main():
                 gpu = "gn" in node_list
             else:
                 gpu = input("\nIs the job running on GPU nodes? [y/N]: ").strip().lower() in ["y", "yes"]
-            if gpu and (input("Did the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
+            if gpu and (input("\nDid the user requested at least the same number of CPUs as GPUs? [Y/n]: ").strip().lower() in ["n", "no"]):
                 print("""That will cause errors. You must reserve at least the same number of CPUs than GPUs.
                     GPUs are used in tandem with a CPU. The CPU executes the main program with the GPU being used at times to carry out specific functions.
                     A CPU is always needed to run a code that uses a GPU.""")
