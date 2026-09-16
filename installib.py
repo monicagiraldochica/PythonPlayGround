@@ -30,7 +30,7 @@ def runBash(cmd: list, output_file: str=""):
             stdout = ""
 
         else:
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             stdout = result.stdout
 
         return result.returncode, result.stderr, stdout
