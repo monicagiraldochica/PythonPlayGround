@@ -1,0 +1,22 @@
+name: Check Python code
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v6
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Check Python code
+        run: ruff check instalib.py
