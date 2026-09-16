@@ -35,9 +35,12 @@ def runBash(cmd: list, output_file: str=""):
 
         return result.returncode, result.stderr, stdout
     
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         err = (e.stderr or e.stdout or str(e)).strip()
         return e.returncode, err, ""
+
+    except OSError as e:
+        return 1, str(e), ""
 
 def runPipedCommands(commands: list[list]):
     try:
