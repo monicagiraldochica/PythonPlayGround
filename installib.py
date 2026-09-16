@@ -171,20 +171,20 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
                 with open(help_file, "r") as fin:
                     ml_help = fin.read()
 
-            except Exception as e:
+            except OSError as e:
                 print(f"WARNING: Could not read {help_file}. Leaving help content empty: {e}")
                 ml_help = ""
 
         if input(f"\nDoes {mdl_name} uses a GUI? [y/N]: ").strip().lower() in ("y", "yes"):
             msg="Make sure you connect using -XY flag if planning to use the GUI.\nFor Mac users: make sure you have XQuartz installed."
             if ml_help:
-                ml_help+=f"\n\n"
+                ml_help+="\n\n"
             ml_help+=msg
 
         py_files = [f for f in contentFolder(bin_path).split("\n") if f.endswith(".py")]
         if py_files:
             if ml_help:
-                ml_help+=f"\n\n"
+                ml_help+="\n\n"
             ml_help+=f"Run '{py_files[0]} -h' instead of 'python {py_files[0]} -h'"
 
         # Create category string
@@ -205,7 +205,7 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
             try:
                 with open("unload_cmd.txt", "r") as fin:
                     unload_line = fin.read()
-            except Exception as e:
+            except OSError as e:
                 print(f"WARNING: lua file will be incomplete, the content ot clear environments could not be loaded: {e}")
                 unload_line = ""
         else:
@@ -306,7 +306,7 @@ def createMdlFile(mdl_name: str, mdl_version: str, bin_path: str, conda: bool, g
         try:
             with open(new_ml, "w") as f1:
                 f1.write(content)
-        except Exception as e:
+        except OSError as e:
             print(f"Error: could not create module file: {e}")
             return False
         
@@ -345,16 +345,15 @@ def cloneRepos(mdl_name: str, mdl_version: str) -> list[str]:
             git_dirs+=[download_dir]
 
             req_file = f"{download_dir}/requirements.txt"
-            if os.path.isfile(req_file):
-                if input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
-                    input(f"cd {download_dir} [Enter]")
-                    input("python -m pip install -r requirements.txt [Enter]")
+            if os.path.isfile(req_file) and if input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
+                input(f"cd {download_dir} [Enter]")
+                input("python -m pip install -r requirements.txt [Enter]")
 
-                    print("Check that all requirements where successfully installed:")
-                    with open(req_file, "r") as fin:
-                        line = fin.readline().lower
-                        if line.contains(">="):
-                            line = line.split(">=")[0]
-                        input(f"conda list | grep {line} [Enter]")
+                print("Check that all requirements where successfully installed:")
+                with open(req_file, "r") as fin:
+                    line = fin.readline().lower
+                    if line.contains(">="):
+                        line = line.split(">=")[0]
+                    input(f"conda list | grep {line} [Enter]")
 
     return git_dirs
