@@ -86,7 +86,7 @@ def decompress(filename: str):
     elif filename.endswith(".zip"):
         cmd = f"unzip {filename}"
     
-    elif filename.endswith(".tgz") or filename.endswith(".tar.gz"):
+    elif filename.endswith((".tgz", ".tar.gz")):
         cmd = f"tar -xvzf {filename}"
     
     elif filename.endswith(".tar.bz2"):
@@ -100,6 +100,7 @@ def decompress(filename: str):
     
     else:
         cmd = f"Decompress {filename}"
+
     input(f"{cmd} [Enter]")
 
 def version_key(s):
@@ -128,7 +129,7 @@ def availableModules(pkg: str):
     return sorted(modules, key=version_key)
 
 def contentFolder(path: str) -> str:
-    path = path[:-1] if path.endswith("/") else path
+    path = path.removesuffix("/")
     returncode, stderr, stdout = runBash(["ls", "-l", path])
     
     if returncode!=0:
