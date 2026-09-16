@@ -19,4 +19,4 @@ jobs:
         run: pip install ruff
 
       - name: Check Python code
-        run: ruff check instalib.py
+        run: ruff check installib.py
