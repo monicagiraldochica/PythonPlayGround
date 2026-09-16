@@ -56,9 +56,12 @@ def runPipedCommands(commands: list[list]):
         stdout, stderr = prev_proc.communicate()
         return prev_proc.returncode, stderr, stdout
 
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         err = (e.stderr or e.stdout or str(e)).strip()
         return e.returncode, err, ""
+
+    except OSError as e:
+        return 1, str(e), ""
 
 def downloadPackage(download_in_apps: bool, pkg_url: str, mdl_name: str, mdl_vers: str, git: bool=False):
     download_dir = f"/hpc/apps/{mdl_name}/{mdl_vers}" if download_in_apps else f"/adminfs/builds/{mdl_name}/{mdl_vers}"
