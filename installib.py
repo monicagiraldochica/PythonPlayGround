@@ -20,26 +20,24 @@ import shutil
 import subprocess
 import textwrap
 
+# text=True: makes stdout and stderr strings instead of bytes
+# check=True: if there's an error, an exception is produced
 def runBash(cmd: list, output_file: str=""):
-    file_handle = None
     try:
         if output_file:
-            file_handle = open(output_file, "w")
-        stdout_target = file_handle if output_file else subprocess.PIPE
+            with open(output_file, "w") as file_handle:
+                result = subprocess.run(cmd, stdout=file_handle, stderr=subprocess.PIPE, text=True, check=True)
+            stdout = ""
 
-        # text=True: makes stdout and stderr strings instead of bytes
-        # check=True: if there's an error, an exception is produced
-        result = subprocess.run(cmd, stdout=stdout_target, stderr=subprocess.PIPE, text=True, check=True)
-        stdout = "" if output_file else result.stdout
+        else:
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            stdout = result.stdout
+
         return result.returncode, result.stderr, stdout
     
     except Exception as e:
         err = (e.stderr or e.stdout or str(e)).strip()
         return e.returncode, err, ""
-    
-    finally:
-        if file_handle:
-            file_handle.close()
 
 def runPipedCommands(commands: list[list]):
     try:
