@@ -345,7 +345,7 @@ def cloneRepos(mdl_name: str, mdl_version: str) -> list[str]:
             git_dirs+=[download_dir]
 
             req_file = f"{download_dir}/requirements.txt"
-            if os.path.isfile(req_file) and if input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
+            if os.path.isfile(req_file) and input(f"A requirements.txt file was found in {repo_name}. Do you want to install these requirements? [Y/n]: ").strip().lower() not in ["n", "not"]:
                 input(f"cd {download_dir} [Enter]")
                 input("python -m pip install -r requirements.txt [Enter]")
 
