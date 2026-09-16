@@ -13,11 +13,11 @@ if sys.version_info[:3] != (3, 12, 10):
     )
     sys.exit(1)
 
-import subprocess
-from pathlib import Path
 import os
+from pathlib import Path
 import re
 import shutil
+import subprocess
 import textwrap
 
 def runBash(cmd: list, output_file: str=""):
