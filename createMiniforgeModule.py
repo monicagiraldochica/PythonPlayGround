@@ -174,6 +174,7 @@ def main():
     if input("\nIs this program going to be run from Jupyter Notebook? [y/N]: "):
         input("conda install ipykernel [Enter]")
         input("Create kernel from one of the others: /hpc/apps/miniforge/share/jupyter/kernels [Enter]")
+        input("Test the json file: python3 -m json.tool .local/share/jupyter/kernels/pyscenic/kernel.json [Enter]")
 
     # Run tests with the conda environment activated
     print("\nTest the conda environment:")
